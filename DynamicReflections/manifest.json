@@ -1,0 +1,11 @@
+﻿{
+  "Name": "Dynamic Reflections",
+  "Author": "PeacefulEnd",
+  "Version": "REPLACE_ME_WITH_VERSION",
+  "Description": "Dynamic water and surface reflections for Stardew Valley.",
+  "UniqueID": "PeacefulEnd.DynamicReflections",
+  "EntryDll": "DynamicReflections.dll",
+  "MinimumApiVersion": "3.14.4",
+  "UpdateKeys": [ "Nexus:????" ],
+  "Dependencies": []
+}
