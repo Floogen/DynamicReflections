@@ -1,0 +1,13 @@
+﻿{
+  "Name": "[SF] Example Pack",
+  "Author": "PeacefulEnd",
+  "Version": "1.0.0",
+  "Description": "A pack utilizing Solid Foundations to show how to use the Dynamic Reflections framework.",
+  "UniqueID": "PeacefulEnd.DynamicReflections.ExamplePack",
+  "UpdateKeys": [],
+  "Dependencies": [],
+  "ContentPackFor": {
+    "UniqueID": "PeacefulEnd.SolidFoundations",
+    "MinimumVersion": "1.12.0"
+  }
+}

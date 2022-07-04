@@ -33,7 +33,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
         private static bool DrawTilePrefix(IDisplayDevice __instance, Tile? tile, Location location, float layerDepth)
         {
-            if (tile is null || (DynamicReflections.areWaterReflectionsEnabled is false && DynamicReflections.areMirrorReflectionsEnabled is false))
+            if (tile is null || DynamicReflections.areWaterReflectionsEnabled is false)
             {
                 return true;
             }
@@ -42,17 +42,9 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             {
                 return false;
             }
-            else if (DynamicReflections.isDrawingMirrorReflection is true && tile.Properties.TryGetValue("IsMirror", out _) is true)
+            else if (DynamicReflections.isFilteringWater is true && tile.TileIndexProperties.TryGetValue("Water", out _) is false)
             {
                 return false;
-            }
-
-            if (DynamicReflections.isFilteringWater is true || DynamicReflections.isFilteringMirror is true)
-            {
-                if (tile.TileIndexProperties.TryGetValue("Water", out _) is false && tile.Properties.TryGetValue("IsMirror", out _) is false)
-                {
-                    return false;
-                }
             }
 
             return true;

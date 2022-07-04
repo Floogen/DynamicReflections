@@ -7,7 +7,6 @@ using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using DynamicReflections.Framework.Patches.Core;
 using DynamicReflections.Framework.Patches.SMAPI;
 using DynamicReflections.Framework.Patches.Tiles;
 using DynamicReflections.Framework.Patches.Tools;
@@ -43,8 +42,11 @@ namespace DynamicReflections
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
 
-        internal static Effect effect;
-        internal static RenderTarget2D renderTarget;
+        internal static Effect waterReflectionEffect;
+        internal static Effect mirrorReflectionEffect;
+        internal static RenderTarget2D playerWaterReflectionRender;
+        internal static RenderTarget2D playerMirrorReflectionRender;
+        internal static RenderTarget2D mirrorsRenderTarget;
         internal static RasterizerState rasterizer;
 
 
@@ -95,12 +97,38 @@ namespace DynamicReflections
 
         private void OnWindowResized(object sender, StardewModdingAPI.Events.WindowResizedEventArgs e)
         {
-            if (renderTarget is not null)
+            if (playerWaterReflectionRender is not null)
             {
-                renderTarget.Dispose();
+                playerWaterReflectionRender.Dispose();
             }
 
-            renderTarget = new RenderTarget2D(
+            playerWaterReflectionRender = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            if (mirrorsRenderTarget is not null)
+            {
+                mirrorsRenderTarget.Dispose();
+            }
+
+            mirrorsRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            if (playerMirrorReflectionRender is not null)
+            {
+                playerMirrorReflectionRender.Dispose();
+            }
+
+            playerMirrorReflectionRender = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -131,14 +159,14 @@ namespace DynamicReflections
 
             // Check current map for tiles with IsMirror
             var map = currentLocation.Map;
-            if (map is null || (map.GetLayer("Back") is var backLayer && backLayer is null))
+            if (map is null || (map.GetLayer("Mirrors") is var mirrorLayer && mirrorLayer is null))
             {
                 return;
             }
 
-            for (int x = 0; x < backLayer.LayerWidth; x++)
+            for (int x = 0; x < mirrorLayer.LayerWidth; x++)
             {
-                for (int y = 0; y < backLayer.LayerHeight; y++)
+                for (int y = 0; y < mirrorLayer.LayerHeight; y++)
                 {
                     if (IsMirrorTile(currentLocation, x, y, true) is false)
                     {
@@ -148,7 +176,7 @@ namespace DynamicReflections
 
                     // Check to see if another IsMirror exists directly below it
                     int actualBaseY;
-                    for (actualBaseY = y; actualBaseY < backLayer.LayerHeight; actualBaseY++)
+                    for (actualBaseY = y; actualBaseY < mirrorLayer.LayerHeight; actualBaseY++)
                     {
                         if (IsMirrorTile(currentLocation, x, actualBaseY, true) is false)
                         {
@@ -193,9 +221,9 @@ namespace DynamicReflections
                 }
 
                 var speed = 1f;
-                if (DynamicReflections.isWavyReflection && DynamicReflections.effect is not null)
+                if (DynamicReflections.isWavyReflection && DynamicReflections.waterReflectionEffect is not null)
                 {
-                    var phase = effect.Parameters["Phase"].GetValueSingle();
+                    var phase = waterReflectionEffect.Parameters["Phase"].GetValueSingle();
                     //monitor.Log($"TESTING: {phase}", LogLevel.Debug);
                     if (phase >= 2 * Math.PI)
                     {
@@ -207,9 +235,9 @@ namespace DynamicReflections
                     }
                     phase += (float)Game1.currentGameTime.ElapsedGameTime.TotalSeconds * speed;
 
-                    effect.Parameters["Phase"].SetValue(phase);
-                    effect.Parameters["Frequency"].SetValue(50f);
-                    effect.Parameters["Amplitude"].SetValue(0.01f);
+                    waterReflectionEffect.Parameters["Phase"].SetValue(phase);
+                    waterReflectionEffect.Parameters["Frequency"].SetValue(50f);
+                    waterReflectionEffect.Parameters["Amplitude"].SetValue(0.01f);
                 }
             }
 
@@ -281,14 +309,32 @@ namespace DynamicReflections
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             // Compile via the command: mgfxc wavy.fx wavy.mgfx
-            effect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "wavy.mgfx")));
-            effect.CurrentTechnique = effect.Techniques["Wavy"];
+            mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "mask.mgfx")));
+
+            waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "wavy.mgfx")));
+            waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["Wavy"];
 
             //effect = modHelper.ModContent.Load<Effect>(Path.Combine("Framework", "Assets", "wavy.xnb"));
             //monitor.Log($"TESTING: {effect is null}", LogLevel.Debug);
 
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
-            renderTarget = new RenderTarget2D(
+            playerWaterReflectionRender = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            mirrorsRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            playerMirrorReflectionRender = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -302,7 +348,7 @@ namespace DynamicReflections
 
         private bool IsMirrorTile(GameLocation location, int x, int y, bool requireEnabled = false)
         {
-            string isMirrorProperty = location.doesTileHavePropertyNoNull(x, y, "IsMirror", "Back");
+            string isMirrorProperty = location.doesTileHavePropertyNoNull(x, y, "IsMirror", "Mirrors");
             if (String.IsNullOrEmpty(isMirrorProperty))
             {
                 return false;

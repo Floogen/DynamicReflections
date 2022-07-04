@@ -37,12 +37,76 @@ namespace DynamicReflections.Framework.Patches.Tiles
         private static void DrawMirrorReflection(bool resumeSpriteBatch = false)
         {
             Game1.spriteBatch.End();
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+            DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(DynamicReflections.mirrorsRenderTarget);
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
+
+            Game1.spriteBatch.Draw(DynamicReflections.playerMirrorReflectionRender, Vector2.Zero, Color.White);
+
+            Game1.spriteBatch.End();
+
+            if (resumeSpriteBatch)
+            {
+                Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+            }
+        }
+
+        internal static void DrawMirrorsLayer(bool useCachedRender = false)
+        {
+            if (useCachedRender)
+            {
+                Game1.spriteBatch.Draw(DynamicReflections.mirrorsRenderTarget, Vector2.Zero, Color.White);
+            }
+            else
+            {
+                if (Game1.currentLocation is null || Game1.currentLocation.Map is null)
+                {
+                    return;
+                }
+
+                if (Game1.currentLocation.Map.GetLayer("Mirrors") is var mirrorsLayer && mirrorsLayer is null)
+                {
+                    return;
+                }
+                Game1.spriteBatch.End();
+                Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                // Draw the "Mirrors" layer
+                LayerPatch.DrawReversePatch(mirrorsLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
+            }
+        }
+
+        private static void RenderMirrors()
+        {
+            // Set the render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.mirrorsRenderTarget);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            DrawMirrorsLayer();
+
+            // Drop the render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        private static void RenderMirrorReflectionPlayerSprite(bool resumeSpriteBatch = false)
+        {
+            Game1.spriteBatch.End();
+
+            // Set the render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.playerMirrorReflectionRender);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
             var oldPosition = Game1.player.Position;
             var oldDirection = Game1.player.FacingDirection;
             var oldSprite = Game1.player.FarmerSprite;
 
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
                 var mirror = DynamicReflections.mapMirrors[mirrorPosition];
@@ -53,17 +117,18 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
                 Game1.player.draw(Game1.spriteBatch);
             }
+            Game1.spriteBatch.End();
 
             Game1.player.Position = oldPosition;
             Game1.player.FacingDirection = oldDirection;
             Game1.player.FarmerSprite = oldSprite;
 
-            Game1.spriteBatch.End();
+            // Drop the render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(null);
 
-            if (resumeSpriteBatch)
-            {
-                Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
-            }
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+
+            Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
         }
 
         private static void DrawReflectionViaMatrix(bool resumeSpriteBatch = false)
@@ -85,14 +150,14 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
             if (resumeSpriteBatch)
             {
-                Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+                Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
             }
         }
 
-        private static void RenderFlattenedPlayerSprite(bool resumeSpriteBatch = false)
+        private static void RenderWaterReflectionPlayerSprite(bool resumeSpriteBatch = false)
         {
             // Set the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.renderTarget);
+            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.playerWaterReflectionRender);
 
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -106,7 +171,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
             if (resumeSpriteBatch)
             {
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
             }
         }
 
@@ -114,15 +179,15 @@ namespace DynamicReflections.Framework.Patches.Tiles
         {
             Game1.spriteBatch.End();
 
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.effect : null);
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
             //ModEntry.monitor.LogOnce($"[{ModEntry.renderTarget.Bounds}] {Game1.viewport.Width / 2} | {Game1.viewport.Height / 2}", LogLevel.Debug);
-            Game1.spriteBatch.Draw(DynamicReflections.renderTarget, Vector2.Zero, Color.White);
+            Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, Color.White);
 
             Game1.spriteBatch.End();
 
             if (resumeSpriteBatch)
             {
-                Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+                Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
             }
         }
 
@@ -131,71 +196,61 @@ namespace DynamicReflections.Framework.Patches.Tiles
             DynamicReflections.isDrawingWaterReflection = false;
             DynamicReflections.isDrawingMirrorReflection = false;
 
-            if (__instance.Id.Equals("Back", StringComparison.OrdinalIgnoreCase) is false)
+            if (__instance.Id.Equals("Back", StringComparison.OrdinalIgnoreCase) is true)
             {
-                return true;
-            }
+                // Pre-render the Mirrors layer
+                RenderMirrors();
 
-            // Handle preliminary water reflection logic
-            if (DynamicReflections.shouldDrawWaterReflection is true)
-            {
-                DynamicReflections.isFilteringWater = true;
+                // Pre-render the mirror reflections
+                RenderMirrorReflectionPlayerSprite();
 
-                if (DynamicReflections.isWavyReflection)
+                // Handle preliminary water reflection logic
+                if (DynamicReflections.shouldDrawWaterReflection is true)
                 {
-                    RenderFlattenedPlayerSprite(resumeSpriteBatch: true);
-                }
-            }
+                    DynamicReflections.isFilteringWater = true;
 
-            // Handle preliminary mirror reflection logic
-            if (DynamicReflections.shouldDrawMirrorReflection is true)
-            {
-                DynamicReflections.isFilteringMirror = true;
-            }
-
-            // Draw the filtered layer, if needed
-            if (DynamicReflections.isFilteringWater is false && DynamicReflections.isFilteringMirror is false)
-            {
-                return true;
-            }
-            LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
-
-            // Draw the water reflection
-            if (DynamicReflections.isFilteringWater is true)
-            {
-                if (DynamicReflections.isWavyReflection)
-                {
-                    DrawRenderedPlayer(isWavy: true, resumeSpriteBatch: true);
-                }
-                else
-                {
-                    DrawReflectionViaMatrix(resumeSpriteBatch: true);
+                    if (DynamicReflections.isWavyReflection)
+                    {
+                        RenderWaterReflectionPlayerSprite(resumeSpriteBatch: true);
+                    }
                 }
 
-                DynamicReflections.isFilteringWater = false;
-                DynamicReflections.isDrawingWaterReflection = true;
+                // Draw the filtered layer, if needed
+                if (DynamicReflections.isFilteringWater is false)
+                {
+                    return true;
+                }
+                LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+
+                // Draw the water reflection
+                if (DynamicReflections.isFilteringWater is true)
+                {
+                    if (DynamicReflections.isWavyReflection)
+                    {
+                        DrawRenderedPlayer(isWavy: true, resumeSpriteBatch: true);
+                    }
+                    else
+                    {
+                        DrawReflectionViaMatrix(resumeSpriteBatch: true);
+                    }
+
+                    DynamicReflections.isFilteringWater = false;
+                    DynamicReflections.isDrawingWaterReflection = true;
+                }
             }
-
-            // Draw the mirror reflection
-            if (DynamicReflections.isFilteringMirror is true)
+            else if (__instance.Id.Equals("Buildings", StringComparison.OrdinalIgnoreCase) is true)
             {
-                DynamicReflections.isFilteringMirror = false;
-                DynamicReflections.isDrawingMirrorReflection = true;
+                DrawMirrorsLayer(useCachedRender: true);
 
-                DrawMirrorReflection(true);
+                // Skip drawing the player's reflection if not needed
+                if (DynamicReflections.shouldDrawMirrorReflection is true)
+                {
+                    DynamicReflections.isDrawingMirrorReflection = true;
+                    DrawMirrorReflection(resumeSpriteBatch: true);
+                }
             }
 
             return true;
-        }
-
-        private static void DrawPostfix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)
-        {
-            if (DynamicReflections.waterReflectionPosition is null || __instance.Id.Equals("Back", StringComparison.OrdinalIgnoreCase) is false)
-            {
-                return;
-            }
-
-            //Game1.spriteBatch.Draw(_texture, new Vector2(ModEntry.farmerReflection.getLocalPosition(Game1.viewport).X - 4f, ModEntry.farmerReflection.getLocalPosition(Game1.viewport).Y - 4f), Color.White);
         }
 
         private static void DrawReversePatch(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)
