@@ -13,6 +13,7 @@ namespace DynamicReflections.Framework.Models
         internal Point _tilePosition;
         public Vector2 WorldPosition { get; set; }
         public int Height { get; set; }
+        public int Width { get; set; }
         public float ReflectionScale { get; set; }
 
         public bool IsEnabled { get; set; }

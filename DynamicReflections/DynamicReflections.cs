@@ -60,7 +60,9 @@ namespace DynamicReflections
         // Map property - WaterReflectionWavyAmplitude - Any float
         // Map property - WaterReflectionWavyFrequency - Any float
 
-        // Tile property - IsMirror - T or F
+        // Tile property - IsMirrorBase - T or F
+        // Tile property - MirrorHeight - Any int
+        // Tile property - MirrorWidth - Any int
         // Tile property - MirrorReflectionScale - Any float
         // Tile property - MirrorReflectionOpacity - 0.0 to 1.0
         // Tile property - MirrorReflectionYOffset - Any float
@@ -157,7 +159,7 @@ namespace DynamicReflections
             // Clear the old base points out
             DynamicReflections.mapMirrors.Clear();
 
-            // Check current map for tiles with IsMirror
+            // Check current map for tiles with IsMirrorBase
             var map = currentLocation.Map;
             if (map is null || (map.GetLayer("Mirrors") is var mirrorLayer && mirrorLayer is null))
             {
@@ -168,27 +170,15 @@ namespace DynamicReflections
             {
                 for (int y = 0; y < mirrorLayer.LayerHeight; y++)
                 {
-                    if (IsMirrorTile(currentLocation, x, y, true) is false)
+                    if (IsMirrorBaseTile(currentLocation, x, y, true) is false)
                     {
                         continue;
                     }
 
-
-                    // Check to see if another IsMirror exists directly below it
-                    int actualBaseY;
-                    for (actualBaseY = y; actualBaseY < mirrorLayer.LayerHeight; actualBaseY++)
-                    {
-                        if (IsMirrorTile(currentLocation, x, actualBaseY, true) is false)
-                        {
-                            actualBaseY -= 1;
-                            break;
-                        }
-                    }
-
-                    var point = new Point(x, actualBaseY);
+                    var point = new Point(x, y);
                     if (DynamicReflections.mapMirrors.ContainsKey(point) is false)
                     {
-                        DynamicReflections.mapMirrors[point] = new Mirror() { TilePosition = point, Height = Math.Max(1, actualBaseY - y) };
+                        DynamicReflections.mapMirrors[point] = new Mirror() { TilePosition = point, Height = GetMirrorHeight(currentLocation, x, y) - 1, Width = GetMirrorWidth(currentLocation, x, y) };
                     }
                 }
             }
@@ -244,7 +234,7 @@ namespace DynamicReflections
             DynamicReflections.shouldDrawMirrorReflection = false;
             if (DynamicReflections.areMirrorReflectionsEnabled)
             {
-                // TODO: Determine the reflection position in relation to the base IsMirror tile
+                // TODO: Determine the reflection position in relation to the base IsMirrorBase tile
                 var playerWorldPosition = Game1.player.Position;
                 var playerTilePosition = Game1.player.getTileLocationPoint();
 
@@ -346,9 +336,9 @@ namespace DynamicReflections
             rasterizer.CullMode = CullMode.CullClockwiseFace;
         }
 
-        private bool IsMirrorTile(GameLocation location, int x, int y, bool requireEnabled = false)
+        private bool IsMirrorBaseTile(GameLocation location, int x, int y, bool requireEnabled = false)
         {
-            string isMirrorProperty = location.doesTileHavePropertyNoNull(x, y, "IsMirror", "Mirrors");
+            string isMirrorProperty = location.doesTileHavePropertyNoNull(x, y, "IsMirrorBase", "Mirrors");
             if (String.IsNullOrEmpty(isMirrorProperty))
             {
                 return false;
@@ -360,6 +350,38 @@ namespace DynamicReflections
             }
 
             return true;
+        }
+
+        private int GetMirrorHeight(GameLocation location, int x, int y)
+        {
+            string mirrorHeightProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorHeight", "Mirrors");
+            if (String.IsNullOrEmpty(mirrorHeightProperty))
+            {
+                return -1;
+            }
+
+            if (Int32.TryParse(mirrorHeightProperty, out int mirrorHeightValue) is false)
+            {
+                return 1;
+            }
+
+            return mirrorHeightValue;
+        }
+
+        private int GetMirrorWidth(GameLocation location, int x, int y)
+        {
+            string mirrorWidthProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorWidth", "Mirrors");
+            if (String.IsNullOrEmpty(mirrorWidthProperty))
+            {
+                return -1;
+            }
+
+            if (Int32.TryParse(mirrorWidthProperty, out int mirrorWidthValue) is false)
+            {
+                return 1;
+            }
+
+            return mirrorWidthValue;
         }
 
         private bool IsWaterReflectiveTile(GameLocation location, int x, int y)
