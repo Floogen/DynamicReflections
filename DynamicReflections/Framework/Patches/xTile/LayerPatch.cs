@@ -16,7 +16,7 @@ using xTile.Layers;
 using xTile.Tiles;
 using Object = StardewValley.Object;
 
-namespace DynamicReflections.Framework.Patches.Buildings
+namespace DynamicReflections.Framework.Patches.Tiles
 {
     internal class LayerPatch : PatchTemplate
     {

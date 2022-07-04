@@ -3,11 +3,14 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using DynamicReflections.Framework.Models;
-using DynamicReflections.Framework.Patches.Buildings;
 using StardewValley;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using DynamicReflections.Framework.Patches.Core;
+using DynamicReflections.Framework.Patches.SMAPI;
+using DynamicReflections.Framework.Patches.Tiles;
+using DynamicReflections.Framework.Patches.Tools;
 
 namespace DynamicReflections
 {

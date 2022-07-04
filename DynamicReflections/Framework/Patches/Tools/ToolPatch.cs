@@ -12,7 +12,7 @@ using System.Linq;
 using System.Reflection.Emit;
 using Object = StardewValley.Object;
 
-namespace DynamicReflections.Framework.Patches.Buildings
+namespace DynamicReflections.Framework.Patches.Tools
 {
     internal class ToolPatch : PatchTemplate
     {
