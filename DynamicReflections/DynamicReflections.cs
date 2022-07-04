@@ -45,6 +45,7 @@ namespace DynamicReflections
 
         internal static Effect effect;
         internal static RenderTarget2D renderTarget;
+        internal static RasterizerState rasterizer;
 
 
         // TODO: Implement these map / tile properties
@@ -106,6 +107,14 @@ namespace DynamicReflections
                 false,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
+
+            if (rasterizer is not null)
+            {
+                rasterizer.Dispose();
+            }
+
+            rasterizer = new RasterizerState();
+            rasterizer.CullMode = CullMode.CullClockwiseFace;
         }
 
 
@@ -278,6 +287,7 @@ namespace DynamicReflections
             //effect = modHelper.ModContent.Load<Effect>(Path.Combine("Framework", "Assets", "wavy.xnb"));
             //monitor.Log($"TESTING: {effect is null}", LogLevel.Debug);
 
+            // Create the RenderTarget2D and RasterizerState for use by the water reflection
             renderTarget = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
@@ -285,6 +295,9 @@ namespace DynamicReflections
                 false,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
+
+            rasterizer = new RasterizerState();
+            rasterizer.CullMode = CullMode.CullClockwiseFace;
         }
 
         private bool IsMirrorTile(GameLocation location, int x, int y, bool requireEnabled = false)

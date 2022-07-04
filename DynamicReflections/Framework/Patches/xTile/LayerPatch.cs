@@ -30,7 +30,6 @@ namespace DynamicReflections.Framework.Patches.Tiles
         internal void Apply(Harmony harmony)
         {
             harmony.Patch(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), prefix: new HarmonyMethod(GetType(), nameof(DrawPrefix)));
-            //harmony.Patch(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), postfix: new HarmonyMethod(GetType(), nameof(DrawPostfix)));
 
             harmony.CreateReversePatcher(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), new HarmonyMethod(GetType(), nameof(DrawReversePatch))).Patch();
         }
@@ -75,10 +74,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
             var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y * 2, 0);
             //_monitor.LogOnce($"{Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight} | {Game1.GlobalToLocal(Game1.viewport, ModEntry.farmerReflection.Position).Y}", LogLevel.Debug);
 
-            RasterizerState rasterizer = new RasterizerState();
-            rasterizer.CullMode = CullMode.CullClockwiseFace;
-
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: rasterizer, transformMatrix: scale * position);
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
 
             var oldPosition = Game1.player.Position;
             Game1.player.Position = DynamicReflections.waterReflectionPosition.Value;
