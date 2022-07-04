@@ -50,7 +50,9 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 if (DynamicReflections.shouldDrawMirrorReflection is true)
                 {
                     // Pre-render the mirror reflections
+                    DynamicReflections.isFilteringMirror = true;
                     SpriteBatchToolkit.RenderMirrorReflectionPlayerSprite();
+                    DynamicReflections.isFilteringMirror = false;
                 }
 
                 // Handle preliminary water reflection logic
