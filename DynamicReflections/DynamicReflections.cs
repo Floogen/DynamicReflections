@@ -178,7 +178,15 @@ namespace DynamicReflections
                     var point = new Point(x, y);
                     if (DynamicReflections.mapMirrors.ContainsKey(point) is false)
                     {
-                        DynamicReflections.mapMirrors[point] = new Mirror() { TilePosition = point, Height = GetMirrorHeight(currentLocation, x, y) - 1, Width = GetMirrorWidth(currentLocation, x, y) };
+                        DynamicReflections.mapMirrors[point] = new Mirror()
+                        {
+                            TilePosition = point,
+                            Height = GetMirrorHeight(currentLocation, x, y) - 1,
+                            Width = GetMirrorWidth(currentLocation, x, y),
+                            ReflectionScale = GetMirrorScale(currentLocation, x, y), // TODO: Implement this property
+                            //ReflectionOpacity = GetMirrorOpacity(currentLocation, x, y), // TODO: Implement this property
+                            ReflectionOffset = GetMirrorOffset(currentLocation, x, y)
+                        };
                     }
                 }
             }
@@ -382,6 +390,45 @@ namespace DynamicReflections
             }
 
             return mirrorWidthValue;
+        }
+
+        private float GetMirrorScale(GameLocation location, int x, int y)
+        {
+            string mirrorScaleProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorScale", "Mirrors");
+            if (String.IsNullOrEmpty(mirrorScaleProperty))
+            {
+                return 1f;
+            }
+
+            if (float.TryParse(mirrorScaleProperty, out float mirrorScaleValue) is false)
+            {
+                return 1f;
+            }
+
+            return mirrorScaleValue;
+        }
+
+        private Vector2 GetMirrorOffset(GameLocation location, int x, int y)
+        {
+            string mirrorOffsetProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorOffset", "Mirrors");
+            if (String.IsNullOrEmpty(mirrorOffsetProperty))
+            {
+                return Vector2.Zero;
+            }
+
+            if (mirrorOffsetProperty.Contains(" ") is false)
+            {
+                return Vector2.Zero;
+            }
+
+            var xOffsetText = mirrorOffsetProperty.Split(" ")[0];
+            var yOffsetText = mirrorOffsetProperty.Split(" ")[1];
+            if (float.TryParse(xOffsetText, out float xOffsetValue) is false || float.TryParse(yOffsetText, out float yOffsetValue) is false)
+            {
+                return Vector2.Zero;
+            }
+
+            return new Vector2(xOffsetValue, yOffsetValue);
         }
 
         private bool IsWaterReflectiveTile(GameLocation location, int x, int y)

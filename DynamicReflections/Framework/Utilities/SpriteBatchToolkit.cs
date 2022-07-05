@@ -108,11 +108,12 @@ namespace DynamicReflections.Framework.Utilities
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
                 var mirror = DynamicReflections.mapMirrors[mirrorPosition];
+                var offsetPosition = mirror.PlayerReflectionPosition;
+                offsetPosition -= mirror.ReflectionOffset * 16;
 
-                Game1.player.Position = mirror.PlayerReflectionPosition;
+                Game1.player.Position = offsetPosition;
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
                 Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
-
                 Game1.player.draw(Game1.spriteBatch);
             }
             Game1.spriteBatch.End();
