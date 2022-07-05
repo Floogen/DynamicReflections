@@ -19,6 +19,9 @@
 	</ItemGroup>
 
 	<ItemGroup>
+		<None Update="Examples\[SF] Example Pack\manifest.json">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="Framework\Assets\mask.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
@@ -43,8 +46,10 @@
 			7z a -tzip "C:\Users\Floogen\Documents\GitHub Repos\DynamicReflections\DynamicReflections\releases\DynamicReflections-$(Version).zip" "C:\Users\Floogen\Documents\GitHub Repos\DynamicReflections\DynamicReflections\releases\latest\DynamicReflections"
 
 			powershell Remove-Item -Path '$(GameModsPath)\DynamicReflections' -Recurse -Force
+			powershell Remove-Item -Path '$(GameModsPath)\Dynamic Reflections Examples' -Recurse -Force
 
 			xcopy /s /y /i "C:\Users\Floogen\Documents\GitHub Repos\DynamicReflections\DynamicReflections\releases\latest\DynamicReflections" "$(GameModsPath)\DynamicReflections"
+			xcopy /s /y /i "C:\Users\Floogen\Documents\GitHub Repos\DynamicReflections\DynamicReflections\Examples\*" "$(GameModsPath)\Dynamic Reflections Examples"
 		</PostBuildEvent>
 	</PropertyGroup>
 </Project>

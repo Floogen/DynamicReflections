@@ -1,0 +1,23 @@
+{
+  "Id": "PeacefulEnd.DynamicReflections.ExamplePack_HallofMirrors",
+  "Name": "Hall of Mirrors",
+  "Description": "...",
+  "BuildCost": 2500,
+  "DrawShadow": false,
+
+  "SourceRect": "0 0 112 80",
+  "Size": {
+    "X": 8,
+    "Y": 3
+  },
+  "SortTileOffset": 1,
+  "CollisionMap": "XXXXXXXO\nXXXXXXXO\nXXXOXXXO",
+
+  "IndoorMap": "hall_of_mirrors",
+  "TunnelDoors": [
+    {
+      "X": 3,
+      "Y": 2
+    }
+  ]
+}
