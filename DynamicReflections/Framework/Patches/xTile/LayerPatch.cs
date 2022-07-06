@@ -45,8 +45,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
             {
                 SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
-                // Pre-render the Mirrors layer (this should always be done, regardless of DynamicReflections.shouldDrawMirrorReflection)
-                SpriteBatchToolkit.RenderMirrors();
+                // Pre-render the Mirrors layer and furniture (this should always be done, regardless of DynamicReflections.shouldDrawMirrorReflection)
+                SpriteBatchToolkit.RenderMirrorsLayer();
                 if (DynamicReflections.shouldDrawMirrorReflection is true)
                 {
                     // Pre-render the mirror reflections
@@ -100,15 +100,15 @@ namespace DynamicReflections.Framework.Patches.Tiles
             else if (__instance.Id.Equals("Buildings", StringComparison.OrdinalIgnoreCase) is true)
             {
                 // Draw the cached Mirrors layer
-                Game1.spriteBatch.Draw(DynamicReflections.mirrorsRenderTarget, Vector2.Zero, Color.White);
+                Game1.spriteBatch.Draw(DynamicReflections.mirrorsLayerRenderTarget, Vector2.Zero, Color.White);
 
                 // Skip drawing the player's reflection if not needed
                 if (DynamicReflections.shouldDrawMirrorReflection is true)
                 {
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
-                    DynamicReflections.isDrawingMirrorReflection = true;
-                    SpriteBatchToolkit.DrawMirrorReflection();
+                    //DynamicReflections.isDrawingMirrorReflection = true;
+                    SpriteBatchToolkit.DrawMirrorReflection(DynamicReflections.mirrorsLayerRenderTarget);
 
                     // Resume previous SpriteBatch
                     SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);

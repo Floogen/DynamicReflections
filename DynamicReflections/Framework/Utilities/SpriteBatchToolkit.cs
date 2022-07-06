@@ -57,9 +57,9 @@ namespace DynamicReflections.Framework.Utilities
 
         // LayerPatch helper methods
         // A note on the Render and Draw prefixed methods: These methods assume SpriteBatch has not been started via SpriteBatch.Begin
-        internal static void DrawMirrorReflection()
+        internal static void DrawMirrorReflection(Texture2D mask)
         {
-            DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(DynamicReflections.mirrorsRenderTarget);
+            DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
 
             int index = 0;
@@ -73,10 +73,10 @@ namespace DynamicReflections.Framework.Utilities
             Game1.spriteBatch.End();
         }
 
-        internal static void RenderMirrors()
+        internal static void RenderMirrorsLayer()
         {
             // Set the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.mirrorsRenderTarget);
+            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.mirrorsLayerRenderTarget);
 
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -118,17 +118,17 @@ namespace DynamicReflections.Framework.Utilities
             int index = 0;
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
-                var reflectionRender = DynamicReflections.rawPlayerMirrorReflectionRenders[index];
+                var rawReflectionRender = DynamicReflections.inBetweenRenderTarget;
 
                 // Set the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(reflectionRender);
+                Game1.graphics.GraphicsDevice.SetRenderTarget(rawReflectionRender);
 
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
 
-                var mirror = DynamicReflections.mapMirrors[mirrorPosition];
+                var mirror = DynamicReflections.mirrors[mirrorPosition];
                 var offsetPosition = mirror.PlayerReflectionPosition;
                 offsetPosition -= mirror.ReflectionOffset * 16;
 
@@ -143,24 +143,16 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.graphics.GraphicsDevice.SetRenderTarget(null);
 
-                index++;
-            }
-
-            // Now use the rawPlayerMirrorReflectionRenders to flip and apply other effects to them
-            index = 0;
-            foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
-            {
-                var reflectionRender = DynamicReflections.modifiedPlayerMirrorReflectionRenders[index];
+                // Now use the rawReflectionRender to flip and apply other effects to them
+                var composedReflectionRender = DynamicReflections.composedPlayerMirrorReflectionRenders[index];
 
                 // Set the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(reflectionRender);
+                Game1.graphics.GraphicsDevice.SetRenderTarget(composedReflectionRender);
 
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-
-                var mirror = DynamicReflections.mapMirrors[mirrorPosition];
 
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
 
@@ -170,7 +162,30 @@ namespace DynamicReflections.Framework.Utilities
                 // This variable (flipOffset) is required to re-adjust the flipped screen (as the player sprite may not be in the center)
                 var flipOffset = Game1.player.FacingDirection is (0 or 2) ? (Game1.viewport.Width - Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).X * 2) - 64 : 0f;
 
-                Game1.spriteBatch.Draw(DynamicReflections.rawPlayerMirrorReflectionRenders[index], new Vector2(-flipOffset, 0f), DynamicReflections.rawPlayerMirrorReflectionRenders[index].Bounds, mirror.ReflectionOverlay, 0f, Vector2.Zero, 1f, flipEffect, 1f);
+                // TODO: Implement these for Mirror.ReflectionScale
+                var scale = new Vector2(1f, 1f);
+                var scaleOffset = Vector2.One;
+
+                Game1.spriteBatch.Draw(rawReflectionRender, new Vector2(-flipOffset, 0f), rawReflectionRender.Bounds, mirror.ReflectionOverlay, 0f, scaleOffset, scale, flipEffect, 1f);
+
+                Game1.spriteBatch.End();
+
+                // Drop the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+
+                // Now draw the masked version, for use by the furniture
+                var maskedReflectionRender = DynamicReflections.maskedPlayerMirrorReflectionRenders[index];
+
+                // Set the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(maskedReflectionRender);
+
+                // Draw the scene
+                Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+                DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(DynamicReflections.mirrorsFurnitureRenderTarget);
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
+
+                Game1.spriteBatch.Draw(composedReflectionRender, Vector2.Zero, Color.White);
 
                 Game1.spriteBatch.End();
 

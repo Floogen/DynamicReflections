@@ -10,6 +10,9 @@ using System.IO;
 using DynamicReflections.Framework.Patches.SMAPI;
 using DynamicReflections.Framework.Patches.Tiles;
 using DynamicReflections.Framework.Patches.Tools;
+using System.Linq;
+using DynamicReflections.Framework.Patches.Objects;
+using DynamicReflections.Framework.Utilities;
 
 namespace DynamicReflections
 {
@@ -35,7 +38,7 @@ namespace DynamicReflections
 
         // Mirror reflection variables
         internal static FarmerSprite mirrorReflectionSprite;
-        internal static Dictionary<Point, Mirror> mapMirrors = new Dictionary<Point, Mirror>();
+        internal static Dictionary<Point, Mirror> mirrors = new Dictionary<Point, Mirror>();
         internal static List<Point> activeMirrorPositions = new List<Point>();
         internal static float mirrorReflectionYOffset = 1.5f;
         internal static bool shouldDrawMirrorReflection;
@@ -48,9 +51,10 @@ namespace DynamicReflections
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
         internal static RenderTarget2D playerWaterReflectionRender;
-        internal static RenderTarget2D[] rawPlayerMirrorReflectionRenders;
-        internal static RenderTarget2D[] modifiedPlayerMirrorReflectionRenders;
-        internal static RenderTarget2D mirrorsRenderTarget;
+        internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
+        internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
+        internal static RenderTarget2D inBetweenRenderTarget;
+        internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RasterizerState rasterizer;
 
 
@@ -116,12 +120,12 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
 
-            if (mirrorsRenderTarget is not null)
+            if (mirrorsLayerRenderTarget is not null)
             {
-                mirrorsRenderTarget.Dispose();
+                mirrorsLayerRenderTarget.Dispose();
             }
 
-            mirrorsRenderTarget = new RenderTarget2D(
+            mirrorsLayerRenderTarget = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -136,10 +140,10 @@ namespace DynamicReflections
                     mirrorPlayerRender.Dispose();
                 }
             }
-            rawPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             for (int i = 0; i < 3; i++)
             {
-                rawPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -148,17 +152,17 @@ namespace DynamicReflections
                 DepthFormat.None);
             }
 
-            foreach (var mirrorPlayerRender in modifiedPlayerMirrorReflectionRenders)
+            foreach (var mirrorPlayerRender in composedPlayerMirrorReflectionRenders)
             {
                 if (mirrorPlayerRender is not null)
                 {
                     mirrorPlayerRender.Dispose();
                 }
             }
-            modifiedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             for (int i = 0; i < 3; i++)
             {
-                modifiedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                composedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -166,6 +170,19 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
             }
+
+            if (inBetweenRenderTarget is not null)
+            {
+                inBetweenRenderTarget.Dispose();
+            }
+
+            inBetweenRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
 
             if (rasterizer is not null)
             {
@@ -186,7 +203,7 @@ namespace DynamicReflections
             var currentLocation = e.NewLocation;
 
             // Clear the old base points out
-            DynamicReflections.mapMirrors.Clear();
+            DynamicReflections.mirrors.Clear();
 
             // Check current map for tiles with IsMirrorBase
             var map = currentLocation.Map;
@@ -205,15 +222,15 @@ namespace DynamicReflections
                     }
 
                     var point = new Point(x, y);
-                    if (DynamicReflections.mapMirrors.ContainsKey(point) is false)
+                    if (DynamicReflections.mirrors.ContainsKey(point) is false)
                     {
-                        DynamicReflections.mapMirrors[point] = new Mirror()
+                        var dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1);
+                        DynamicReflections.mirrors[point] = new Mirror()
                         {
                             TilePosition = point,
-                            Height = GetMirrorHeight(currentLocation, x, y) - 1,
-                            Width = GetMirrorWidth(currentLocation, x, y),
+                            Dimensions = dimensions,
                             ReflectionScale = GetMirrorScale(currentLocation, x, y), // TODO: Implement this property
-                            ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y), // TODO: Implement this property
+                            ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
                             ReflectionOffset = GetMirrorOffset(currentLocation, x, y)
                         };
                     }
@@ -271,22 +288,21 @@ namespace DynamicReflections
             DynamicReflections.shouldDrawMirrorReflection = false;
             if (DynamicReflections.areMirrorReflectionsEnabled)
             {
-                // TODO: Determine the reflection position in relation to the base IsMirrorBase tile
                 var playerWorldPosition = Game1.player.Position;
                 var playerTilePosition = Game1.player.getTileLocationPoint();
 
                 DynamicReflections.activeMirrorPositions.Clear();
-                foreach (var mirror in DynamicReflections.mapMirrors.Values)
+                foreach (var mirror in DynamicReflections.mirrors.Values)
                 {
                     mirror.IsEnabled = false;
 
                     // Limit the amount of active Mirrors to the amount of available reflection renders
-                    if (activeMirrorPositions.Count >= DynamicReflections.rawPlayerMirrorReflectionRenders.Length)
+                    if (activeMirrorPositions.Count >= DynamicReflections.maskedPlayerMirrorReflectionRenders.Length)
                     {
                         break;
                     }
 
-                    var mirrorRange = mirror.TilePosition.Y + mirror.Height;
+                    var mirrorRange = mirror.TilePosition.Y + mirror.Dimensions.Height;
                     if (mirrorRange - 1 <= playerTilePosition.Y && playerTilePosition.Y <= mirrorRange + 1)
                     {
                         mirror.IsEnabled = true;
@@ -360,7 +376,7 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
 
-            mirrorsRenderTarget = new RenderTarget2D(
+            mirrorsLayerRenderTarget = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -368,10 +384,18 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
 
-            rawPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            mirrorsFurnitureRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             for (int i = 0; i < 3; i++)
             {
-                rawPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -380,10 +404,10 @@ namespace DynamicReflections
                 DepthFormat.None);
             }
 
-            modifiedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             for (int i = 0; i < 3; i++)
             {
-                modifiedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                composedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
@@ -391,6 +415,14 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
             }
+
+            inBetweenRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
 
             rasterizer = new RasterizerState();
             rasterizer.CullMode = CullMode.CullClockwiseFace;
