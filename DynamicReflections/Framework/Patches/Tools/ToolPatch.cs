@@ -16,7 +16,6 @@ namespace DynamicReflections.Framework.Patches.Tools
 {
     internal class ToolPatch : PatchTemplate
     {
-
         private readonly Type _type = typeof(Tool);
 
         internal ToolPatch(IMonitor modMonitor, IModHelper modHelper) : base(modMonitor, modHelper)

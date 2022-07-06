@@ -41,11 +41,15 @@ namespace DynamicReflections
         internal static bool shouldDrawMirrorReflection;
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
+        internal static bool shouldOverrideHorizontalFlip;
 
+        // Effects and RenderTarget2Ds
+        internal static Effect opacityEffect;
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
         internal static RenderTarget2D playerWaterReflectionRender;
-        internal static RenderTarget2D playerMirrorReflectionRender;
+        internal static RenderTarget2D[] rawPlayerMirrorReflectionRenders;
+        internal static RenderTarget2D[] modifiedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D mirrorsRenderTarget;
         internal static RasterizerState rasterizer;
 
@@ -125,18 +129,43 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
 
-            if (playerMirrorReflectionRender is not null)
+            foreach (var mirrorPlayerRender in rawPlayerMirrorReflectionRenders)
             {
-                playerMirrorReflectionRender.Dispose();
+                if (mirrorPlayerRender is not null)
+                {
+                    mirrorPlayerRender.Dispose();
+                }
             }
-
-            playerMirrorReflectionRender = new RenderTarget2D(
+            rawPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            for (int i = 0; i < 3; i++)
+            {
+                rawPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
                 false,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
+            }
+
+            foreach (var mirrorPlayerRender in modifiedPlayerMirrorReflectionRenders)
+            {
+                if (mirrorPlayerRender is not null)
+                {
+                    mirrorPlayerRender.Dispose();
+                }
+            }
+            modifiedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            for (int i = 0; i < 3; i++)
+            {
+                modifiedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+            }
 
             if (rasterizer is not null)
             {
@@ -184,7 +213,7 @@ namespace DynamicReflections
                             Height = GetMirrorHeight(currentLocation, x, y) - 1,
                             Width = GetMirrorWidth(currentLocation, x, y),
                             ReflectionScale = GetMirrorScale(currentLocation, x, y), // TODO: Implement this property
-                            //ReflectionOpacity = GetMirrorOpacity(currentLocation, x, y), // TODO: Implement this property
+                            ReflectionOpacity = GetMirrorOpacity(currentLocation, x, y), // TODO: Implement this property
                             ReflectionOffset = GetMirrorOffset(currentLocation, x, y)
                         };
                     }
@@ -251,6 +280,12 @@ namespace DynamicReflections
                 {
                     mirror.IsEnabled = false;
 
+                    // Limit the amount of active Mirrors to the amount of available reflection renders
+                    if (activeMirrorPositions.Count >= DynamicReflections.rawPlayerMirrorReflectionRenders.Length)
+                    {
+                        break;
+                    }
+
                     var mirrorRange = mirror.TilePosition.Y + mirror.Height;
                     if (mirrorRange - 1 <= playerTilePosition.Y && playerTilePosition.Y <= mirrorRange + 1)
                     {
@@ -307,6 +342,7 @@ namespace DynamicReflections
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
             // Compile via the command: mgfxc wavy.fx wavy.mgfx
+            opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "opacity.mgfx")));
             mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "mask.mgfx")));
 
             waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "wavy.mgfx")));
@@ -332,13 +368,29 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
 
-            playerMirrorReflectionRender = new RenderTarget2D(
+            rawPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            for (int i = 0; i < 3; i++)
+            {
+                rawPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
                 false,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
+            }
+
+            modifiedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            for (int i = 0; i < 3; i++)
+            {
+                modifiedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+            }
 
             rasterizer = new RasterizerState();
             rasterizer.CullMode = CullMode.CullClockwiseFace;
@@ -406,6 +458,22 @@ namespace DynamicReflections
             }
 
             return mirrorScaleValue;
+        }
+
+        private float GetMirrorOpacity(GameLocation location, int x, int y)
+        {
+            string mirrorOpacityProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorOpacity", "Mirrors");
+            if (String.IsNullOrEmpty(mirrorOpacityProperty))
+            {
+                return 1f;
+            }
+
+            if (float.TryParse(mirrorOpacityProperty, out float mirrorOpacityValue) is false)
+            {
+                return 1f;
+            }
+
+            return mirrorOpacityValue;
         }
 
         private Vector2 GetMirrorOffset(GameLocation location, int x, int y)

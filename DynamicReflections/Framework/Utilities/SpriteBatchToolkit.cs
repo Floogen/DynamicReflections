@@ -1,6 +1,7 @@
 ﻿using DynamicReflections.Framework.Patches.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using StardewModdingAPI;
 using StardewValley;
 using System;
 using System.Collections.Generic;
@@ -61,7 +62,13 @@ namespace DynamicReflections.Framework.Utilities
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(DynamicReflections.mirrorsRenderTarget);
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
 
-            Game1.spriteBatch.Draw(DynamicReflections.playerMirrorReflectionRender, Vector2.Zero, Color.White);
+            int index = 0;
+            foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
+            {
+                Game1.spriteBatch.Draw(DynamicReflections.modifiedPlayerMirrorReflectionRenders[index], Vector2.Zero, Color.White);
+
+                index++;
+            }
 
             Game1.spriteBatch.End();
         }
@@ -94,19 +101,33 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderMirrorReflectionPlayerSprite()
         {
-            // Set the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.playerMirrorReflectionRender);
-
-            // Draw the scene
-            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
-
             var oldPosition = Game1.player.Position;
             var oldDirection = Game1.player.FacingDirection;
             var oldSprite = Game1.player.FarmerSprite;
 
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+            Dictionary<string, string> modDataCache = new Dictionary<string, string>();
+            foreach (var dataKey in Game1.player.modData.Keys)
+            {
+                modDataCache[dataKey] = Game1.player.modData[dataKey];
+            }
+
+            // Note: Current solution is to utilize RenderTarget2Ds as the player sprite is composed of many other sprites layered on top of each other
+            // This makes modifying it via shader difficult and even more so difficult with Fashion Sense (as the size of appearances are not bounded)
+
+            // Draw the raw and flattened player sprites
+            int index = 0;
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
+                var reflectionRender = DynamicReflections.rawPlayerMirrorReflectionRenders[index];
+
+                // Set the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(reflectionRender);
+
+                // Draw the scene
+                Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
                 var mirror = DynamicReflections.mapMirrors[mirrorPosition];
                 var offsetPosition = mirror.PlayerReflectionPosition;
                 offsetPosition -= mirror.ReflectionOffset * 16;
@@ -114,16 +135,60 @@ namespace DynamicReflections.Framework.Utilities
                 Game1.player.Position = offsetPosition;
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
                 Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
+                Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
+
                 Game1.player.draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+
+                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+
+                index++;
             }
-            Game1.spriteBatch.End();
+
+            // Now use the rawPlayerMirrorReflectionRenders to flip and apply other effects to them
+            index = 0;
+            foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
+            {
+                var reflectionRender = DynamicReflections.modifiedPlayerMirrorReflectionRenders[index];
+
+                // Set the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(reflectionRender);
+
+                // Draw the scene
+                Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                var mirror = DynamicReflections.mapMirrors[mirrorPosition];
+
+                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
+
+                // Determine if we should flip the sprite on the X-axis (if facing front or back)
+                var flipEffect = Game1.player.FacingDirection is (0 or 2) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+
+                // This variable (flipOffset) is required to re-adjust the flipped screen (as the player sprite may not be in the center)
+                var flipOffset = Game1.player.FacingDirection is (0 or 2) ? ((Game1.viewport.Width / 2 - Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).X) * 2) - 64 : 0f;
+
+                Game1.spriteBatch.Draw(DynamicReflections.rawPlayerMirrorReflectionRenders[index], new Vector2(-flipOffset, 0f), DynamicReflections.rawPlayerMirrorReflectionRenders[index].Bounds, new Color(255, 255, 255, mirror.ReflectionOpacity), 0f, Vector2.Zero, 1f, flipEffect, 1f);
+
+                Game1.spriteBatch.End();
+
+                // Drop the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+
+                index++;
+            }
 
             Game1.player.Position = oldPosition;
             Game1.player.FacingDirection = oldDirection;
             Game1.player.FarmerSprite = oldSprite;
 
-            // Drop the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+            // Restore modData for Fashion Sense
+            foreach (var dataKey in modDataCache.Keys)
+            {
+                Game1.player.modData[dataKey] = modDataCache[dataKey];
+            }
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
@@ -163,7 +228,6 @@ namespace DynamicReflections.Framework.Utilities
         internal static void DrawRenderedPlayer(bool isWavy = false)
         {
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
-            //ModEntry.monitor.LogOnce($"[{ModEntry.renderTarget.Bounds}] {Game1.viewport.Width / 2} | {Game1.viewport.Height / 2}", LogLevel.Debug);
             Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, Color.White);
 
             Game1.spriteBatch.End();
