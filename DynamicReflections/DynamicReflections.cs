@@ -44,7 +44,6 @@ namespace DynamicReflections
         internal static bool shouldDrawMirrorReflection;
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
-        internal static bool shouldOverrideHorizontalFlip;
 
         // Effects and RenderTarget2Ds
         internal static Effect opacityEffect;
@@ -55,6 +54,7 @@ namespace DynamicReflections
         internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
+        internal static RenderTarget2D mirrorsFurnitureRenderTarget;
         internal static RasterizerState rasterizer;
 
 
@@ -91,6 +91,7 @@ namespace DynamicReflections
                 new LayerPatch(monitor, modHelper).Apply(harmony);
                 new DisplayDevicePatch(monitor, modHelper).Apply(harmony);
                 new ToolPatch(monitor, modHelper).Apply(harmony);
+                new FurniturePatch(monitor, modHelper).Apply(harmony);
             }
             catch (Exception e)
             {
@@ -100,6 +101,7 @@ namespace DynamicReflections
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;
+            helper.Events.World.FurnitureListChanged += OnFurnitureListChanged;
             helper.Events.Player.Warped += OnWarped;
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
@@ -133,7 +135,20 @@ namespace DynamicReflections
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);
 
-            foreach (var mirrorPlayerRender in rawPlayerMirrorReflectionRenders)
+            if (mirrorsFurnitureRenderTarget is not null)
+            {
+                mirrorsFurnitureRenderTarget.Dispose();
+            }
+
+            mirrorsFurnitureRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            foreach (var mirrorPlayerRender in maskedPlayerMirrorReflectionRenders)
             {
                 if (mirrorPlayerRender is not null)
                 {
@@ -193,6 +208,31 @@ namespace DynamicReflections
             rasterizer.CullMode = CullMode.CullClockwiseFace;
         }
 
+        private void OnFurnitureListChanged(object sender, StardewModdingAPI.Events.FurnitureListChangedEventArgs e)
+        {
+            if (e.IsCurrentLocation is false)
+            {
+                return;
+            }
+
+            foreach (var addedFurniture in e.Added)
+            {
+                if (addedFurniture.Name == "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror")
+                {
+                    Monitor.Log($"{addedFurniture.Name} | {addedFurniture.TileLocation}", LogLevel.Debug);
+
+                    var point = new Point((int)addedFurniture.TileLocation.X, (int)addedFurniture.TileLocation.Y);
+                    var dimensions = new Rectangle(0, 0, addedFurniture.getTilesWide(), addedFurniture.getTilesHigh() + 1);
+                    DynamicReflections.mirrors.Add(point, new Mirror()
+                    {
+                        FurnitureLink = addedFurniture,
+                        Dimensions = dimensions,
+                        TilePosition = point,
+                        ReflectionOverlay = Color.White
+                    });
+                }
+            }
+        }
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {

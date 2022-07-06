@@ -47,6 +47,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
                 // Pre-render the Mirrors layer and furniture (this should always be done, regardless of DynamicReflections.shouldDrawMirrorReflection)
                 SpriteBatchToolkit.RenderMirrorsLayer();
+                SpriteBatchToolkit.RenderMirrorsFurniture();
                 if (DynamicReflections.shouldDrawMirrorReflection is true)
                 {
                     // Pre-render the mirror reflections

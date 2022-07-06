@@ -65,7 +65,11 @@ namespace DynamicReflections.Framework.Utilities
             int index = 0;
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
-                Game1.spriteBatch.Draw(DynamicReflections.modifiedPlayerMirrorReflectionRenders[index], Vector2.Zero, Color.White);
+                var mirror = DynamicReflections.mirrors[mirrorPosition];
+                if (mirror.FurnitureLink is null)
+                {
+                    Game1.spriteBatch.Draw(DynamicReflections.composedPlayerMirrorReflectionRenders[index], Vector2.Zero, Color.White);
+                }
 
                 index++;
             }
@@ -91,6 +95,36 @@ namespace DynamicReflections.Framework.Utilities
                     LayerPatch.DrawReversePatch(mirrorsLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
                     Game1.spriteBatch.End();
                 }
+            }
+
+            // Drop the render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        internal static void RenderMirrorsFurniture()
+        {
+            // Set the render target
+            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.mirrorsFurnitureRenderTarget);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            if (Game1.currentLocation is not null && Game1.currentLocation.furniture is not null)
+            {
+                Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                foreach (var furniture in Game1.currentLocation.furniture)
+                {
+                    if (furniture.Name == "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror")
+                    {
+                        DynamicReflections.isFilteringMirror = true;
+                        furniture.draw(Game1.spriteBatch, (int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
+                        DynamicReflections.isFilteringMirror = false;
+                    }
+                }
+                Game1.spriteBatch.End();
             }
 
             // Drop the render target
