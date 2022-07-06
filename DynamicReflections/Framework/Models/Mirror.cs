@@ -15,7 +15,7 @@ namespace DynamicReflections.Framework.Models
         public int Height { get; set; }
         public int Width { get; set; }
         public float ReflectionScale { get; set; }
-        public float ReflectionOpacity { get; set; }
+        public Color ReflectionOverlay { get; set; }
         public Vector2 ReflectionOffset { get; set; }
 
         public bool IsEnabled { get; set; }

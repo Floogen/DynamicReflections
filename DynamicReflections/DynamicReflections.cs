@@ -68,7 +68,7 @@ namespace DynamicReflections
         // Tile property - MirrorHeight - Any int
         // Tile property - MirrorWidth - Any int
         // Tile property - MirrorReflectionScale - Any float
-        // Tile property - MirrorReflectionOpacity - 0.0 to 1.0
+        // Tile property - MirrorOverlay - RGBA
         // Tile property - MirrorReflectionYOffset - Any float
 
 
@@ -213,7 +213,7 @@ namespace DynamicReflections
                             Height = GetMirrorHeight(currentLocation, x, y) - 1,
                             Width = GetMirrorWidth(currentLocation, x, y),
                             ReflectionScale = GetMirrorScale(currentLocation, x, y), // TODO: Implement this property
-                            ReflectionOpacity = GetMirrorOpacity(currentLocation, x, y), // TODO: Implement this property
+                            ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y), // TODO: Implement this property
                             ReflectionOffset = GetMirrorOffset(currentLocation, x, y)
                         };
                     }
@@ -460,20 +460,24 @@ namespace DynamicReflections
             return mirrorScaleValue;
         }
 
-        private float GetMirrorOpacity(GameLocation location, int x, int y)
+        private Color GetMirrorOverlay(GameLocation location, int x, int y)
         {
-            string mirrorOpacityProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorOpacity", "Mirrors");
-            if (String.IsNullOrEmpty(mirrorOpacityProperty))
+            string mirrorOverlayProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorOverlay", "Mirrors");
+            if (String.IsNullOrEmpty(mirrorOverlayProperty) || mirrorOverlayProperty.Split(' ').Length < 3)
             {
-                return 1f;
+                return Color.White;
+            }
+            var splitColorValues = mirrorOverlayProperty.Split(' ');
+
+            for (int i = 0; i < 3; i++)
+            {
+                if (Int32.TryParse(splitColorValues[i], out int _) is false)
+                {
+                    return Color.White;
+                }
             }
 
-            if (float.TryParse(mirrorOpacityProperty, out float mirrorOpacityValue) is false)
-            {
-                return 1f;
-            }
-
-            return mirrorOpacityValue;
+            return new Color(Int32.Parse(splitColorValues[0]), Int32.Parse(splitColorValues[1]), Int32.Parse(splitColorValues[2]), Int32.Parse(splitColorValues[3]));
         }
 
         private Vector2 GetMirrorOffset(GameLocation location, int x, int y)

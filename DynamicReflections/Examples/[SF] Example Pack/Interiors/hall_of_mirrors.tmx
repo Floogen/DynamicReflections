@@ -135,6 +135,7 @@
     <property name="IsMirrorBase" value="T"/>
     <property name="MirrorHeight" type="int" value="3"/>
     <property name="MirrorOffset" value="0 1.5"/>
+    <property name="MirrorOverlay" value="255 255 255 100"/>
     <property name="MirrorScale" type="float" value="1.5"/>
     <property name="MirrorWidth" type="int" value="2"/>
    </properties>
