@@ -114,14 +114,24 @@ namespace DynamicReflections.Framework.Utilities
             if (Game1.currentLocation is not null && Game1.currentLocation.furniture is not null)
             {
                 Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
-
-                foreach (var furniture in Game1.currentLocation.furniture)
+                foreach (var mirror in DynamicReflections.mirrors.Values.ToList())
                 {
-                    if (furniture.Name == "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror")
+                    if (mirror.IsEnabled is false || mirror.FurnitureLink is null)
                     {
+                        continue;
+                    }
+
+                    foreach (var furniture in Game1.currentLocation.furniture)
+                    {
+                        if (mirror.FurnitureLink != furniture)
+                        {
+                            continue;
+                        }
+
                         DynamicReflections.isFilteringMirror = true;
                         furniture.draw(Game1.spriteBatch, (int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                         DynamicReflections.isFilteringMirror = false;
+                        break;
                     }
                 }
                 Game1.spriteBatch.End();
@@ -164,7 +174,7 @@ namespace DynamicReflections.Framework.Utilities
 
                 var mirror = DynamicReflections.mirrors[mirrorPosition];
                 var offsetPosition = mirror.PlayerReflectionPosition;
-                offsetPosition -= mirror.ReflectionOffset * 16;
+                offsetPosition -= mirror.Settings.ReflectionOffset * 16;
 
                 Game1.player.Position = offsetPosition;
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
@@ -198,11 +208,42 @@ namespace DynamicReflections.Framework.Utilities
 
                 // TODO: Implement these for Mirror.ReflectionScale
                 var scale = new Vector2(1f, 1f);
-                var scaleOffset = Vector2.One;
+                var scaleOffset = Vector2.Zero;
 
-                Game1.spriteBatch.Draw(rawReflectionRender, new Vector2(-flipOffset, 0f), rawReflectionRender.Bounds, mirror.ReflectionOverlay, 0f, scaleOffset, scale, flipEffect, 1f);
+                Game1.spriteBatch.Draw(rawReflectionRender, new Vector2(-flipOffset, 0f), rawReflectionRender.Bounds, mirror.Settings.ReflectionOverlay, 0f, scaleOffset, scale, flipEffect, 1f);
 
                 Game1.spriteBatch.End();
+
+                // Drop the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+
+                // Now draw the individual furniture mask
+                var furnitureMaskRender = DynamicReflections.mirrorsFurnitureRenderTarget;
+
+                // Set the render target
+                Game1.graphics.GraphicsDevice.SetRenderTarget(furnitureMaskRender);
+
+                // Draw the scene
+                Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+                if (mirror.IsEnabled is true && mirror.FurnitureLink is not null && Game1.currentLocation is not null && Game1.currentLocation.furniture is not null)
+                {
+                    Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                    foreach (var furniture in Game1.currentLocation.furniture)
+                    {
+                        if (mirror.FurnitureLink != furniture)
+                        {
+                            continue;
+                        }
+
+                        DynamicReflections.isFilteringMirror = true;
+                        furniture.draw(Game1.spriteBatch, (int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
+                        DynamicReflections.isFilteringMirror = false;
+                        break;
+                    }
+                    Game1.spriteBatch.End();
+                }
 
                 // Drop the render target
                 Game1.graphics.GraphicsDevice.SetRenderTarget(null);

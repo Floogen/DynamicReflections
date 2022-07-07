@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using DynamicReflections.Framework.Models.ContentPack;
+using Microsoft.Xna.Framework;
 using StardewValley.Objects;
 using System;
 using System.Collections.Generic;
@@ -13,12 +14,10 @@ namespace DynamicReflections.Framework.Models
         public Point TilePosition { get { return _tilePosition; } set { _tilePosition = value; WorldPosition = new Vector2(value.X, value.Y) * 64f; } }
         internal Point _tilePosition;
         public Vector2 WorldPosition { get; set; }
-        public Rectangle Dimensions { get; set; }
-        public float ReflectionScale { get; set; }
-        public Color ReflectionOverlay { get; set; }
-        public Vector2 ReflectionOffset { get; set; }
+        public MirrorSettings Settings { get; set; } = new MirrorSettings();
 
         public bool IsEnabled { get; set; }
+        public int ActiveIndex { get; set; }
         public Vector2 PlayerReflectionPosition { get; set; }
         public Furniture? FurnitureLink { get; set; }
     }

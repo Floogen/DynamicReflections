@@ -13,6 +13,8 @@ using DynamicReflections.Framework.Patches.Tools;
 using System.Linq;
 using DynamicReflections.Framework.Patches.Objects;
 using DynamicReflections.Framework.Utilities;
+using DynamicReflections.Framework.Managers;
+using DynamicReflections.Framework.Models.ContentPack;
 
 namespace DynamicReflections
 {
@@ -22,6 +24,9 @@ namespace DynamicReflections
         internal static IMonitor monitor;
         internal static IModHelper modHelper;
         internal static Multiplayer multiplayer;
+
+        // Managers
+        internal static MirrorsManager mirrorsManager;
 
         // Config options
         internal static bool areWaterReflectionsEnabled = true;
@@ -57,6 +62,10 @@ namespace DynamicReflections
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
         internal static RasterizerState rasterizer;
 
+        // Masking textures
+        internal static Texture2D simpleMask;
+        internal static Vector2 lastViewportMovement;
+
 
         // TODO: Implement these map / tile properties
         // Note: These water reflection map properties override the player's config for the current map (if set)
@@ -83,6 +92,13 @@ namespace DynamicReflections
             modHelper = helper;
             multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
 
+            // Load the managers
+            mirrorsManager = new MirrorsManager();
+
+            // Establish the mask textures
+            simpleMask = new Texture2D(Game1.graphics.GraphicsDevice, 1, 1);
+            simpleMask.SetData(new Color[] { Color.White });
+
             try
             {
                 var harmony = new Harmony(this.ModManifest.UniqueID);
@@ -98,6 +114,9 @@ namespace DynamicReflections
                 Monitor.Log($"Issue with Harmony patching: {e}", LogLevel.Error);
                 return;
             }
+
+            // Add in the debug commands
+            helper.ConsoleCommands.Add("dr_reload", "Reloads all Dynamic Reflections content packs.\n\nUsage: dr_reload", delegate { this.LoadContentPacks(); });
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;
@@ -215,21 +234,39 @@ namespace DynamicReflections
                 return;
             }
 
-            foreach (var addedFurniture in e.Added)
+            // Attempt to add any DGA mirrors
+            foreach (var furniture in e.Added)
             {
-                if (addedFurniture.Name == "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror")
+                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
                 {
-                    Monitor.Log($"{addedFurniture.Name} | {addedFurniture.TileLocation}", LogLevel.Debug);
+                    var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
+                    var settings = new MirrorSettings()
+                    {
+                        Dimensions = new Rectangle(baseSettings.Dimensions.X, baseSettings.Dimensions.Y, baseSettings.Dimensions.Width, baseSettings.Dimensions.Height),
+                        ReflectionOffset = baseSettings.ReflectionOffset,
+                        ReflectionOverlay = baseSettings.ReflectionOverlay,
+                        ReflectionScale = baseSettings.ReflectionScale
+                    };
 
-                    var point = new Point((int)addedFurniture.TileLocation.X, (int)addedFurniture.TileLocation.Y);
-                    var dimensions = new Rectangle(0, 0, addedFurniture.getTilesWide(), addedFurniture.getTilesHigh() + 1);
                     DynamicReflections.mirrors.Add(point, new Mirror()
                     {
-                        FurnitureLink = addedFurniture,
-                        Dimensions = dimensions,
+                        FurnitureLink = furniture,
                         TilePosition = point,
-                        ReflectionOverlay = Color.White
+                        Settings = settings
                     });
+                }
+            }
+
+            // Attempt to remove any DGA mirrors
+            foreach (var furniture in e.Removed)
+            {
+                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                {
+                    var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
+                    if (DynamicReflections.mirrors.ContainsKey(point))
+                    {
+                        DynamicReflections.mirrors.Remove(point);
+                    }
                 }
             }
         }
@@ -264,16 +301,43 @@ namespace DynamicReflections
                     var point = new Point(x, y);
                     if (DynamicReflections.mirrors.ContainsKey(point) is false)
                     {
-                        var dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1);
+                        var settings = new MirrorSettings()
+                        {
+                            Dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1),
+                            ReflectionOffset = GetMirrorOffset(currentLocation, x, y),
+                            ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
+                            ReflectionScale = GetMirrorScale(currentLocation, x, y)
+                        };
+
                         DynamicReflections.mirrors[point] = new Mirror()
                         {
                             TilePosition = point,
-                            Dimensions = dimensions,
-                            ReflectionScale = GetMirrorScale(currentLocation, x, y), // TODO: Implement this property
-                            ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
-                            ReflectionOffset = GetMirrorOffset(currentLocation, x, y)
+                            Settings = settings
                         };
                     }
+                }
+            }
+
+            // Find all mirror furniture
+            foreach (var furniture in currentLocation.furniture)
+            {
+                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                {
+                    var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
+                    var settings = new MirrorSettings()
+                    {
+                        Dimensions = new Rectangle(baseSettings.Dimensions.X, baseSettings.Dimensions.Y, baseSettings.Dimensions.Width, baseSettings.Dimensions.Height),
+                        ReflectionOffset = baseSettings.ReflectionOffset,
+                        ReflectionOverlay = baseSettings.ReflectionOverlay,
+                        ReflectionScale = baseSettings.ReflectionScale
+                    };
+
+                    DynamicReflections.mirrors.Add(point, new Mirror()
+                    {
+                        FurnitureLink = furniture,
+                        TilePosition = point,
+                        Settings = settings
+                    });
                 }
             }
         }
@@ -284,6 +348,30 @@ namespace DynamicReflections
             {
                 return;
             }
+            if (Game1.getMostRecentViewportMotion() != Vector2.Zero && DynamicReflections.activeMirrorPositions.Count > 0)
+            {
+                // TODO: Determine why maskedPlayerMirrorReflectionRenders aren't updating when the viewport moves
+                for (int i = 0; i < DynamicReflections.activeMirrorPositions.Count; i++)
+                {
+                    var position = DynamicReflections.activeMirrorPositions[i];
+                    if (DynamicReflections.mirrors.ContainsKey(position) && DynamicReflections.mirrors[position].FurnitureLink is not null)
+                    {
+                        if (maskedPlayerMirrorReflectionRenders[i] is not null)
+                        {
+                            maskedPlayerMirrorReflectionRenders[i].Dispose();
+                        }
+
+                        maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                        Game1.graphics.GraphicsDevice,
+                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                        false,
+                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                        DepthFormat.None);
+                    }
+                }
+            }
+
 
             DynamicReflections.shouldDrawWaterReflection = false;
             if (DynamicReflections.areWaterReflectionsEnabled)
@@ -342,17 +430,22 @@ namespace DynamicReflections
                         break;
                     }
 
-                    var mirrorRange = mirror.TilePosition.Y + mirror.Dimensions.Height;
-                    if (mirrorRange - 1 <= playerTilePosition.Y && playerTilePosition.Y <= mirrorRange + 1)
+                    var mirrorWidth = mirror.TilePosition.X + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Width / 16f) - 1 : mirror.Settings.Dimensions.Width);
+                    if (mirror.TilePosition.X - 1 <= playerTilePosition.X && playerTilePosition.X <= mirrorWidth)
                     {
-                        mirror.IsEnabled = true;
+                        var mirrorRange = mirror.TilePosition.Y + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) - 1 : mirror.Settings.Dimensions.Height);
+                        if (mirrorRange - 1 <= playerTilePosition.Y && playerTilePosition.Y <= mirrorRange + 1)
+                        {
+                            mirror.IsEnabled = true;
+                            mirror.ActiveIndex = DynamicReflections.activeMirrorPositions.Count;
 
-                        var playerDistanceFromBase = mirror.WorldPosition.Y - playerWorldPosition.Y;
-                        var adjustedPosition = new Vector2(playerWorldPosition.X, mirror.WorldPosition.Y + playerDistanceFromBase + 64f);
-                        mirror.PlayerReflectionPosition = adjustedPosition;
+                            var playerDistanceFromBase = mirror.WorldPosition.Y - playerWorldPosition.Y;
+                            var adjustedPosition = new Vector2(playerWorldPosition.X, mirror.WorldPosition.Y + playerDistanceFromBase + 64f);
+                            mirror.PlayerReflectionPosition = adjustedPosition;
 
-                        DynamicReflections.shouldDrawMirrorReflection = true;
-                        DynamicReflections.activeMirrorPositions.Add(mirror.TilePosition);
+                            DynamicReflections.shouldDrawMirrorReflection = true;
+                            DynamicReflections.activeMirrorPositions.Add(mirror.TilePosition);
+                        }
                     }
                 }
 
@@ -397,15 +490,15 @@ namespace DynamicReflections
 
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
         {
+            // Load any owned content packs
+            LoadContentPacks();
+
             // Compile via the command: mgfxc wavy.fx wavy.mgfx
             opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "opacity.mgfx")));
             mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "mask.mgfx")));
 
             waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "wavy.mgfx")));
             waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["Wavy"];
-
-            //effect = modHelper.ModContent.Load<Effect>(Path.Combine("Framework", "Assets", "wavy.xnb"));
-            //monitor.Log($"TESTING: {effect is null}", LogLevel.Debug);
 
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
             playerWaterReflectionRender = new RenderTarget2D(
@@ -466,6 +559,41 @@ namespace DynamicReflections
 
             rasterizer = new RasterizerState();
             rasterizer.CullMode = CullMode.CullClockwiseFace;
+        }
+
+        private void LoadContentPacks(bool silent = false)
+        {
+            // Clear the existing cache of custom buildings
+            mirrorsManager.Reset();
+
+            // Load owned content packs
+            foreach (IContentPack contentPack in Helper.ContentPacks.GetOwned())
+            {
+                try
+                {
+                    Monitor.Log($"Loading data from pack: {contentPack.Manifest.Name} {contentPack.Manifest.Version} by {contentPack.Manifest.Author}", silent ? LogLevel.Trace : LogLevel.Debug);
+
+                    // Load mirrors
+                    if (!File.Exists(Path.Combine(contentPack.DirectoryPath, "mirrors.json")))
+                    {
+                        Monitor.Log($"Content pack {contentPack.Manifest.Name} is missing a mirrors.json!", LogLevel.Warn);
+                        continue;
+                    }
+
+                    var mirrorModels = contentPack.ReadJsonFile<List<ContentPackModel>>("mirrors.json");
+                    if (mirrorModels is null || mirrorModels.Count == 0)
+                    {
+                        Monitor.Log($"Content pack {contentPack.Manifest.Name} has an empty or invalid mirrors.json!", LogLevel.Warn);
+                        continue;
+                    }
+
+                    mirrorsManager.Add(mirrorModels);
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to load the content pack {contentPack.Manifest.UniqueID}: {ex}", LogLevel.Warn);
+                }
+            }
         }
 
         private bool IsMirrorBaseTile(GameLocation location, int x, int y, bool requireEnabled = false)

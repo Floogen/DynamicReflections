@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using DynamicReflections.Framework.Models;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Netcode;
@@ -45,15 +46,15 @@ namespace DynamicReflections.Framework.Patches.Objects
 
         private static bool DrawPrefix(Furniture __instance, NetInt ___sourceIndexOffset, NetVector2 ___drawPosition, SpriteBatch spriteBatch, int x, int y, float alpha = 1f)
         {
-            if (__instance.Name == "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror")
+            if (DynamicReflections.isFilteringMirror is true && DynamicReflections.isDrawingMirrorReflection is false)
             {
-                if (DynamicReflections.isFilteringMirror is true && DynamicReflections.isDrawingMirrorReflection is false)
+                foreach (var mirror in DynamicReflections.mirrors.Values.ToList())
                 {
-                    var sourceRect = new Rectangle(4, 4, 8, 36);
-                    var dummyTexture = new Texture2D(Game1.graphics.GraphicsDevice, 1, 1);
-                    dummyTexture.SetData(new Color[] { Color.White });
-
-                    spriteBatch.Draw(dummyTexture, Game1.GlobalToLocal(Game1.viewport, ___drawPosition + ((__instance.shakeTimer > 0) ? new Vector2(Game1.random.Next(-1, 2), Game1.random.Next(-1, 2)) : Vector2.Zero)), sourceRect, Color.White * alpha, 0f, new Vector2(-sourceRect.X, -sourceRect.Y), 4f, __instance.flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, ((int)__instance.furniture_type == 12) ? (2E-09f + __instance.tileLocation.Y / 100000f) : ((float)(__instance.boundingBox.Value.Bottom - (((int)__instance.furniture_type == 6 || (int)__instance.furniture_type == 17 || (int)__instance.furniture_type == 13) ? 48 : 8)) / 10000f));
+                    if (mirror.IsEnabled is false || mirror.FurnitureLink != __instance)
+                    {
+                        continue;
+                    }
+                    spriteBatch.Draw(DynamicReflections.simpleMask, Game1.GlobalToLocal(Game1.viewport, ___drawPosition + ((__instance.shakeTimer > 0) ? new Vector2(Game1.random.Next(-1, 2), Game1.random.Next(-1, 2)) : Vector2.Zero)), mirror.Settings.Dimensions, Color.White * alpha, 0f, new Vector2(-mirror.Settings.Dimensions.X, -mirror.Settings.Dimensions.Y), 4f, __instance.flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, ((int)__instance.furniture_type == 12) ? (2E-09f + __instance.tileLocation.Y / 100000f) : ((float)(__instance.boundingBox.Value.Bottom - (((int)__instance.furniture_type == 6 || (int)__instance.furniture_type == 17 || (int)__instance.furniture_type == 13) ? 48 : 8)) / 10000f));
 
                     return false;
                 }
@@ -61,12 +62,19 @@ namespace DynamicReflections.Framework.Patches.Objects
             return true;
         }
 
-        private static void DrawPostfix(Furniture __instance, SpriteBatch spriteBatch, int x, int y, float alpha = 1f)
+        private static void DrawPostfix(Furniture __instance, NetVector2 ___drawPosition, SpriteBatch spriteBatch, int x, int y, float alpha = 1f)
         {
-            if (__instance.Name == "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror")
+            foreach (var mirror in DynamicReflections.mirrors.Values.ToList())
             {
+                if (mirror.IsEnabled is false || mirror.FurnitureLink != __instance)
+                {
+                    continue;
+                }
+
                 var layerOffset = ((int)__instance.furniture_type == 12) ? (2E-09f + __instance.tileLocation.Y / 100000f) : ((float)(__instance.boundingBox.Value.Bottom - (((int)__instance.furniture_type == 6 || (int)__instance.furniture_type == 17 || (int)__instance.furniture_type == 13) ? 48 : 8)) / 10000f);
-                spriteBatch.Draw(DynamicReflections.maskedPlayerMirrorReflectionRenders.First(), Vector2.Zero, DynamicReflections.maskedPlayerMirrorReflectionRenders.First().Bounds, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerOffset + 0.001f);
+                spriteBatch.Draw(DynamicReflections.maskedPlayerMirrorReflectionRenders[mirror.ActiveIndex], Vector2.Zero, DynamicReflections.maskedPlayerMirrorReflectionRenders[mirror.ActiveIndex].Bounds, Color.White, 0f, Vector2.Zero, 1f, SpriteEffects.None, layerOffset + 0.001f);
+
+                break;
             }
         }
     }
