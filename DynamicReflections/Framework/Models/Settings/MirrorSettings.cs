@@ -6,7 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DynamicReflections.Framework.Models.ContentPack
+namespace DynamicReflections.Framework.Models.Settings
 {
     internal class MirrorSettings
     {

@@ -1,4 +1,4 @@
-﻿using DynamicReflections.Framework.Models.ContentPack;
+﻿using DynamicReflections.Framework.Models.Settings;
 using Microsoft.Xna.Framework;
 using StardewValley.Objects;
 using System;

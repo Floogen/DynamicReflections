@@ -1,5 +1,5 @@
 ﻿using DynamicReflections.Framework.Models;
-using DynamicReflections.Framework.Models.ContentPack;
+using DynamicReflections.Framework.Models.Settings;
 using Microsoft.Xna.Framework.Graphics;
 using System;
 using System.Collections.Generic;

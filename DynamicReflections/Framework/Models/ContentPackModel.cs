@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using DynamicReflections.Framework.Models.Settings;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewValley.Objects;
 using System;
@@ -7,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace DynamicReflections.Framework.Models.ContentPack
+namespace DynamicReflections.Framework.Models
 {
     internal class ContentPackModel
     {

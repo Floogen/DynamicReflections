@@ -14,7 +14,7 @@ using System.Linq;
 using DynamicReflections.Framework.Patches.Objects;
 using DynamicReflections.Framework.Utilities;
 using DynamicReflections.Framework.Managers;
-using DynamicReflections.Framework.Models.ContentPack;
+using DynamicReflections.Framework.Models.Settings;
 
 namespace DynamicReflections
 {
@@ -80,9 +80,9 @@ namespace DynamicReflections
         // Tile property - IsMirrorBase - T or F
         // Tile property - MirrorHeight - Any int
         // Tile property - MirrorWidth - Any int
-        // Tile property - MirrorReflectionScale - Any float
+        // Tile property - MirrorReflectionScale - Any float - Not yet implemented
         // Tile property - MirrorOverlay - RGBA
-        // Tile property - MirrorReflectionYOffset - Any float
+        // Tile property - MirrorReflectionOffset - Any float
 
 
         public override void Entry(IModHelper helper)
