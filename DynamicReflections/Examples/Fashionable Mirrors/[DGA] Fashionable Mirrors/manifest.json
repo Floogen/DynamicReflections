@@ -1,0 +1,20 @@
+﻿{
+  "Name": "[DGA] Fashionable Mirrors",
+  "Author": "PeacefulEnd",
+  "Version": "1.0",
+  "Description": "Furniture component for Fashionable Mirrors.",
+  "UniqueID": "PeacefulEnd.DGA.FashionableMirrors",
+  "UpdateKeys": [ "Nexus:????" ],
+  "ContentPackFor": {
+    "UniqueID": "spacechase0.DynamicGameAssets",
+    "MinimumVersion": "1.4.3"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "PeacefulEnd.FashionSense",
+      "MinimumVersion": "4.9.0"
+    }
+  ],
+  "DGA.FormatVersion": 2,
+  "DGA.ConditionsFormatVersion": "1.23.0"
+}

@@ -1,0 +1,18 @@
+﻿{
+  "Name": "[DR] Fashionable Mirrors",
+  "Author": "PeacefulEnd",
+  "Version": "1.0",
+  "Description": "Reflection component for Fashionable Mirrors.",
+  "UniqueID": "PeacefulEnd.DynamicReflections.FashionableMirrors",
+  "UpdateKeys": [ "Nexus:????" ],
+  "ContentPackFor": {
+    "UniqueID": "PeacefulEnd.DynamicReflections",
+    "MinimumVersion": "1.0.0"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "PeacefulEnd.FashionSense",
+      "MinimumVersion": "4.9.0"
+    }
+  ]
+}

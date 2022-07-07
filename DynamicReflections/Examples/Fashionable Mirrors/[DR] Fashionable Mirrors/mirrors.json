@@ -1,0 +1,19 @@
+﻿[
+  {
+    "FurnitureId": "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror",
+    "Mirror": {
+      "Dimensions": {
+        "X": 4,
+        "Y": 4,
+        "Width": 8,
+        "Height": 36
+      },
+      "ReflectionOverlay": {
+        "R": 255,
+        "G": 255,
+        "B": 255,
+        "A": 255
+      }
+    }
+  }
+]

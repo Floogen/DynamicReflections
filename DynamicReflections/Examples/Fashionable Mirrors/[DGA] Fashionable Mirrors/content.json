@@ -1,0 +1,34 @@
+[
+  {
+    "$ItemType": "Furniture",
+    "ID": "Leaning Mirror",
+    "Type": "Decoration",
+    "Configurations": [
+      {
+        "Texture": "assets/leaning_mirror.png",
+        "DisplaySize": {
+          "X": 1,
+          "Y": 3
+        },
+        "CollisionHeight": 1,
+        "TileProperties": {
+          "0, 0": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "0, 1": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "0, 2": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          }
+        }
+      }
+    ]
+  }
+]
