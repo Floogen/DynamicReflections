@@ -174,7 +174,7 @@ namespace DynamicReflections.Framework.Utilities
 
                 var mirror = DynamicReflections.mirrors[mirrorPosition];
                 var offsetPosition = mirror.PlayerReflectionPosition;
-                offsetPosition -= mirror.Settings.ReflectionOffset * 16;
+                offsetPosition += mirror.Settings.ReflectionOffset * 16;
 
                 Game1.player.Position = offsetPosition;
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
