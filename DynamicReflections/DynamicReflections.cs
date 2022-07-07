@@ -368,11 +368,11 @@ namespace DynamicReflections
                         break;
                     }
 
-                    var mirrorWidth = mirror.TilePosition.X + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Width / 16f) - 1 : mirror.Settings.Dimensions.Width);
+                    var mirrorWidth = mirror.TilePosition.X + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Width / 16f) : mirror.Settings.Dimensions.Width);
                     if (mirror.TilePosition.X - 1 <= playerTilePosition.X && playerTilePosition.X <= mirrorWidth)
                     {
-                        var mirrorRange = mirror.TilePosition.Y + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) - 1 : mirror.Settings.Dimensions.Height);
-                        if (mirrorRange - 1 <= playerTilePosition.Y && playerTilePosition.Y <= mirrorRange + 1)
+                        var mirrorRange = mirror.TilePosition.Y + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) : mirror.Settings.Dimensions.Height);
+                        if (mirror.TilePosition.Y < playerTilePosition.Y && playerTilePosition.Y <= mirrorRange)
                         {
                             // Skip any mirrors that are within range of an already active mirror
                             if (IsTileWithinActiveMirror(mirrorRange))
