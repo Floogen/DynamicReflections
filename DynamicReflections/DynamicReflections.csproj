@@ -20,7 +20,7 @@
 
 	<ItemGroup>
 		<None Update="Examples\[SF] Example Pack\manifest.json">
-			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</None>
 		<None Update="Framework\Assets\mask.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>

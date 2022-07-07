@@ -238,7 +238,7 @@ namespace DynamicReflections
             // Attempt to add any DGA mirrors
             foreach (var furniture in e.Added)
             {
-                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                if (DynamicReflections.mirrorsManager.GetSettings(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                     var settings = new MirrorSettings()
@@ -249,19 +249,19 @@ namespace DynamicReflections
                         ReflectionScale = baseSettings.ReflectionScale
                     };
 
-                    DynamicReflections.mirrors.Add(point, new Mirror()
+                    DynamicReflections.mirrors[point] = new Mirror()
                     {
                         FurnitureLink = furniture,
                         TilePosition = point,
                         Settings = settings
-                    });
+                    };
                 }
             }
 
             // Attempt to remove any DGA mirrors
             foreach (var furniture in e.Removed)
             {
-                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                if (DynamicReflections.mirrorsManager.GetSettings(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                     foreach (var mirrorPosition in DynamicReflections.mirrors.Keys.ToList())
@@ -536,6 +536,18 @@ namespace DynamicReflections
                         continue;
                     }
 
+                    // Verify that the mask texture exists under the content pack's Masks folder
+                    foreach (var mirrorModel in mirrorModels)
+                    {
+                        if (String.IsNullOrEmpty(mirrorModel.MaskTexture) || !File.Exists(Path.Combine(contentPack.DirectoryPath, "Masks", mirrorModel.MaskTexture)))
+                        {
+                            Monitor.Log($"The mirror for {mirrorModel.FurnitureId} within content pack {contentPack.Manifest.Name} is missing its mask texture!", LogLevel.Warn);
+                            continue;
+                        }
+
+                        mirrorModel.Mask = contentPack.ModContent.Load<Texture2D>(Path.Combine("Masks", mirrorModel.MaskTexture));
+                    }
+
                     mirrorsManager.Add(mirrorModels);
                 }
                 catch (Exception ex)
@@ -593,7 +605,7 @@ namespace DynamicReflections
             // Find all mirror furniture
             foreach (var furniture in currentLocation.furniture)
             {
-                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                if (DynamicReflections.mirrorsManager.GetSettings(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                     var settings = new MirrorSettings()

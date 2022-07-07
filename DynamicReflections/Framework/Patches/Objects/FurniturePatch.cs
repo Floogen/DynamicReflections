@@ -51,11 +51,37 @@ namespace DynamicReflections.Framework.Patches.Objects
             {
                 foreach (var mirror in DynamicReflections.mirrors.Values.ToList())
                 {
-                    if (mirror.IsEnabled is false || mirror.FurnitureLink != __instance)
+                    if (mirror.IsEnabled is false || mirror.FurnitureLink != __instance || DynamicReflections.mirrorsManager.GetMask(__instance.Name) is null)
                     {
                         continue;
                     }
-                    spriteBatch.Draw(DynamicReflections.simpleMask, Game1.GlobalToLocal(Game1.viewport, ___drawPosition + ((__instance.shakeTimer > 0) ? new Vector2(Game1.random.Next(-1, 2), Game1.random.Next(-1, 2)) : Vector2.Zero)), mirror.Settings.Dimensions, Color.White * alpha, 0f, new Vector2(-mirror.Settings.Dimensions.X, -mirror.Settings.Dimensions.Y), 4f, __instance.flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, ((int)__instance.furniture_type == 12) ? (2E-09f + __instance.tileLocation.Y / 100000f) : ((float)(__instance.boundingBox.Value.Bottom - (((int)__instance.furniture_type == 6 || (int)__instance.furniture_type == 17 || (int)__instance.furniture_type == 13) ? 48 : 8)) / 10000f));
+
+                    // Attempt to get the animation frame
+                    Rectangle? sourceRectangle = null;
+                    try
+                    {
+                        var packConfig = DynamicReflections.modHelper.Reflection.GetMethod(__instance, "GetCurrentConfiguration", required: false).Invoke<object>();
+                        var packTextureName = DynamicReflections.modHelper.Reflection.GetProperty<string>(packConfig, "Texture", required: false).GetValue();
+
+                        var packData = DynamicReflections.modHelper.Reflection.GetProperty<object>(__instance, "Data", required: false).GetValue();
+                        var actualContentPack = DynamicReflections.modHelper.Reflection.GetField<object>(packData, "pack", required: false).GetValue();
+                        var textureRectangleData = DynamicReflections.modHelper.Reflection.GetMethod(actualContentPack, "GetTexture", required: false).Invoke<object>(packTextureName, mirror.Settings.Dimensions.Width, mirror.Settings.Dimensions.Height);
+                        sourceRectangle = DynamicReflections.modHelper.Reflection.GetProperty<Rectangle?>(textureRectangleData, "Rect", required: false).GetValue();
+                    }
+                    catch (Exception ex)
+                    {
+                        _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}", LogLevel.Warn);
+                        _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}: {ex}", LogLevel.Trace);
+                    }
+
+                    // Verify we actually got the source rectangle for the DGA texture
+                    if (sourceRectangle is null)
+                    {
+                        _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}", LogLevel.Warn);
+                        return false;
+                    }
+
+                    spriteBatch.Draw(DynamicReflections.mirrorsManager.GetMask(__instance.Name), Game1.GlobalToLocal(Game1.viewport, ___drawPosition + ((__instance.shakeTimer > 0) ? new Vector2(Game1.random.Next(-1, 2), Game1.random.Next(-1, 2)) : Vector2.Zero)), sourceRectangle, Color.White * alpha, 0f, new Vector2(-mirror.Settings.Dimensions.X, -mirror.Settings.Dimensions.Y), 4f, __instance.flipped ? SpriteEffects.FlipHorizontally : SpriteEffects.None, ((int)__instance.furniture_type == 12) ? (2E-09f + __instance.tileLocation.Y / 100000f) : ((float)(__instance.boundingBox.Value.Bottom - (((int)__instance.furniture_type == 6 || (int)__instance.furniture_type == 17 || (int)__instance.furniture_type == 13) ? 48 : 8)) / 10000f));
 
                     return false;
                 }
