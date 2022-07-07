@@ -284,36 +284,34 @@ namespace DynamicReflections
 
             // Check current map for tiles with IsMirrorBase
             var map = currentLocation.Map;
-            if (map is null || (map.GetLayer("Mirrors") is var mirrorLayer && mirrorLayer is null))
+            if (map is not null && (map.GetLayer("Mirrors") is var mirrorLayer && mirrorLayer is not null))
             {
-                return;
-            }
-
-            for (int x = 0; x < mirrorLayer.LayerWidth; x++)
-            {
-                for (int y = 0; y < mirrorLayer.LayerHeight; y++)
+                for (int x = 0; x < mirrorLayer.LayerWidth; x++)
                 {
-                    if (IsMirrorBaseTile(currentLocation, x, y, true) is false)
+                    for (int y = 0; y < mirrorLayer.LayerHeight; y++)
                     {
-                        continue;
-                    }
-
-                    var point = new Point(x, y);
-                    if (DynamicReflections.mirrors.ContainsKey(point) is false)
-                    {
-                        var settings = new MirrorSettings()
+                        if (IsMirrorBaseTile(currentLocation, x, y, true) is false)
                         {
-                            Dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1),
-                            ReflectionOffset = GetMirrorOffset(currentLocation, x, y),
-                            ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
-                            ReflectionScale = GetMirrorScale(currentLocation, x, y)
-                        };
+                            continue;
+                        }
 
-                        DynamicReflections.mirrors[point] = new Mirror()
+                        var point = new Point(x, y);
+                        if (DynamicReflections.mirrors.ContainsKey(point) is false)
                         {
-                            TilePosition = point,
-                            Settings = settings
-                        };
+                            var settings = new MirrorSettings()
+                            {
+                                Dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1),
+                                ReflectionOffset = GetMirrorOffset(currentLocation, x, y),
+                                ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
+                                ReflectionScale = GetMirrorScale(currentLocation, x, y)
+                            };
+
+                            DynamicReflections.mirrors[point] = new Mirror()
+                            {
+                                TilePosition = point,
+                                Settings = settings
+                            };
+                        }
                     }
                 }
             }
