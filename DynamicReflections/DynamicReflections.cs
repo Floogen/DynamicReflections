@@ -123,6 +123,7 @@ namespace DynamicReflections
             helper.Events.World.FurnitureListChanged += OnFurnitureListChanged;
             helper.Events.Player.Warped += OnWarped;
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
+            helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         }
 
@@ -273,71 +274,7 @@ namespace DynamicReflections
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
-            if (Context.IsWorldReady is false || e.NewLocation is null)
-            {
-                return;
-            }
-            var currentLocation = e.NewLocation;
-
-            // Clear the old base points out
-            DynamicReflections.mirrors.Clear();
-
-            // Check current map for tiles with IsMirrorBase
-            var map = currentLocation.Map;
-            if (map is not null && (map.GetLayer("Mirrors") is var mirrorLayer && mirrorLayer is not null))
-            {
-                for (int x = 0; x < mirrorLayer.LayerWidth; x++)
-                {
-                    for (int y = 0; y < mirrorLayer.LayerHeight; y++)
-                    {
-                        if (IsMirrorBaseTile(currentLocation, x, y, true) is false)
-                        {
-                            continue;
-                        }
-
-                        var point = new Point(x, y);
-                        if (DynamicReflections.mirrors.ContainsKey(point) is false)
-                        {
-                            var settings = new MirrorSettings()
-                            {
-                                Dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1),
-                                ReflectionOffset = GetMirrorOffset(currentLocation, x, y),
-                                ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
-                                ReflectionScale = GetMirrorScale(currentLocation, x, y)
-                            };
-
-                            DynamicReflections.mirrors[point] = new Mirror()
-                            {
-                                TilePosition = point,
-                                Settings = settings
-                            };
-                        }
-                    }
-                }
-            }
-
-            // Find all mirror furniture
-            foreach (var furniture in currentLocation.furniture)
-            {
-                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
-                {
-                    var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
-                    var settings = new MirrorSettings()
-                    {
-                        Dimensions = new Rectangle(baseSettings.Dimensions.X, baseSettings.Dimensions.Y, baseSettings.Dimensions.Width, baseSettings.Dimensions.Height),
-                        ReflectionOffset = baseSettings.ReflectionOffset,
-                        ReflectionOverlay = baseSettings.ReflectionOverlay,
-                        ReflectionScale = baseSettings.ReflectionScale
-                    };
-
-                    DynamicReflections.mirrors.Add(point, new Mirror()
-                    {
-                        FurnitureLink = furniture,
-                        TilePosition = point,
-                        Settings = settings
-                    });
-                }
-            }
+            DetectMirrorsForActiveLocation();
         }
 
         private void OnUpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
@@ -590,6 +527,75 @@ namespace DynamicReflections
                 catch (Exception ex)
                 {
                     Monitor.Log($"Failed to load the content pack {contentPack.Manifest.UniqueID}: {ex}", LogLevel.Warn);
+                }
+            }
+        }
+
+        private void DetectMirrorsForActiveLocation()
+        {
+            if (Context.IsWorldReady is false || Game1.currentLocation is null)
+            {
+                return;
+            }
+            var currentLocation = Game1.currentLocation;
+
+            // Clear the old base points out
+            DynamicReflections.mirrors.Clear();
+
+            // Check current map for tiles with IsMirrorBase
+            var map = currentLocation.Map;
+            if (map is not null && (map.GetLayer("Mirrors") is var mirrorLayer && mirrorLayer is not null))
+            {
+                for (int x = 0; x < mirrorLayer.LayerWidth; x++)
+                {
+                    for (int y = 0; y < mirrorLayer.LayerHeight; y++)
+                    {
+                        if (IsMirrorBaseTile(currentLocation, x, y, true) is false)
+                        {
+                            continue;
+                        }
+
+                        var point = new Point(x, y);
+                        if (DynamicReflections.mirrors.ContainsKey(point) is false)
+                        {
+                            var settings = new MirrorSettings()
+                            {
+                                Dimensions = new Rectangle(0, 0, GetMirrorWidth(currentLocation, x, y), GetMirrorHeight(currentLocation, x, y) - 1),
+                                ReflectionOffset = GetMirrorOffset(currentLocation, x, y),
+                                ReflectionOverlay = GetMirrorOverlay(currentLocation, x, y),
+                                ReflectionScale = GetMirrorScale(currentLocation, x, y)
+                            };
+
+                            DynamicReflections.mirrors[point] = new Mirror()
+                            {
+                                TilePosition = point,
+                                Settings = settings
+                            };
+                        }
+                    }
+                }
+            }
+
+            // Find all mirror furniture
+            foreach (var furniture in currentLocation.furniture)
+            {
+                if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                {
+                    var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
+                    var settings = new MirrorSettings()
+                    {
+                        Dimensions = new Rectangle(baseSettings.Dimensions.X, baseSettings.Dimensions.Y, baseSettings.Dimensions.Width, baseSettings.Dimensions.Height),
+                        ReflectionOffset = baseSettings.ReflectionOffset,
+                        ReflectionOverlay = baseSettings.ReflectionOverlay,
+                        ReflectionScale = baseSettings.ReflectionScale
+                    };
+
+                    DynamicReflections.mirrors.Add(point, new Mirror()
+                    {
+                        FurnitureLink = furniture,
+                        TilePosition = point,
+                        Settings = settings
+                    });
                 }
             }
         }
