@@ -44,6 +44,7 @@ namespace DynamicReflections.Framework.Patches.Objects
             }
         }
 
+        [HarmonyBefore(new string[] { "spacechase0.DynamicGameAssets", "PeacefulEnd.AlternativeTextures" })]
         private static bool DrawPrefix(Furniture __instance, NetInt ___sourceIndexOffset, NetVector2 ___drawPosition, SpriteBatch spriteBatch, int x, int y, float alpha = 1f)
         {
             if (DynamicReflections.isFilteringMirror is true && DynamicReflections.isDrawingMirrorReflection is false)
