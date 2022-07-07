@@ -264,9 +264,12 @@ namespace DynamicReflections
                 if (DynamicReflections.mirrorsManager.Get(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
-                    if (DynamicReflections.mirrors.ContainsKey(point))
+                    foreach (var mirrorPosition in DynamicReflections.mirrors.Keys.ToList())
                     {
-                        DynamicReflections.mirrors.Remove(point);
+                        if (DynamicReflections.mirrors[mirrorPosition].FurnitureLink is not null && mirrorPosition.X == point.X && mirrorPosition.Y == point.Y)
+                        {
+                            DynamicReflections.mirrors.Remove(mirrorPosition);
+                        }
                     }
                 }
             }
