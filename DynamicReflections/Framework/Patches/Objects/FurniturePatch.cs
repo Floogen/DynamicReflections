@@ -67,17 +67,18 @@ namespace DynamicReflections.Framework.Patches.Objects
                         var actualContentPack = DynamicReflections.modHelper.Reflection.GetField<object>(packData, "pack", required: false).GetValue();
                         var textureRectangleData = DynamicReflections.modHelper.Reflection.GetMethod(actualContentPack, "GetTexture", required: false).Invoke<object>(packTextureName, mirror.Settings.Dimensions.Width, mirror.Settings.Dimensions.Height);
                         sourceRectangle = DynamicReflections.modHelper.Reflection.GetProperty<Rectangle?>(textureRectangleData, "Rect", required: false).GetValue();
+
+                        // Verify we actually got the source rectangle for the DGA texture
+                        if (sourceRectangle is null)
+                        {
+                            _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}", LogLevel.Warn);
+                            return false;
+                        }
                     }
                     catch (Exception ex)
                     {
                         _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}", LogLevel.Warn);
                         _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}: {ex}", LogLevel.Trace);
-                    }
-
-                    // Verify we actually got the source rectangle for the DGA texture
-                    if (sourceRectangle is null)
-                    {
-                        _monitor.LogOnce($"Failed to get texture source rectangle from the DGA item {__instance.Name}", LogLevel.Warn);
                         return false;
                     }
 
