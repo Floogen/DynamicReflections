@@ -355,7 +355,7 @@ namespace DynamicReflections
                 var playerTilePosition = Game1.player.getTileLocationPoint();
 
                 DynamicReflections.activeMirrorPositions.Clear();
-                foreach (var mirror in DynamicReflections.mirrors.Values)
+                foreach (var mirror in DynamicReflections.mirrors.Values.OrderByDescending(m => m.TilePosition.Y))
                 {
                     mirror.IsEnabled = false;
 
@@ -371,6 +371,12 @@ namespace DynamicReflections
                         var mirrorRange = mirror.TilePosition.Y + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) - 1 : mirror.Settings.Dimensions.Height);
                         if (mirrorRange - 1 <= playerTilePosition.Y && playerTilePosition.Y <= mirrorRange + 1)
                         {
+                            // Skip any mirrors that are within range of an already active mirror
+                            if (IsTileWithinActiveMirror(mirrorRange))
+                            {
+                                continue;
+                            }
+
                             mirror.IsEnabled = true;
                             mirror.ActiveIndex = DynamicReflections.activeMirrorPositions.Count;
 
@@ -421,6 +427,11 @@ namespace DynamicReflections
                     }
                 }
             }
+        }
+
+        private void OnDayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
+        {
+            DetectMirrorsForActiveLocation();
         }
 
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
@@ -598,6 +609,19 @@ namespace DynamicReflections
                     });
                 }
             }
+        }
+
+        private bool IsTileWithinActiveMirror(int tileY)
+        {
+            foreach (var activePosition in DynamicReflections.activeMirrorPositions)
+            {
+                if (tileY - 1 <= activePosition.Y && activePosition.Y <= tileY + 1)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private bool IsMirrorBaseTile(GameLocation location, int x, int y, bool requireEnabled = false)
