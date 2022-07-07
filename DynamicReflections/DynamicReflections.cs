@@ -116,7 +116,7 @@ namespace DynamicReflections
             }
 
             // Add in the debug commands
-            helper.ConsoleCommands.Add("dr_reload", "Reloads all Dynamic Reflections content packs.\n\nUsage: dr_reload", delegate { this.LoadContentPacks(); });
+            helper.ConsoleCommands.Add("dr_reload", "Reloads all Dynamic Reflections content packs.\n\nUsage: dr_reload", delegate { this.LoadContentPacks(); this.DetectMirrorsForActiveLocation(); });
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;
