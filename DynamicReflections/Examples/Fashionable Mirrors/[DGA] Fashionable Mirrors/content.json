@@ -30,5 +30,52 @@
         }
       }
     ]
+  },
+  {
+    "$ItemType": "Furniture",
+    "ID": "Double Leaning Mirror",
+    "Type": "Decoration",
+    "Configurations": [
+      {
+        "Texture": "assets/double_leaning_mirror.png",
+        "DisplaySize": {
+          "X": 2,
+          "Y": 3
+        },
+        "CollisionHeight": 1,
+        "TileProperties": {
+          "0, 0": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "0, 1": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "0, 2": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "1, 0": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "1, 1": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          },
+          "1, 2": {
+            "Buildings": {
+              "Action": "OpenFashionSense"
+            }
+          }
+        }
+      }
+    ]
   }
 ]
