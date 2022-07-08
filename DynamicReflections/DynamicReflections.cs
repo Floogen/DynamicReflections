@@ -219,12 +219,13 @@ namespace DynamicReflections
 
                 // Hide the reflection if it will show up out of bounds on the map or not drawn on water tile
                 var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
-                for (int yOffset = 0; yOffset <= Math.Ceiling(currentWaterSettings.ReflectionOffset.Y); yOffset++)
+                for (int yOffset = -1; yOffset <= Math.Ceiling(currentWaterSettings.ReflectionOffset.Y); yOffset++)
                 {
                     var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
-                    if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true)
+                    if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
                     {
                         DynamicReflections.shouldDrawWaterReflection = true;
+                        break;
                     }
                 }
 
