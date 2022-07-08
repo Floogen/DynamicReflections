@@ -61,24 +61,6 @@ namespace DynamicReflections
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
         internal static RasterizerState rasterizer;
 
-        // TODO: Implement these map / tile properties
-        // Note: These water reflection map properties override the player's config for the current map (if set)
-        // Map property - AreWaterReflectionsEnabled - T or F
-        // Map property - WaterReflectionDirection - 0 or 2
-        // Map property - WaterReflectionOpacity - 0.0 to 1.0
-        // Map property - WaterReflectionIsWavy - T or F
-        // Map property - WaterReflectionWaveSpeed - Any float
-        // Map property - WaterReflectionWaveAmplitude - Any float
-        // Map property - WaterReflectionWaveFrequency - Any float
-
-        // Tile property - IsMirrorBase - T or F
-        // Tile property - MirrorHeight - Any int
-        // Tile property - MirrorWidth - Any int
-        // Tile property - MirrorReflectionScale - Any float - Not yet implemented
-        // Tile property - MirrorOverlay - RGBA
-        // Tile property - MirrorOffset - Any float
-
-
         public override void Entry(IModHelper helper)
         {
             // Set up the monitor, helper and multiplayer
