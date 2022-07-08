@@ -25,6 +25,9 @@
 		<None Update="Framework\Assets\mask.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="Framework\Assets\opacity.mgfx">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="Framework\Assets\wavy.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
