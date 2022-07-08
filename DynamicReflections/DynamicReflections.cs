@@ -76,7 +76,7 @@ namespace DynamicReflections
         // Tile property - MirrorWidth - Any int
         // Tile property - MirrorReflectionScale - Any float - Not yet implemented
         // Tile property - MirrorOverlay - RGBA
-        // Tile property - MirrorReflectionOffset - Any float
+        // Tile property - MirrorOffset - Any float
 
 
         public override void Entry(IModHelper helper)
@@ -721,7 +721,7 @@ namespace DynamicReflections
             string mirrorHeightProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorHeight", "Mirrors");
             if (String.IsNullOrEmpty(mirrorHeightProperty))
             {
-                return -1;
+                return 1;
             }
 
             if (Int32.TryParse(mirrorHeightProperty, out int mirrorHeightValue) is false)
@@ -737,7 +737,7 @@ namespace DynamicReflections
             string mirrorWidthProperty = location.doesTileHavePropertyNoNull(x, y, "MirrorWidth", "Mirrors");
             if (String.IsNullOrEmpty(mirrorWidthProperty))
             {
-                return -1;
+                return 1;
             }
 
             if (Int32.TryParse(mirrorWidthProperty, out int mirrorWidthValue) is false)
