@@ -15,6 +15,8 @@ using DynamicReflections.Framework.Patches.Objects;
 using DynamicReflections.Framework.Utilities;
 using DynamicReflections.Framework.Managers;
 using DynamicReflections.Framework.Models.Settings;
+using System.Text.Json;
+using DynamicReflections.Framework.External.GenericModConfigMenu;
 
 namespace DynamicReflections
 {
@@ -26,32 +28,29 @@ namespace DynamicReflections
         internal static Multiplayer multiplayer;
 
         // Managers
+        internal static ApiManager apiManager;
         internal static MirrorsManager mirrorsManager;
 
         // Config options
-        internal static bool areWaterReflectionsEnabled = true;
-        internal static bool areMirrorReflectionsEnabled = true;
+        internal static ModConfig modConfig;
+        internal static WaterSettings currentWaterSettings;
 
         // Water reflection variables
-        internal static float waterReflectionYOffset = 1.5f;
         internal static Vector2? waterReflectionPosition;
         internal static Vector2? waterReflectionTilePosition;
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
-        internal static bool isWavyReflection = true;
 
         // Mirror reflection variables
         internal static FarmerSprite mirrorReflectionSprite;
         internal static Dictionary<Point, Mirror> mirrors = new Dictionary<Point, Mirror>();
         internal static List<Point> activeMirrorPositions = new List<Point>();
-        internal static float mirrorReflectionYOffset = 1.5f;
         internal static bool shouldDrawMirrorReflection;
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
 
         // Effects and RenderTarget2Ds
-        internal static Effect opacityEffect;
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
         internal static RenderTarget2D playerWaterReflectionRender;
@@ -62,20 +61,15 @@ namespace DynamicReflections
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
         internal static RasterizerState rasterizer;
 
-        // Masking textures
-        internal static Texture2D simpleMask;
-        internal static Vector2 lastViewportMovement;
-
-
         // TODO: Implement these map / tile properties
         // Note: These water reflection map properties override the player's config for the current map (if set)
-        // Map property - WaterReflectionsEnabled - T or F
+        // Map property - AreWaterReflectionsEnabled - T or F
         // Map property - WaterReflectionDirection - 0 or 2
         // Map property - WaterReflectionOpacity - 0.0 to 1.0
         // Map property - WaterReflectionIsWavy - T or F
-        // Map property - WaterReflectionWavySpeed - Any float
-        // Map property - WaterReflectionWavyAmplitude - Any float
-        // Map property - WaterReflectionWavyFrequency - Any float
+        // Map property - WaterReflectionWaveSpeed - Any float
+        // Map property - WaterReflectionWaveAmplitude - Any float
+        // Map property - WaterReflectionWaveFrequency - Any float
 
         // Tile property - IsMirrorBase - T or F
         // Tile property - MirrorHeight - Any int
@@ -93,11 +87,8 @@ namespace DynamicReflections
             multiplayer = helper.Reflection.GetField<Multiplayer>(typeof(Game1), "multiplayer").GetValue();
 
             // Load the managers
+            apiManager = new ApiManager(monitor);
             mirrorsManager = new MirrorsManager();
-
-            // Establish the mask textures
-            simpleMask = new Texture2D(Game1.graphics.GraphicsDevice, 1, 1);
-            simpleMask.SetData(new Color[] { Color.White });
 
             try
             {
@@ -129,103 +120,7 @@ namespace DynamicReflections
 
         private void OnWindowResized(object sender, StardewModdingAPI.Events.WindowResizedEventArgs e)
         {
-            if (playerWaterReflectionRender is not null)
-            {
-                playerWaterReflectionRender.Dispose();
-            }
-
-            playerWaterReflectionRender = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            if (mirrorsLayerRenderTarget is not null)
-            {
-                mirrorsLayerRenderTarget.Dispose();
-            }
-
-            mirrorsLayerRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            if (mirrorsFurnitureRenderTarget is not null)
-            {
-                mirrorsFurnitureRenderTarget.Dispose();
-            }
-
-            mirrorsFurnitureRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            foreach (var mirrorPlayerRender in maskedPlayerMirrorReflectionRenders)
-            {
-                if (mirrorPlayerRender is not null)
-                {
-                    mirrorPlayerRender.Dispose();
-                }
-            }
-            maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
-            for (int i = 0; i < 3; i++)
-            {
-                maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-            }
-
-            foreach (var mirrorPlayerRender in composedPlayerMirrorReflectionRenders)
-            {
-                if (mirrorPlayerRender is not null)
-                {
-                    mirrorPlayerRender.Dispose();
-                }
-            }
-            composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
-            for (int i = 0; i < 3; i++)
-            {
-                composedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-            }
-
-            if (inBetweenRenderTarget is not null)
-            {
-                inBetweenRenderTarget.Dispose();
-            }
-
-            inBetweenRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            if (rasterizer is not null)
-            {
-                rasterizer.Dispose();
-            }
-
-            rasterizer = new RasterizerState();
-            rasterizer.CullMode = CullMode.CullClockwiseFace;
+            LoadRenderers();
         }
 
         private void OnFurnitureListChanged(object sender, StardewModdingAPI.Events.FurnitureListChangedEventArgs e)
@@ -277,6 +172,7 @@ namespace DynamicReflections
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
+            SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
         }
 
@@ -286,6 +182,7 @@ namespace DynamicReflections
             {
                 return;
             }
+            // Handle mirror-viewport issue
             if (Game1.getMostRecentViewportMotion() != Vector2.Zero && DynamicReflections.activeMirrorPositions.Count > 0)
             {
                 // TODO: Determine why maskedPlayerMirrorReflectionRenders aren't updating when the viewport moves
@@ -310,18 +207,19 @@ namespace DynamicReflections
                 }
             }
 
-
+            // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
-            if (DynamicReflections.areWaterReflectionsEnabled)
+            if (DynamicReflections.modConfig.AreWaterReflectionsEnabled && currentWaterSettings is not null)
             {
+                var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.ReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;
-                playerPosition.Y += (Game1.player.FacingDirection == 2 ? DynamicReflections.waterReflectionYOffset : 1.5f) * 64;
+                playerPosition += currentWaterSettings.ReflectionOffset * 64 * positionInverter;
                 DynamicReflections.waterReflectionPosition = playerPosition;
                 DynamicReflections.waterReflectionTilePosition = playerPosition / 64f;
 
                 // Hide the reflection if it will show up out of bounds on the map or not drawn on water tile
                 var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
-                for (int yOffset = 0; yOffset <= Math.Ceiling(DynamicReflections.waterReflectionYOffset); yOffset++)
+                for (int yOffset = 0; yOffset <= Math.Ceiling(currentWaterSettings.ReflectionOffset.Y); yOffset++)
                 {
                     var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
                     if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true)
@@ -330,29 +228,21 @@ namespace DynamicReflections
                     }
                 }
 
-                var speed = 1f;
-                if (DynamicReflections.isWavyReflection && DynamicReflections.waterReflectionEffect is not null)
+                // Handle the wavy effect if enabled
+                if (currentWaterSettings.IsReflectionWavy && DynamicReflections.waterReflectionEffect is not null)
                 {
                     var phase = waterReflectionEffect.Parameters["Phase"].GetValueSingle();
-                    //monitor.Log($"TESTING: {phase}", LogLevel.Debug);
-                    if (phase >= 2 * Math.PI)
-                    {
-                        //phase = -(float)(2 * Math.PI);
-                    }
-                    else
-                    {
-                        //phase += (float)(1);
-                    }
-                    phase += (float)Game1.currentGameTime.ElapsedGameTime.TotalSeconds * speed;
+                    phase += (float)Game1.currentGameTime.ElapsedGameTime.TotalSeconds * currentWaterSettings.WaveSpeed;
 
                     waterReflectionEffect.Parameters["Phase"].SetValue(phase);
-                    waterReflectionEffect.Parameters["Frequency"].SetValue(50f);
-                    waterReflectionEffect.Parameters["Amplitude"].SetValue(0.01f);
+                    waterReflectionEffect.Parameters["Frequency"].SetValue(currentWaterSettings.WaveFrequency);
+                    waterReflectionEffect.Parameters["Amplitude"].SetValue(currentWaterSettings.WaveAmplitude);
                 }
             }
 
+            // Handle the mirror reflections
             DynamicReflections.shouldDrawMirrorReflection = false;
-            if (DynamicReflections.areMirrorReflectionsEnabled)
+            if (DynamicReflections.modConfig.AreMirrorReflectionsEnabled)
             {
                 var playerWorldPosition = Game1.player.Position;
                 var playerTilePosition = Game1.player.getTileLocationPoint();
@@ -434,6 +324,7 @@ namespace DynamicReflections
 
         private void OnDayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
+            SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
         }
 
@@ -442,72 +333,44 @@ namespace DynamicReflections
             // Load any owned content packs
             LoadContentPacks();
 
+            // Set our default configuration file
+            modConfig = Helper.ReadConfig<ModConfig>();
+
+            // Hook into GMCM, if applicable
+            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            {
+                var configApi = apiManager.GetGenericModConfigMenuApi();
+                configApi.Register(ModManifest, () => modConfig = new ModConfig(), delegate { Helper.WriteConfig(modConfig); SetWaterReflectionSettings(); LoadRenderers(); });
+
+                // Register the standard settings
+                configApi.RegisterLabel(ModManifest, $"General Settings", String.Empty);
+                configApi.AddBoolOption(ModManifest, () => modConfig.AreMirrorReflectionsEnabled, value => modConfig.AreMirrorReflectionsEnabled = value, () => "Enable Mirror Reflections");
+                configApi.AddBoolOption(ModManifest, () => modConfig.AreWaterReflectionsEnabled, value => modConfig.AreWaterReflectionsEnabled = value, () => "Enable Water Reflections");
+
+                configApi.RegisterLabel(ModManifest, $"Water Specific Settings", String.Empty);
+                configApi.AddNumberOption(ModManifest, () => (int)modConfig.WaterReflectionSettings.ReflectionDirection, value => modConfig.WaterReflectionSettings.ReflectionDirection = (Direction)value, () => "Reflection Direction", tooltip: () => "0 for North reflections, 2 for South reflections.", min: 0, max: 2, interval: 2);
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.R, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(value, modConfig.WaterReflectionSettings.ReflectionOverlay.G, modConfig.WaterReflectionSettings.ReflectionOverlay.B, modConfig.WaterReflectionSettings.ReflectionOverlay.A), () => "Reflection Overlay Color (R)", min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.G, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(modConfig.WaterReflectionSettings.ReflectionOverlay.R, value, modConfig.WaterReflectionSettings.ReflectionOverlay.B, modConfig.WaterReflectionSettings.ReflectionOverlay.A), () => "Reflection Overlay Color (G)", min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.B, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(modConfig.WaterReflectionSettings.ReflectionOverlay.R, modConfig.WaterReflectionSettings.ReflectionOverlay.G, value, modConfig.WaterReflectionSettings.ReflectionOverlay.A), () => "Reflection Overlay Color (B)", min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.A, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(modConfig.WaterReflectionSettings.ReflectionOverlay.R, modConfig.WaterReflectionSettings.ReflectionOverlay.G, modConfig.WaterReflectionSettings.ReflectionOverlay.B, value), () => "Reflection Overlay Color (A)", min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOffset.X, value => modConfig.WaterReflectionSettings.ReflectionOffset = new Vector2(value, modConfig.WaterReflectionSettings.ReflectionOffset.Y), () => "Reflection X Offset", interval: 0.1f);
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOffset.Y, value => modConfig.WaterReflectionSettings.ReflectionOffset = new Vector2(modConfig.WaterReflectionSettings.ReflectionOffset.X, value), () => "Reflection Y Offset", interval: 0.1f);
+                configApi.AddBoolOption(ModManifest, () => modConfig.WaterReflectionSettings.IsReflectionWavy, value => modConfig.WaterReflectionSettings.IsReflectionWavy = value, () => "Enable Wavy Reflections");
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveSpeed, value => modConfig.WaterReflectionSettings.WaveSpeed = value, () => "Reflection Wave Speed");
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveAmplitude, value => modConfig.WaterReflectionSettings.WaveAmplitude = value, () => "Reflection Wave Amplitude");
+                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveFrequency, value => modConfig.WaterReflectionSettings.WaveFrequency = value, () => "Reflection Wave Frequency");
+            }
+
+            // Load in our shaders
             // Compile via the command: mgfxc wavy.fx wavy.mgfx
-            opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "opacity.mgfx")));
+            // Unused: opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "opacity.mgfx")));
             mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "mask.mgfx")));
 
             waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "wavy.mgfx")));
             waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["Wavy"];
 
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
-            playerWaterReflectionRender = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            mirrorsLayerRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            mirrorsFurnitureRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
-            for (int i = 0; i < 3; i++)
-            {
-                maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-            }
-
-            composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
-            for (int i = 0; i < 3; i++)
-            {
-                composedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-            }
-
-            inBetweenRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            rasterizer = new RasterizerState();
-            rasterizer.CullMode = CullMode.CullClockwiseFace;
+            LoadRenderers();
         }
 
         private void LoadContentPacks(bool silent = false)
@@ -553,6 +416,96 @@ namespace DynamicReflections
                 catch (Exception ex)
                 {
                     Monitor.Log($"Failed to load the content pack {contentPack.Manifest.UniqueID}: {ex}", LogLevel.Warn);
+                }
+            }
+        }
+
+        private void SetWaterReflectionSettings()
+        {
+            if (currentWaterSettings is null)
+            {
+                currentWaterSettings = new WaterSettings();
+            }
+            currentWaterSettings.Reset(modConfig.WaterReflectionSettings);
+
+            var map = Game1.currentLocation.Map;
+            if (map is null)
+            {
+                return;
+            }
+
+            // Set the map specific water settings
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_IsEnabled))
+            {
+                currentWaterSettings.IsEnabled = map.Properties[WaterSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_ReflectionDirection))
+            {
+                if (Enum.TryParse<Direction>(map.Properties[WaterSettings.MapProperty_ReflectionDirection], out var direction))
+                {
+                    currentWaterSettings.ReflectionDirection = direction;
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_ReflectionOverlay))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Color>(map.Properties[WaterSettings.MapProperty_ReflectionOverlay]) is Color overlay)
+                    {
+                        currentWaterSettings.ReflectionOverlay = overlay;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_ReflectionOverlay from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_ReflectionOverlay from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_ReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[WaterSettings.MapProperty_ReflectionOffset]) is Vector2 offset)
+                    {
+                        currentWaterSettings.ReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_ReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_ReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_IsReflectionWavy))
+            {
+                currentWaterSettings.IsReflectionWavy = map.Properties[WaterSettings.MapProperty_IsReflectionWavy].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_WaveSpeed))
+            {
+                if (float.TryParse(map.Properties[WaterSettings.MapProperty_WaveSpeed], out var waveSpeed))
+                {
+                    currentWaterSettings.WaveSpeed = waveSpeed;
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_WaveAmplitude))
+            {
+                if (float.TryParse(map.Properties[WaterSettings.MapProperty_WaveAmplitude], out var waveAmplitude))
+                {
+                    currentWaterSettings.WaveAmplitude = waveAmplitude;
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_WaveFrequency))
+            {
+                if (float.TryParse(map.Properties[WaterSettings.MapProperty_WaveFrequency], out var waveFrequency))
+                {
+                    currentWaterSettings.WaveFrequency = waveFrequency;
                 }
             }
         }
@@ -624,6 +577,114 @@ namespace DynamicReflections
                     });
                 }
             }
+        }
+
+        private void LoadRenderers()
+        {
+
+            if (playerWaterReflectionRender is not null)
+            {
+                playerWaterReflectionRender.Dispose();
+            }
+
+            playerWaterReflectionRender = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            if (mirrorsLayerRenderTarget is not null)
+            {
+                mirrorsLayerRenderTarget.Dispose();
+            }
+
+            mirrorsLayerRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            if (mirrorsFurnitureRenderTarget is not null)
+            {
+                mirrorsFurnitureRenderTarget.Dispose();
+            }
+
+            mirrorsFurnitureRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            if (maskedPlayerMirrorReflectionRenders is not null)
+            {
+                foreach (var mirrorPlayerRender in maskedPlayerMirrorReflectionRenders)
+                {
+                    if (mirrorPlayerRender is not null)
+                    {
+                        mirrorPlayerRender.Dispose();
+                    }
+                }
+            }
+            maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            for (int i = 0; i < 3; i++)
+            {
+                maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+            }
+
+            if (composedPlayerMirrorReflectionRenders is not null)
+            {
+                foreach (var mirrorPlayerRender in composedPlayerMirrorReflectionRenders)
+                {
+                    if (mirrorPlayerRender is not null)
+                    {
+                        mirrorPlayerRender.Dispose();
+                    }
+                }
+            }
+            composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
+            for (int i = 0; i < 3; i++)
+            {
+                composedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+            }
+
+            if (inBetweenRenderTarget is not null)
+            {
+                inBetweenRenderTarget.Dispose();
+            }
+
+            inBetweenRenderTarget = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
+
+            if (rasterizer is not null)
+            {
+                rasterizer.Dispose();
+            }
+
+            rasterizer = new RasterizerState();
+            rasterizer.CullMode = CullMode.CullClockwiseFace;
         }
 
         private bool IsTileWithinActiveMirror(int tileY)

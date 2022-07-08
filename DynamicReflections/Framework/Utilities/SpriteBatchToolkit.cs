@@ -301,24 +301,42 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void DrawReflectionViaMatrix()
         {
-            var scale = Matrix.CreateScale(1, -1, 1);
-            var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y * 2, 0);
-            //_monitor.LogOnce($"{Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight} | {Game1.GlobalToLocal(Game1.viewport, ModEntry.farmerReflection.Position).Y}", LogLevel.Debug);
-
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
-
             var oldPosition = Game1.player.Position;
+            var oldDirection = Game1.player.FacingDirection;
+            var oldSprite = Game1.player.FarmerSprite;
+
+            if (DynamicReflections.modConfig.WaterReflectionSettings.ReflectionDirection == Models.Settings.Direction.South)
+            {
+                var scale = Matrix.CreateScale(1, -1, 1);
+                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y * 2, 0);
+
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+            }
+            else
+            {
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
+                Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
+                Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
+            }
             Game1.player.Position = DynamicReflections.waterReflectionPosition.Value;
+
             Game1.player.draw(Game1.spriteBatch);
+
             Game1.player.Position = oldPosition;
+            Game1.player.FacingDirection = oldDirection;
+            Game1.player.FarmerSprite = oldSprite;
 
             Game1.spriteBatch.End();
         }
 
         internal static void DrawRenderedPlayer(bool isWavy = false)
         {
+            DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
-            Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, Color.White);
+
+            Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay);
 
             Game1.spriteBatch.End();
         }

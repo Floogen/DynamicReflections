@@ -59,11 +59,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 if (DynamicReflections.shouldDrawWaterReflection is true)
                 {
                     DynamicReflections.isFilteringWater = true;
-
-                    if (DynamicReflections.isWavyReflection)
-                    {
-                        SpriteBatchToolkit.RenderWaterReflectionPlayerSprite();
-                    }
+                    SpriteBatchToolkit.RenderWaterReflectionPlayerSprite();
                 }
 
                 // Resume previous SpriteBatch
@@ -81,14 +77,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 {
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
-                    if (DynamicReflections.isWavyReflection)
-                    {
-                        SpriteBatchToolkit.DrawRenderedPlayer(isWavy: true);
-                    }
-                    else
-                    {
-                        SpriteBatchToolkit.DrawReflectionViaMatrix();
-                    }
+                    SpriteBatchToolkit.DrawRenderedPlayer(isWavy: DynamicReflections.currentWaterSettings.IsReflectionWavy);
 
                     DynamicReflections.isFilteringWater = false;
                     DynamicReflections.isDrawingWaterReflection = true;

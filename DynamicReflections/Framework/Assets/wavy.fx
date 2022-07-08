@@ -9,6 +9,7 @@
 
 float percent;
 
+float4 ColorOverlay;
 float Frequency = 100;
 float Phase = 0;
 float Amplitude = 0.1;
@@ -34,7 +35,7 @@ float4 WavyPS(float4 position : SV_Position, float4 color : COLOR0, float2 Textu
     float2 uv = TextureCoordinates;
     //uv.y = -1.0 - uv.y;
     uv.x += sin(uv.y * Frequency + Phase) * Amplitude;
-    return tex2D(TextureSampler, uv);
+    return tex2D(TextureSampler, uv) * ColorOverlay;
 }
 
 float4 WavyDarkPS(float4 position : SV_Position, float4 color : COLOR0, float2 TextureCoordinates : TEXCOORD0) : COLOR0
