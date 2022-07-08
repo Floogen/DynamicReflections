@@ -6,6 +6,6 @@
   "UniqueID": "PeacefulEnd.DynamicReflections",
   "EntryDll": "DynamicReflections.dll",
   "MinimumApiVersion": "3.14.4",
-  "UpdateKeys": [ "Nexus:????" ],
+  "UpdateKeys": [ "Nexus:12831" ],
   "Dependencies": []
 }
