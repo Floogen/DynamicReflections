@@ -16,6 +16,7 @@ namespace DynamicReflections.Framework.Utilities
     {
         // General helpers
         private static bool _hasCache = false;
+        private static RenderTarget2D _cachedRenderer;
         private static SpriteSortMode _cachedSpriteSortMode;
         private static BlendState _cachedBlendState;
         private static SamplerState _cachedSamplerState;
@@ -55,6 +56,23 @@ namespace DynamicReflections.Framework.Utilities
             return true;
         }
 
+        public static void StartRendering(RenderTarget2D renderTarget2D)
+        {
+            var currentRenderer = Game1.graphics.GraphicsDevice.GetRenderTargets();
+            if (currentRenderer is not null && currentRenderer.Length > 0 && currentRenderer[0].RenderTarget is not null)
+            {
+                _cachedRenderer = currentRenderer[0].RenderTarget as RenderTarget2D;
+            }
+
+            Game1.graphics.GraphicsDevice.SetRenderTarget(renderTarget2D);
+        }
+
+        public static void StopRendering()
+        {
+            Game1.graphics.GraphicsDevice.SetRenderTarget(_cachedRenderer);
+            _cachedRenderer = null;
+        }
+
         // LayerPatch helper methods
         // A note on the Render and Draw prefixed methods: These methods assume SpriteBatch has not been started via SpriteBatch.Begin
         internal static void DrawMirrorReflection(Texture2D mask)
@@ -84,7 +102,7 @@ namespace DynamicReflections.Framework.Utilities
                 if (Game1.currentLocation.Map.GetLayer("Mirrors") is var mirrorsLayer && mirrorsLayer is not null)
                 {
                     // Set the render target
-                    Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.mirrorsLayerRenderTarget);
+                    SpriteBatchToolkit.StartRendering(DynamicReflections.mirrorsLayerRenderTarget);
 
                     // Draw the scene
                     Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -96,7 +114,7 @@ namespace DynamicReflections.Framework.Utilities
                     Game1.spriteBatch.End();
 
                     // Drop the render target
-                    Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                    SpriteBatchToolkit.StopRendering();
 
                     Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
                 }
@@ -106,7 +124,7 @@ namespace DynamicReflections.Framework.Utilities
         internal static void RenderMirrorsFurniture()
         {
             // Set the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.mirrorsFurnitureRenderTarget);
+            SpriteBatchToolkit.StartRendering(DynamicReflections.mirrorsFurnitureRenderTarget);
 
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -138,7 +156,7 @@ namespace DynamicReflections.Framework.Utilities
             }
 
             // Drop the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+            SpriteBatchToolkit.StopRendering();
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
@@ -165,7 +183,7 @@ namespace DynamicReflections.Framework.Utilities
                 var rawReflectionRender = DynamicReflections.inBetweenRenderTarget;
 
                 // Set the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(rawReflectionRender);
+                SpriteBatchToolkit.StartRendering(rawReflectionRender);
 
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -185,13 +203,13 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.spriteBatch.End();
 
-                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                SpriteBatchToolkit.StopRendering();
 
                 // Now use the rawReflectionRender to flip and apply other effects to them
                 var composedReflectionRender = DynamicReflections.composedPlayerMirrorReflectionRenders[index];
 
                 // Set the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(composedReflectionRender);
+                SpriteBatchToolkit.StartRendering(composedReflectionRender);
 
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -215,13 +233,13 @@ namespace DynamicReflections.Framework.Utilities
                 Game1.spriteBatch.End();
 
                 // Drop the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                SpriteBatchToolkit.StopRendering();
 
                 // Now draw the individual furniture mask
                 var furnitureMaskRender = DynamicReflections.mirrorsFurnitureRenderTarget;
 
                 // Set the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(furnitureMaskRender);
+                SpriteBatchToolkit.StartRendering(furnitureMaskRender);
 
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -246,13 +264,13 @@ namespace DynamicReflections.Framework.Utilities
                 }
 
                 // Drop the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                SpriteBatchToolkit.StopRendering();
 
                 // Now draw the masked version, for use by the furniture
                 var maskedReflectionRender = DynamicReflections.maskedPlayerMirrorReflectionRenders[index];
 
                 // Set the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(maskedReflectionRender);
+                SpriteBatchToolkit.StartRendering(maskedReflectionRender);
 
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -265,7 +283,7 @@ namespace DynamicReflections.Framework.Utilities
                 Game1.spriteBatch.End();
 
                 // Drop the render target
-                Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+                SpriteBatchToolkit.StopRendering();
 
                 index++;
             }
@@ -286,7 +304,7 @@ namespace DynamicReflections.Framework.Utilities
         internal static void RenderWaterReflectionPlayerSprite()
         {
             // Set the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(DynamicReflections.playerWaterReflectionRender);
+            SpriteBatchToolkit.StartRendering(DynamicReflections.playerWaterReflectionRender);
 
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
@@ -294,7 +312,7 @@ namespace DynamicReflections.Framework.Utilities
             DrawReflectionViaMatrix();
 
             // Drop the render target
-            Game1.graphics.GraphicsDevice.SetRenderTarget(null);
+            SpriteBatchToolkit.StopRendering();
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
