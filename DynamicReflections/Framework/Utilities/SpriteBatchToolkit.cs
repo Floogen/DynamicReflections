@@ -222,7 +222,7 @@ namespace DynamicReflections.Framework.Utilities
                 var flipEffect = Game1.player.FacingDirection is (0 or 2) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
 
                 // This variable (flipOffset) is required to re-adjust the flipped screen (as the player sprite may not be in the center)
-                var flipOffset = Game1.player.FacingDirection is (0 or 2) ? (Game1.viewport.Width - Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).X * 2) - 64 : 0f;
+                var flipOffset = Game1.player.FacingDirection is (0 or 2) ? (Game1.viewport.Width * Game1.options.zoomLevel - Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).X * 2) - 64 : 0f;
 
                 // TODO: Implement these for Mirror.ReflectionScale
                 var scale = new Vector2(1f, 1f);
