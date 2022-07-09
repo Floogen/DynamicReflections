@@ -97,28 +97,28 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderMirrorsLayer()
         {
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.mirrorsLayerRenderTarget);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
             if (Game1.currentLocation is not null && Game1.currentLocation.Map is not null)
             {
                 if (Game1.currentLocation.Map.GetLayer("Mirrors") is var mirrorsLayer && mirrorsLayer is not null)
                 {
-                    // Set the render target
-                    SpriteBatchToolkit.StartRendering(DynamicReflections.mirrorsLayerRenderTarget);
-
-                    // Draw the scene
-                    Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
-
                     Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
 
                     // Draw the "Mirrors" layer
                     LayerPatch.DrawReversePatch(mirrorsLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
                     Game1.spriteBatch.End();
-
-                    // Drop the render target
-                    SpriteBatchToolkit.StopRendering();
-
-                    Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
                 }
             }
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
         internal static void RenderMirrorsFurniture()
