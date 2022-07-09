@@ -54,6 +54,11 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
         private static bool DrawPrefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)
         {
+            if (__instance is null || String.IsNullOrEmpty(__instance.Id))
+            {
+                return true;
+            }
+
             DynamicReflections.isDrawingWaterReflection = false;
             DynamicReflections.isDrawingMirrorReflection = false;
 
