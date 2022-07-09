@@ -164,6 +164,7 @@ namespace DynamicReflections
             {
                 return;
             }
+
             // Handle mirror-viewport issue
             if (Game1.getMostRecentViewportMotion() != Vector2.Zero && DynamicReflections.activeMirrorPositions.Count > 0)
             {
