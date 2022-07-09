@@ -33,9 +33,25 @@ namespace DynamicReflections.Framework.Patches.Tiles
             harmony.Patch(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), prefix: new HarmonyMethod(GetType(), nameof(DrawPrefix)));
 
             harmony.CreateReversePatcher(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), new HarmonyMethod(GetType(), nameof(DrawReversePatch))).Patch();
+
+            // Perform PyTK related patches
+            if (DynamicReflections.modHelper.ModRegistry.IsLoaded("Platonymous.Toolkit"))
+            {
+                try
+                {
+                    if (Type.GetType("PyTK.Extensions.PyMaps, PyTK") is Type PyTK && PyTK != null)
+                    {
+                        harmony.Patch(AccessTools.Method(PyTK, "drawLayer", new[] { typeof(Layer), typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(int), typeof(Location), typeof(bool) }), prefix: new HarmonyMethod(GetType(), nameof(PyTKDrawLayerPrefix)));
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _monitor.Log($"Failed to patch PyTK in {this.GetType().Name}: DR may not properly display reflections!", LogLevel.Warn);
+                    _monitor.Log($"Patch for PyTK failed in {this.GetType().Name}: {ex}", LogLevel.Trace);
+                }
+            }
         }
 
-        // Start of the actual patch
         private static bool DrawPrefix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)
         {
             DynamicReflections.isDrawingWaterReflection = false;
@@ -110,6 +126,12 @@ namespace DynamicReflections.Framework.Patches.Tiles
         internal static void DrawReversePatch(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)
         {
             new NotImplementedException("It's a stub!");
+        }
+
+        // PyTK related patches
+        private static void PyTKDrawLayerPrefix(Layer __instance, xTile.Display.IDisplayDevice device, xTile.Dimensions.Rectangle viewport, int pixelZoom, Location offset, bool wrap = false)
+        {
+            DrawPrefix(__instance, device, viewport, offset, wrap, pixelZoom);
         }
     }
 }
