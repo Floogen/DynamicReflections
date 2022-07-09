@@ -17,6 +17,7 @@ using DynamicReflections.Framework.Managers;
 using DynamicReflections.Framework.Models.Settings;
 using System.Text.Json;
 using DynamicReflections.Framework.External.GenericModConfigMenu;
+using StardewValley.Locations;
 
 namespace DynamicReflections
 {

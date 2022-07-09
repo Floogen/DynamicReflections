@@ -358,5 +358,13 @@ namespace DynamicReflections.Framework.Utilities
 
             Game1.spriteBatch.End();
         }
+
+        internal static void HandleBackgroundDraw()
+        {
+            if (Game1.background is not null)
+            {
+                Game1.background.draw(Game1.spriteBatch);
+            }
+        }
     }
 }

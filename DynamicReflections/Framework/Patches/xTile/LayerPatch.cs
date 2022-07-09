@@ -87,6 +87,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
 
                 // Draw the filtered layer, if needed
+                SpriteBatchToolkit.HandleBackgroundDraw();
                 if (DynamicReflections.isFilteringWater is false)
                 {
                     return true;
