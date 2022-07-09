@@ -412,11 +412,11 @@ namespace DynamicReflections
             }
             currentWaterSettings.Reset(modConfig.WaterReflectionSettings);
 
-            var map = Game1.currentLocation.Map;
-            if (map is null)
+            if (Context.IsWorldReady is false || Game1.currentLocation is null || Game1.currentLocation.Map is null)
             {
                 return;
             }
+            var map = Game1.currentLocation.Map;
 
             // Set the map specific water settings
             if (map.Properties.ContainsKey(WaterSettings.MapProperty_IsEnabled))
