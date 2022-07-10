@@ -22,13 +22,13 @@
 		<None Update="Examples\[SF] Example Pack\manifest.json">
 			<CopyToOutputDirectory>Never</CopyToOutputDirectory>
 		</None>
-		<None Update="Framework\Assets\mask.mgfx">
+		<None Update="Framework\Assets\Shaders\mask.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="Framework\Assets\opacity.mgfx">
+		<None Update="Framework\Assets\Shaders\opacity.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
-		<None Update="Framework\Assets\wavy.mgfx">
+		<None Update="Framework\Assets\Shaders\wavy.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="i18n\de.json">

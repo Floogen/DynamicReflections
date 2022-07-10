@@ -348,10 +348,10 @@ namespace DynamicReflections
 
             // Load in our shaders
             // Compile via the command: mgfxc wavy.fx wavy.mgfx
-            // Unused: opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "opacity.mgfx")));
-            mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "mask.mgfx")));
+            // Unused: opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "opacity.mgfx")));
+            mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "mask.mgfx")));
 
-            waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "wavy.mgfx")));
+            waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "wavy.mgfx")));
             waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["Wavy"];
 
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
