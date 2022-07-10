@@ -34,7 +34,7 @@ namespace DynamicReflections
 
         // Config options
         internal static ModConfig modConfig;
-        internal static WaterSettings currentWaterSettings;
+        internal static WaterSettings currentWaterSettings = new WaterSettings();
 
         // Water reflection variables
         internal static Vector2? waterReflectionPosition;
