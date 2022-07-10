@@ -192,7 +192,7 @@ namespace DynamicReflections
 
             // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
-            if (DynamicReflections.modConfig.AreWaterReflectionsEnabled && currentWaterSettings is not null)
+            if (currentWaterSettings.IsEnabled && currentWaterSettings is not null)
             {
                 var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.ReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;

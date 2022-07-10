@@ -50,7 +50,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
         private static bool DrawTilePrefix(IDisplayDevice __instance, Tile? tile, Location location, float layerDepth)
         {
-            if (tile is null || DynamicReflections.modConfig.AreWaterReflectionsEnabled is false)
+            if (tile is null || DynamicReflections.currentWaterSettings.IsEnabled is false)
             {
                 return true;
             }
