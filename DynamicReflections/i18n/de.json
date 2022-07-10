@@ -1,0 +1,20 @@
+﻿{
+  // Config
+  "config.general_settings.title": "Allgemeine Einstellungen",
+  "config.general_settings.water_reflections": "Wasserreflektionen aktivieren",
+  "config.general_settings.mirror_reflections": "Spiegelreflektionen aktivieren",
+
+  "config.water_settings.title": "Wasserspezifische Einstellungen",
+  "config.water_settings.reflection_direction": "Reflektionsrichtung",
+  "config.water_settings.reflection_direction.description": "0 für nördliche, 2 für südliche Reflektionen.",
+  "config.water_settings.color.r": "Reflektion: Overlay-Farbe (R)",
+  "config.water_settings.color.g": "Reflektion: Overlay-Farbe (G)",
+  "config.water_settings.color.b": "Reflektion: Overlay-Farbe (B)",
+  "config.water_settings.color.a": "Reflektion: Overlay-Farbe (A)",
+  "config.water_settings.offset.x": "Reflektion: X-Offset",
+  "config.water_settings.offset.y": "Reflektion: Y-Offset",
+  "config.water_settings.is_wavy": "Wellenförmige Reflektionen aktivieren",
+  "config.water_settings.wave_speed": "Wellengeschwindigkeit",
+  "config.water_settings.wave_amplitude": "Wellenamplitude",
+  "config.water_settings.wave_frequency": "Wellenfrequenz"
+}
