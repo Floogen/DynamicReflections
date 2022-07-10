@@ -1,7 +1,7 @@
 ﻿{
   // Config
   "config.general_settings.title": "General Settings",
-  "config.general_settings.water_reflections": "Enable Mirror Reflections",
+  "config.general_settings.water_reflections": "Enable Water Reflections",
   "config.general_settings.mirror_reflections": "Enable Mirror Reflections",
 
   "config.water_settings.title": "Water Specific Settings",
@@ -14,7 +14,7 @@
   "config.water_settings.offset.x": "Reflection X Offset",
   "config.water_settings.offset.y": "Reflection Y Offset",
   "config.water_settings.is_wavy": "Enable Wavy Reflections",
-  "config.water_settings.wave_speed": "Enable Wavy Reflections",
-  "config.water_settings.wave_amplitude": "Enable Wavy Reflections",
-  "config.water_settings.wave_frequency": "Enable Wavy Reflections"
+  "config.water_settings.wave_speed": "Wave Speed",
+  "config.water_settings.wave_amplitude": "Wave Amplitude",
+  "config.water_settings.wave_frequency": "Wave Frequency"
 }
