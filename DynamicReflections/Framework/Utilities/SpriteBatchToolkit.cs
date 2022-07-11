@@ -320,7 +320,7 @@ namespace DynamicReflections.Framework.Utilities
         internal static void DrawPuddleReflection(Texture2D mask)
         {
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
+            Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
 
             Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, new Color(255, 255, 255, 155));
 
@@ -375,6 +375,15 @@ namespace DynamicReflections.Framework.Utilities
             Game1.player.Position = oldPosition;
             Game1.player.FacingDirection = oldDirection;
             Game1.player.FarmerSprite = oldSprite;
+
+            Game1.spriteBatch.End();
+
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+            foreach (var rippleSprite in DynamicReflections.puddleManager.puddleRippleSprites.ToList())
+            {
+                rippleSprite.draw(Game1.spriteBatch);
+            }
 
             Game1.spriteBatch.End();
 

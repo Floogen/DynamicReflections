@@ -12,9 +12,11 @@ namespace DynamicReflections.Framework.Managers
 {
     internal class PuddleManager
     {
-        private Dictionary<GameLocation, bool[,]> _locationToPuddleTiles;
         private const int PUDDLES_POOL = 10;
         internal const int DEFAULT_PUDDLE_INDEX = -1;
+
+        internal List<TemporaryAnimatedSprite> puddleRippleSprites = new List<TemporaryAnimatedSprite>();
+        private Dictionary<GameLocation, bool[,]> _locationToPuddleTiles;
 
         public void Reset()
         {
@@ -23,6 +25,7 @@ namespace DynamicReflections.Framework.Managers
 
         public void Generate(GameLocation location)
         {
+            puddleRippleSprites = new List<TemporaryAnimatedSprite>();
             if (location is null || location.Map is null)
             {
                 return;

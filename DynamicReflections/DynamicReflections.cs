@@ -93,6 +93,7 @@ namespace DynamicReflections
                 new DisplayDevicePatch(monitor, modHelper).Apply(harmony);
                 new ToolPatch(monitor, modHelper).Apply(harmony);
                 new FurniturePatch(monitor, modHelper).Apply(harmony);
+                new GameLocationPatch(monitor, modHelper).Apply(harmony);
             }
             catch (Exception e)
             {
