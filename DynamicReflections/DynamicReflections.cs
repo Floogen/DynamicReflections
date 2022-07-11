@@ -44,6 +44,11 @@ namespace DynamicReflections
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
 
+        // Puddle reflection variables
+        internal static bool shouldDrawPuddlesReflection;
+        internal static bool isFilteringPuddles;
+        internal static bool isDrawingPuddles;
+
         // Mirror reflection variables
         internal static FarmerSprite mirrorReflectionSprite;
         internal static Dictionary<Point, Mirror> mirrors = new Dictionary<Point, Mirror>();
@@ -56,11 +61,13 @@ namespace DynamicReflections
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
         internal static RenderTarget2D playerWaterReflectionRender;
+        internal static RenderTarget2D playerPuddleReflectionRender;
         internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
+        internal static RenderTarget2D puddlesRenderTarget;
         internal static RasterizerState rasterizer;
 
         public override void Entry(IModHelper helper)
@@ -545,6 +552,8 @@ namespace DynamicReflections
         {
             // Handle the render targets
             RegenerateRenderer(ref playerWaterReflectionRender);
+            RegenerateRenderer(ref playerPuddleReflectionRender);
+            RegenerateRenderer(ref puddlesRenderTarget);
 
             RegenerateRenderer(ref mirrorsLayerRenderTarget);
             RegenerateRenderer(ref mirrorsFurnitureRenderTarget);

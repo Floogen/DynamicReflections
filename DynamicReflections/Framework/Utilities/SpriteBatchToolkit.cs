@@ -317,6 +317,73 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
+        internal static void DrawPuddleReflection(Texture2D mask)
+        {
+            DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
+
+            Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, new Color(255, 255, 255, 155));
+
+            Game1.spriteBatch.End();
+        }
+
+        internal static void RenderPuddles()
+        {
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.puddlesRenderTarget);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            if (Game1.currentLocation is not null && Game1.currentLocation.Map is not null)
+            {
+                if (Game1.currentLocation.Map.GetLayer("Back") is var backLayer && backLayer is not null)
+                {
+                    Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                    // Draw the "Back" layer with just the puddles
+                    LayerPatch.DrawReversePatch(backLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
+                    Game1.spriteBatch.End();
+                }
+            }
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        internal static void RenderPuddleReflectionPlayerSprite()
+        {
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.playerPuddleReflectionRender);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            var oldPosition = Game1.player.Position;
+            var oldDirection = Game1.player.FacingDirection;
+            var oldSprite = Game1.player.FarmerSprite;
+
+            var scale = Matrix.CreateScale(1, -1, 1);
+            var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, oldPosition).Y * 2, 0);
+
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+
+            Game1.player.draw(Game1.spriteBatch);
+
+            Game1.player.Position = oldPosition;
+            Game1.player.FacingDirection = oldDirection;
+            Game1.player.FarmerSprite = oldSprite;
+
+            Game1.spriteBatch.End();
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
         internal static void DrawReflectionViaMatrix()
         {
             var oldPosition = Game1.player.Position;

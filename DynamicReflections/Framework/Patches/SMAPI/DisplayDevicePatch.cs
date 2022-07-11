@@ -48,11 +48,28 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             }
         }
 
-        private static bool DrawTilePrefix(IDisplayDevice __instance, Tile? tile, Location location, float layerDepth)
+        private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Color ___m_modulationColour, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
         {
             if (tile is null || DynamicReflections.currentWaterSettings.IsEnabled is false)
             {
                 return true;
+            }
+
+            // TODO: Implement puddles by selecting random Diggable tiles on warp, then drawing the mask before drawing the reflection
+            // TODO: Move this component to postfix to draw the actual puddle / reflection?
+            if (DynamicReflections.isFilteringPuddles is true)
+            {
+                if (tile.TileIndexProperties.TryGetValue("Diggable", out _) is true)
+                {
+                    ___m_tilePosition.X = location.X;
+                    ___m_tilePosition.Y = location.Y;
+                    Vector2 origin = new Vector2(8f, 8f);
+                    ___m_tilePosition.X += origin.X * (float)Layer.zoom;
+                    ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
+                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, 16, 16, 16), ___m_modulationColour, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
+                    //16 * Game1.random.Next(0, 6)
+                }
+                return false;
             }
 
             if (DynamicReflections.isDrawingWaterReflection is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
