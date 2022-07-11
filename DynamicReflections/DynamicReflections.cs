@@ -161,7 +161,7 @@ namespace DynamicReflections
 
         private void OnUpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
         {
-            if (Context.IsWorldReady is false)
+            if (Context.IsWorldReady is false || Game1.currentLocation is null)
             {
                 return;
             }
@@ -794,6 +794,11 @@ namespace DynamicReflections
 
         private bool IsWaterReflectiveTile(GameLocation location, int x, int y)
         {
+            if (location is null)
+            {
+                return false;
+            }
+
             return location.isWaterTile(x, y);
         }
 
