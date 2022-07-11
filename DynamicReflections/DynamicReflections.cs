@@ -32,6 +32,7 @@ namespace DynamicReflections
         internal static ApiManager apiManager;
         internal static AssetManager assetManager;
         internal static MirrorsManager mirrorsManager;
+        internal static PuddleManager puddleManager;
 
         // Config options
         internal static ModConfig modConfig;
@@ -79,8 +80,9 @@ namespace DynamicReflections
 
             // Load the managers
             apiManager = new ApiManager(monitor);
-            mirrorsManager = new MirrorsManager();
             assetManager = new AssetManager(modHelper);
+            mirrorsManager = new MirrorsManager();
+            puddleManager = new PuddleManager();
 
             try
             {
@@ -166,6 +168,8 @@ namespace DynamicReflections
         {
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
+
+            DynamicReflections.puddleManager.Generate(e.NewLocation);
         }
 
         private void OnUpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
@@ -295,6 +299,8 @@ namespace DynamicReflections
         {
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
+
+            DynamicReflections.puddleManager.Reset();
         }
 
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)

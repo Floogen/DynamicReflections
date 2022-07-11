@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using DynamicReflections.Framework.Managers;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -59,15 +60,14 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             // TODO: Move this component to postfix to draw the actual puddle / reflection?
             if (DynamicReflections.isFilteringPuddles is true)
             {
-                if (tile.TileIndexProperties.TryGetValue("Diggable", out _) is true)
+                if (tile.Properties.TryGetValue("PuddleIndex", out var index) && (int)index != PuddleManager.DEFAULT_PUDDLE_INDEX)
                 {
                     ___m_tilePosition.X = location.X;
                     ___m_tilePosition.Y = location.Y;
                     Vector2 origin = new Vector2(8f, 8f);
                     ___m_tilePosition.X += origin.X * (float)Layer.zoom;
                     ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, 16, 16, 16), ___m_modulationColour, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
-                    //16 * Game1.random.Next(0, 6)
+                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, index * 16, 16, 16), ___m_modulationColour, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
                 }
                 return false;
             }
