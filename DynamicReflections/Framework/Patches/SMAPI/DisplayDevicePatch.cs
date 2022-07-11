@@ -60,14 +60,26 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             // TODO: Move this component to postfix to draw the actual puddle / reflection?
             if (DynamicReflections.isFilteringPuddles is true)
             {
-                if (tile.Properties.TryGetValue("PuddleIndex", out var index) && (int)index != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                if (tile.Properties.TryGetValue("PuddleIndex", out var puddleIndex) && (int)puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
                 {
+                    int effectIndex = 0;
+                    if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffect))
+                    {
+                        effectIndex = (int)puddleEffect;
+                    }
+
+                    float rotation = 0f;
+                    if (tile.Properties.TryGetValue("PuddleRotation", out var puddleRotation))
+                    {
+                        rotation = (float)puddleRotation;
+                    }
+
                     ___m_tilePosition.X = location.X;
                     ___m_tilePosition.Y = location.Y;
                     Vector2 origin = new Vector2(8f, 8f);
                     ___m_tilePosition.X += origin.X * (float)Layer.zoom;
                     ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, index * 16, 16, 16), ___m_modulationColour, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
+                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, puddleIndex * 16, 16, 16), new Color(91, 91, 91, 91), rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
                 }
                 return false;
             }
