@@ -30,6 +30,7 @@ namespace DynamicReflections
 
         // Managers
         internal static ApiManager apiManager;
+        internal static AssetManager assetManager;
         internal static MirrorsManager mirrorsManager;
 
         // Config options
@@ -72,6 +73,7 @@ namespace DynamicReflections
             // Load the managers
             apiManager = new ApiManager(monitor);
             mirrorsManager = new MirrorsManager();
+            assetManager = new AssetManager(modHelper);
 
             try
             {
