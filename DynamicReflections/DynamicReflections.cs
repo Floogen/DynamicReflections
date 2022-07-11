@@ -166,31 +166,6 @@ namespace DynamicReflections
                 return;
             }
 
-            // Handle mirror-viewport issue
-            if (Game1.getMostRecentViewportMotion() != Vector2.Zero && DynamicReflections.activeMirrorPositions.Count > 0)
-            {
-                // TODO: Determine why maskedPlayerMirrorReflectionRenders aren't updating when the viewport moves
-                for (int i = 0; i < DynamicReflections.activeMirrorPositions.Count; i++)
-                {
-                    var position = DynamicReflections.activeMirrorPositions[i];
-                    if (DynamicReflections.mirrors.ContainsKey(position) && DynamicReflections.mirrors[position].FurnitureLink is not null)
-                    {
-                        if (maskedPlayerMirrorReflectionRenders[i] is not null)
-                        {
-                            maskedPlayerMirrorReflectionRenders[i].Dispose();
-                        }
-
-                        maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                        Game1.graphics.GraphicsDevice,
-                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                        false,
-                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                        DepthFormat.None);
-                    }
-                }
-            }
-
             // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
             if (currentWaterSettings.IsEnabled && currentWaterSettings is not null)
