@@ -112,7 +112,6 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         {
             DynamicReflections.modConfig = new ModConfig();
 
-            _currentLocation = DEFAULT_LOCATION;
             DynamicReflections.modConfig.LastSelectedLocation = DEFAULT_LOCATION;
             DynamicReflections.modConfig.LocalWaterReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.WaterReflectionSettings;
             DynamicReflections.modConfig.LocalPuddleReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.PuddleReflectionSettings;
@@ -124,6 +123,8 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 
         internal static void RefreshLocationListing(bool reset = false)
         {
+            _currentLocation = DEFAULT_LOCATION;
+
             var location = Game1.currentLocation;
             if (location is null)
             {
@@ -155,7 +156,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             switch (location.NameOrUniqueName)
             {
                 case "Beach":
-                    return new WaterSettings() { ReflectionOffset = new Vector2(0f, 1f) };
+                    return new WaterSettings() { OverrideDefaultSettings = true, ReflectionOffset = new Vector2(0f, 1f) };
             }
             return new WaterSettings();
         }
