@@ -18,6 +18,7 @@ using DynamicReflections.Framework.Models.Settings;
 using System.Text.Json;
 using DynamicReflections.Framework.External.GenericModConfigMenu;
 using StardewValley.Locations;
+using StardewValley.Menus;
 
 namespace DynamicReflections
 {
@@ -340,7 +341,7 @@ namespace DynamicReflections
             if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
             {
                 var configApi = apiManager.GetGenericModConfigMenuApi();
-                configApi.Register(ModManifest, () => modConfig = new ModConfig(), delegate { Helper.WriteConfig(modConfig); SetWaterReflectionSettings(); LoadRenderers(); });
+                configApi.Register(ModManifest, () => modConfig = new ModConfig(), delegate { Helper.WriteConfig(modConfig); SetWaterReflectionSettings(); SetPuddleReflectionSettings(); LoadRenderers(); });
 
                 // Register the standard settings
                 configApi.RegisterLabel(ModManifest, Helper.Translation.Get("config.general_settings.title"), String.Empty);
@@ -361,7 +362,21 @@ namespace DynamicReflections
                 configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveAmplitude, value => modConfig.WaterReflectionSettings.WaveAmplitude = value, () => Helper.Translation.Get("config.water_settings.wave_amplitude"));
                 configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveFrequency, value => modConfig.WaterReflectionSettings.WaveFrequency = value, () => Helper.Translation.Get("config.water_settings.wave_frequency"));
 
-                // TODO: Implement puddle settings for config UI
+                configApi.RegisterLabel(ModManifest, Helper.Translation.Get("config.puddle_settings.title"), String.Empty);
+                configApi.AddBoolOption(ModManifest, () => modConfig.PuddleReflectionSettings.ShouldGeneratePuddles, value => modConfig.PuddleReflectionSettings.ShouldGeneratePuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_generate_puddles"));
+                configApi.AddBoolOption(ModManifest, () => modConfig.PuddleReflectionSettings.ShouldGeneratePuddles, value => modConfig.PuddleReflectionSettings.ShouldGeneratePuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_play_splash_sound"));
+                configApi.AddBoolOption(ModManifest, () => modConfig.PuddleReflectionSettings.ShouldGeneratePuddles, value => modConfig.PuddleReflectionSettings.ShouldGeneratePuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_rain_splash_puddles"));
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.PuddlePercentageWhileRaining, value => modConfig.PuddleReflectionSettings.PuddlePercentageWhileRaining = value, () => Helper.Translation.Get("config.puddle_settings.puddle_percentage_while_raining"), min: 0, max: 100, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.PuddlePercentageAfterRaining, value => modConfig.PuddleReflectionSettings.PuddlePercentageAfterRaining = value, () => Helper.Translation.Get("config.puddle_settings.puddle_percentage_after_raining"), min: 0, max: 100, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.MillisecondsBetweenRaindropSplashes, value => modConfig.PuddleReflectionSettings.MillisecondsBetweenRaindropSplashes = value, () => Helper.Translation.Get("config.puddle_settings.milliseconds_between_raindrop_splashes"), tooltip: () => Helper.Translation.Get("config.puddle_settings.milliseconds_between_raindrop_splashes_description"), min: 100, max: 2000, interval: 100);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.PuddleColor.R, value => modConfig.PuddleReflectionSettings.PuddleColor = new Color(value, modConfig.PuddleReflectionSettings.PuddleColor.G, modConfig.PuddleReflectionSettings.PuddleColor.B, modConfig.PuddleReflectionSettings.PuddleColor.A), () => Helper.Translation.Get("config.puddle_settings.puddle_color.r"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.PuddleColor.G, value => modConfig.PuddleReflectionSettings.PuddleColor = new Color(modConfig.PuddleReflectionSettings.PuddleColor.R, value, modConfig.PuddleReflectionSettings.PuddleColor.B, modConfig.PuddleReflectionSettings.PuddleColor.A), () => Helper.Translation.Get("config.puddle_settings.puddle_color.g"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.PuddleColor.B, value => modConfig.PuddleReflectionSettings.PuddleColor = new Color(modConfig.PuddleReflectionSettings.PuddleColor.R, modConfig.PuddleReflectionSettings.PuddleColor.G, value, modConfig.PuddleReflectionSettings.PuddleColor.A), () => Helper.Translation.Get("config.puddle_settings.puddle_color.b"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.PuddleColor.A, value => modConfig.PuddleReflectionSettings.PuddleColor = new Color(modConfig.PuddleReflectionSettings.PuddleColor.R, modConfig.PuddleReflectionSettings.PuddleColor.G, modConfig.PuddleReflectionSettings.PuddleColor.B, value), () => Helper.Translation.Get("config.puddle_settings.puddle_color.a"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.RippleColor.R, value => modConfig.PuddleReflectionSettings.RippleColor = new Color(value, modConfig.PuddleReflectionSettings.RippleColor.G, modConfig.PuddleReflectionSettings.RippleColor.B, modConfig.PuddleReflectionSettings.RippleColor.A), () => Helper.Translation.Get("config.puddle_settings.ripple_color.r"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.RippleColor.G, value => modConfig.PuddleReflectionSettings.RippleColor = new Color(modConfig.PuddleReflectionSettings.RippleColor.R, value, modConfig.PuddleReflectionSettings.RippleColor.B, modConfig.PuddleReflectionSettings.RippleColor.A), () => Helper.Translation.Get("config.puddle_settings.ripple_color.g"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.RippleColor.B, value => modConfig.PuddleReflectionSettings.RippleColor = new Color(modConfig.PuddleReflectionSettings.RippleColor.R, modConfig.PuddleReflectionSettings.RippleColor.G, value, modConfig.PuddleReflectionSettings.RippleColor.A), () => Helper.Translation.Get("config.puddle_settings.ripple_color.b"), min: 0, max: 255, interval: 1);
+                configApi.AddNumberOption(ModManifest, () => modConfig.PuddleReflectionSettings.RippleColor.A, value => modConfig.PuddleReflectionSettings.RippleColor = new Color(modConfig.PuddleReflectionSettings.RippleColor.R, modConfig.PuddleReflectionSettings.RippleColor.G, modConfig.PuddleReflectionSettings.RippleColor.B, value), () => Helper.Translation.Get("config.puddle_settings.ripple_color.a"), min: 0, max: 255, interval: 1);
             }
 
             // Load in our shaders
@@ -438,7 +453,81 @@ namespace DynamicReflections
             var map = Game1.currentLocation.Map;
 
             // Set the map specific puddle settings
-            // TODO: The above
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_IsEnabled))
+            {
+                currentPuddleSettings.AreReflectionsEnabled = map.Properties[PuddleSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ShouldGeneratePuddles))
+            {
+                currentPuddleSettings.ShouldGeneratePuddles = map.Properties[PuddleSettings.MapProperty_ShouldGeneratePuddles].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ShouldPlaySplashSound))
+            {
+                currentPuddleSettings.ShouldPlaySplashSound = map.Properties[PuddleSettings.MapProperty_ShouldPlaySplashSound].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ShouldRainSplashPuddles))
+            {
+                currentPuddleSettings.ShouldRainSplashPuddles = map.Properties[PuddleSettings.MapProperty_ShouldRainSplashPuddles].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddlePercentageWhileRaining))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_PuddlePercentageWhileRaining], out var percentage))
+                {
+                    currentPuddleSettings.PuddlePercentageWhileRaining = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddlePercentageAfterRaining))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_PuddlePercentageAfterRaining], out var percentage))
+                {
+                    currentPuddleSettings.PuddlePercentageAfterRaining = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_MillisecondsBetweenRaindropSplashes))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_MillisecondsBetweenRaindropSplashes], out var percentage))
+                {
+                    currentPuddleSettings.MillisecondsBetweenRaindropSplashes = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddleColor))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Color>(map.Properties[PuddleSettings.MapProperty_PuddleColor]) is Color overlay)
+                    {
+                        currentPuddleSettings.PuddleColor = overlay;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_PuddleColor from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_PuddleColor from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_RippleColor))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Color>(map.Properties[PuddleSettings.MapProperty_RippleColor]) is Color overlay)
+                    {
+                        currentPuddleSettings.RippleColor = overlay;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_RippleColor from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_RippleColor from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
         }
 
         private void SetWaterReflectionSettings()

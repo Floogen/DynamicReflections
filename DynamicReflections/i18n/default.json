@@ -3,6 +3,7 @@
   "config.general_settings.title": "General Settings",
   "config.general_settings.water_reflections": "Enable Water Reflections",
   "config.general_settings.mirror_reflections": "Enable Mirror Reflections",
+  "config.general_settings.puddle_reflections": "Enable Puddle Reflections",
 
   "config.water_settings.title": "Water Specific Settings",
   "config.water_settings.reflection_direction": "Reflection Direction",
@@ -16,5 +17,22 @@
   "config.water_settings.is_wavy": "Enable Wavy Reflections",
   "config.water_settings.wave_speed": "Wave Speed",
   "config.water_settings.wave_amplitude": "Wave Amplitude",
-  "config.water_settings.wave_frequency": "Wave Frequency"
+  "config.water_settings.wave_frequency": "Wave Frequency",
+
+  "config.puddle_settings.title": "Puddle Specific Settings",
+  "config.puddle_settings.should_generate_puddles": "Should Generate Puddles",
+  "config.puddle_settings.should_play_splash_sound": "Should Play Splash Sound",
+  "config.puddle_settings.should_rain_splash_puddles": "Should Rain Splash Puddles",
+  "config.puddle_settings.puddle_percentage_while_raining": "Puddle Percentage While Raining",
+  "config.puddle_settings.puddle_percentage_after_raining": "Puddle Percentage After Raining",
+  "config.puddle_settings.milliseconds_between_raindrop_splashes": "Raindrop Splashes Cooldown",
+  "config.puddle_settings.milliseconds_between_raindrop_splashes_description": "The milliseconds between raindrop splashes.",
+  "config.puddle_settings.puddle_color.r": "Puddle Color (R)",
+  "config.puddle_settings.puddle_color.g": "Puddle Color (G)",
+  "config.puddle_settings.puddle_color.b": "Puddle Color (B)",
+  "config.puddle_settings.puddle_color.a": "Puddle Color (A)",
+  "config.puddle_settings.ripple_color.r": "Ripple Color (R)",
+  "config.puddle_settings.ripple_color.g": "Ripple Color (G)",
+  "config.puddle_settings.ripple_color.b": "Ripple Color (B)",
+  "config.puddle_settings.ripple_color.a": "Ripple Color (A)"
 }
