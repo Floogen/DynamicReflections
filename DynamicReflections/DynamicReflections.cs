@@ -191,7 +191,7 @@ namespace DynamicReflections
 
             // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
-            if (currentWaterSettings.IsEnabled && currentWaterSettings is not null)
+            if (currentWaterSettings.AreReflectionsEnabled && currentWaterSettings is not null)
             {
                 var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.ReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;
@@ -427,7 +427,7 @@ namespace DynamicReflections
             // Set the map specific water settings
             if (map.Properties.ContainsKey(WaterSettings.MapProperty_IsEnabled))
             {
-                currentWaterSettings.IsEnabled = map.Properties[WaterSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+                currentWaterSettings.AreReflectionsEnabled = map.Properties[WaterSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
             }
 
             if (map.Properties.ContainsKey(WaterSettings.MapProperty_ReflectionDirection))

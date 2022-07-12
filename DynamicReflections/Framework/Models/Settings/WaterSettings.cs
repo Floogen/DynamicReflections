@@ -20,7 +20,7 @@ namespace DynamicReflections.Framework.Models.Settings
     {
         // Note: This property can only override disabling, it cannot force a user to enable reflections
         public const string MapProperty_IsEnabled = "AreWaterReflectionsEnabled";
-        public bool IsEnabled { get; set; } = true;
+        public bool AreReflectionsEnabled { get; set; } = true;
 
         public const string MapProperty_ReflectionDirection = "WaterReflectionDirection";
         public Direction ReflectionDirection { get; set; } = Direction.South;
@@ -48,7 +48,7 @@ namespace DynamicReflections.Framework.Models.Settings
         {
             if (referencedSettings is null)
             {
-                IsEnabled = true;
+                AreReflectionsEnabled = true;
                 ReflectionDirection = Direction.South;
                 ReflectionOverlay = Color.White;
                 ReflectionOffset = new Vector2(0f, 1.5f);
@@ -59,7 +59,7 @@ namespace DynamicReflections.Framework.Models.Settings
             }
             else
             {
-                IsEnabled = referencedSettings.IsEnabled;
+                AreReflectionsEnabled = referencedSettings.AreReflectionsEnabled;
                 ReflectionDirection = referencedSettings.ReflectionDirection;
                 ReflectionOverlay = referencedSettings.ReflectionOverlay;
                 ReflectionOffset = referencedSettings.ReflectionOffset;

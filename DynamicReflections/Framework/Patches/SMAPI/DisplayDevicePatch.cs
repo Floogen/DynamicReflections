@@ -51,7 +51,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
         private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Color ___m_modulationColour, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
         {
-            if (tile is null || DynamicReflections.currentWaterSettings.IsEnabled is false)
+            if (tile is null || DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
             {
                 return true;
             }

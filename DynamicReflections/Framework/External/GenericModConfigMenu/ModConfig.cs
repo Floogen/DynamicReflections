@@ -9,8 +9,9 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 {
     public class ModConfig
     {
-        public bool AreWaterReflectionsEnabled { get { return WaterReflectionSettings.IsEnabled; } set { WaterReflectionSettings.IsEnabled = value; } }
+        public bool AreWaterReflectionsEnabled { get { return WaterReflectionSettings.AreReflectionsEnabled; } set { WaterReflectionSettings.AreReflectionsEnabled = value; } }
         public bool AreMirrorReflectionsEnabled { get; set; } = true;
+        public bool ArePuddleReflectionsEnabled { get; set; } = true;
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();
     }
 }
