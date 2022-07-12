@@ -485,6 +485,14 @@ namespace DynamicReflections
                 }
             }
 
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_BigPuddleChance))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_BigPuddleChance], out var percentage))
+                {
+                    currentPuddleSettings.BigPuddleChance = percentage;
+                }
+            }
+
             if (map.Properties.ContainsKey(PuddleSettings.MapProperty_MillisecondsBetweenRaindropSplashes))
             {
                 if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_MillisecondsBetweenRaindropSplashes], out var percentage))

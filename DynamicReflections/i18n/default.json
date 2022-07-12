@@ -38,6 +38,7 @@
   "config.puddle_settings.should_rain_splash_puddles": "Should Rain Splash Puddles",
   "config.puddle_settings.puddle_percentage_while_raining": "Puddle Percentage While Raining",
   "config.puddle_settings.puddle_percentage_after_raining": "Puddle Percentage After Raining",
+  "config.puddle_settings.big_puddle_chance": "Big Puddle Chance",
   "config.puddle_settings.milliseconds_between_raindrop_splashes": "Raindrop Splashes Cooldown",
   "config.puddle_settings.milliseconds_between_raindrop_splashes_description": "The milliseconds between raindrop splashes.",
   "config.puddle_settings.puddle_color.title": "Puddle Color",

@@ -12,7 +12,7 @@ namespace DynamicReflections.Framework.Managers
 {
     internal class PuddleManager
     {
-        private const int PUDDLES_POOL = 10;
+        private const int PUDDLES_POOL = 16;
         internal const int DEFAULT_PUDDLE_INDEX = -1;
 
         internal List<TemporaryAnimatedSprite> puddleRippleSprites = new List<TemporaryAnimatedSprite>();
@@ -58,8 +58,9 @@ namespace DynamicReflections.Framework.Managers
                         if (backLayer.Tiles[x, y] is not null)
                         {
                             backLayer.Tiles[x, y].Properties["PuddleIndex"] = DEFAULT_PUDDLE_INDEX;
+                            backLayer.Tiles[x, y].Properties["BigPuddleIndex"] = DEFAULT_PUDDLE_INDEX;
 
-                            if (String.IsNullOrEmpty(location.doesTileHaveProperty(x, y, "Diggable", "Back")) is false && location.isTileHoeDirt(new Microsoft.Xna.Framework.Vector2(x, y)) is false && location.isTileLocationTotallyClearAndPlaceable(x, y) && DoesPointHavePreviousNeighbor(location, new Point(x, y)) is false)
+                            if (String.IsNullOrEmpty(location.doesTileHaveProperty(x, y, "Diggable", "Back")) is false && location.isTileHoeDirt(new Microsoft.Xna.Framework.Vector2(x, y)) is false && location.isTileLocationTotallyClearAndPlaceable(x, y))
                             {
                                 diggableTiles.Add(new Point(x, y));
                             }
@@ -75,15 +76,81 @@ namespace DynamicReflections.Framework.Managers
                 for (int i = 0; i < diggableTiles.Count / percentOfDiggableTiles; i++)
                 {
                     var tilePosition = GetRandomTile(random, diggableTiles);
-                    var puddleIndex = random.Next(DEFAULT_PUDDLE_INDEX, PUDDLES_POOL);
+                    if (IsBigPuddleTile(backLayer, tilePosition))
+                    {
+                        continue;
+                    }
 
+                    var puddleIndex = random.Next(DEFAULT_PUDDLE_INDEX, PUDDLES_POOL);
                     backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleIndex"] = puddleIndex;
                     backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleEffect"] = random.Next(0, 4);
                     backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleRotation"] = MathHelper.ToRadians(90 * random.Next(0, 4));
 
+                    bool shouldAttemptBigPuddle = random.NextDouble() < DynamicReflections.currentPuddleSettings.BigPuddleChance / 100f;
+                    if (shouldAttemptBigPuddle)
+                    {
+                        bool canMakeBigPuddle = true;
+                        if (diggableTiles.FirstOrDefault(d => d.X == tilePosition.X + 1 && d.Y == tilePosition.Y) is var xOffsetPoint && (xOffsetPoint == default(Point) || IsBigPuddleTile(backLayer, xOffsetPoint)))
+                        {
+                            canMakeBigPuddle = false;
+                        }
+                        if (diggableTiles.FirstOrDefault(d => d.X == tilePosition.X + 1 && d.Y == tilePosition.Y + 1) is var yOffsetPoint && (yOffsetPoint == default(Point) || IsBigPuddleTile(backLayer, yOffsetPoint)))
+                        {
+                            canMakeBigPuddle = false;
+                        }
+                        if (diggableTiles.FirstOrDefault(d => d.X == tilePosition.X && d.Y == tilePosition.Y + 1) is var xyOffsetPoint && (xyOffsetPoint == default(Point) || IsBigPuddleTile(backLayer, xyOffsetPoint)))
+                        {
+                            canMakeBigPuddle = false;
+                        }
+
+                        if (canMakeBigPuddle)
+                        {
+                            var puddleEffect = random.Next(0, 4);
+                            var puddleRotation = 0;
+                            var adjustedPuddleIndex = random.Next(0, PUDDLES_POOL);
+                            if (adjustedPuddleIndex % 2 != 0)
+                            {
+                                adjustedPuddleIndex -= 1;
+                            }
+
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleIndex"] = puddleEffect is (0 or 1) ? adjustedPuddleIndex : adjustedPuddleIndex + 1;
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["BigPuddleIndex"] = puddleEffect is (0 or 2) ? 1 : 2;
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleEffect"] = puddleEffect;
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleRotation"] = puddleRotation;
+
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y].Properties["PuddleIndex"] = puddleEffect is (0 or 1) ? adjustedPuddleIndex : adjustedPuddleIndex + 1;
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y].Properties["BigPuddleIndex"] = puddleEffect is (0 or 2) ? 2 : 1;
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y].Properties["PuddleEffect"] = puddleEffect;
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y].Properties["PuddleRotation"] = puddleRotation;
+                            _locationToPuddleTiles[location][tilePosition.X + 1, tilePosition.Y] = true;
+
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y + 1].Properties["PuddleIndex"] = puddleEffect is (0 or 1) ? adjustedPuddleIndex + 1 : adjustedPuddleIndex;
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y + 1].Properties["BigPuddleIndex"] = puddleEffect is (0 or 2) ? 1 : 2;
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y + 1].Properties["PuddleEffect"] = puddleEffect;
+                            backLayer.Tiles[tilePosition.X, tilePosition.Y + 1].Properties["PuddleRotation"] = puddleRotation;
+                            _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y + 1] = true;
+
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y + 1].Properties["PuddleIndex"] = puddleEffect is (0 or 1) ? adjustedPuddleIndex + 1 : adjustedPuddleIndex;
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y + 1].Properties["BigPuddleIndex"] = puddleEffect is (0 or 2) ? 2 : 1;
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y + 1].Properties["PuddleEffect"] = puddleEffect;
+                            backLayer.Tiles[tilePosition.X + 1, tilePosition.Y + 1].Properties["PuddleRotation"] = puddleRotation;
+                            _locationToPuddleTiles[location][tilePosition.X + 1, tilePosition.Y + 1] = true;
+                        }
+                    }
+
                     _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = puddleIndex != DEFAULT_PUDDLE_INDEX;
                 }
             }
+        }
+
+        private bool IsBigPuddleTile(Layer backLayer, Point tilePosition)
+        {
+            if (backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties.ContainsKey("BigPuddleIndex") && Int32.TryParse(backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["BigPuddleIndex"], out int value) && value != DEFAULT_PUDDLE_INDEX)
+            {
+                return true;
+            }
+
+            return false;
         }
 
         private Point GetRandomTile(Random random, List<Point> tilePoints)
@@ -106,7 +173,7 @@ namespace DynamicReflections.Framework.Managers
                         if (backLayer.Tiles[x, y] is not null)
                         {
                             var puddleIndex = DEFAULT_PUDDLE_INDEX;
-                            if (backLayer.Tiles[x, y].TileIndexProperties.TryGetValue("Diggable", out _) && DoesPointHavePreviousNeighbor(location, point) is false && location.isTileLocationTotallyClearAndPlaceable(x, y))
+                            if (backLayer.Tiles[x, y].TileIndexProperties.TryGetValue("Diggable", out _) && DoesPointHaveNeighbor(location, point) is false && location.isTileLocationTotallyClearAndPlaceable(x, y))
                             {
                                 puddleIndex = random.NextDouble() < 0.95 ? DEFAULT_PUDDLE_INDEX : random.Next(DEFAULT_PUDDLE_INDEX, PUDDLES_POOL);
                                 _locationToPuddleTiles[location][x, y] = puddleIndex != DEFAULT_PUDDLE_INDEX;
@@ -119,7 +186,7 @@ namespace DynamicReflections.Framework.Managers
             }
         }
 
-        public bool DoesPointHavePreviousNeighbor(GameLocation location, Point point)
+        public bool DoesPointHaveNeighbor(GameLocation location, Point point)
         {
             var offsetPoint = new Point(point.X - 1, point.Y);
             if (IsTilePuddle(location, offsetPoint.X, offsetPoint.Y) is true)

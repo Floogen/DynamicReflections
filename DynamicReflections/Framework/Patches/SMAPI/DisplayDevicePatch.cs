@@ -60,6 +60,13 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             {
                 if (tile.Properties.TryGetValue("PuddleIndex", out var puddleIndex) && (int)puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
                 {
+                    var tileXOffset = 0;
+                    var tileYOffset = puddleIndex * 16;
+                    if (tile.Properties.TryGetValue("BigPuddleIndex", out var bigPuddleIndex) && (int)bigPuddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                    {
+                        tileXOffset = bigPuddleIndex * 16;
+                    }
+
                     int effectIndex = 0;
                     if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffect))
                     {
@@ -77,7 +84,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                     Vector2 origin = new Vector2(8f, 8f);
                     ___m_tilePosition.X += origin.X * (float)Layer.zoom;
                     ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, puddleIndex * 16, 16, 16), DynamicReflections.currentPuddleSettings.PuddleColor, rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
+                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tileXOffset, tileYOffset, 16, 16), DynamicReflections.currentPuddleSettings.PuddleColor, rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
                 }
                 return false;
             }
