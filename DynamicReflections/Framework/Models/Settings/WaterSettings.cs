@@ -20,14 +20,13 @@ namespace DynamicReflections.Framework.Models.Settings
     {
         // Note: This property can only override disabling, it cannot force a user to enable reflections
         public const string MapProperty_IsEnabled = "AreWaterReflectionsEnabled";
-        public bool IsEnabled { get; set; } = true;
+        public bool AreReflectionsEnabled { get; set; } = true;
 
         public const string MapProperty_ReflectionDirection = "WaterReflectionDirection";
         public Direction ReflectionDirection { get; set; } = Direction.South;
 
         public const string MapProperty_ReflectionOverlay = "WaterReflectionOverlay";
         public Color ReflectionOverlay { get; set; } = Color.White;
-        private Color _actualReflectionOverlay;
 
         public const string MapProperty_ReflectionOffset = "WaterReflectionOffset";
         public Vector2 ReflectionOffset { get; set; } = new Vector2(0f, 1.5f);
@@ -44,11 +43,14 @@ namespace DynamicReflections.Framework.Models.Settings
         public const string MapProperty_WaveFrequency = "WaterReflectionWaveFrequency";
         public float WaveFrequency { get; set; } = 50f;
 
+
+        public bool OverrideDefaultSettings { get; set; }
+
         public void Reset(WaterSettings referencedSettings = null)
         {
             if (referencedSettings is null)
             {
-                IsEnabled = true;
+                AreReflectionsEnabled = true;
                 ReflectionDirection = Direction.South;
                 ReflectionOverlay = Color.White;
                 ReflectionOffset = new Vector2(0f, 1.5f);
@@ -56,10 +58,11 @@ namespace DynamicReflections.Framework.Models.Settings
                 WaveSpeed = 1f;
                 WaveAmplitude = 0.01f;
                 WaveFrequency = 50f;
+                OverrideDefaultSettings = false;
             }
             else
             {
-                IsEnabled = referencedSettings.IsEnabled;
+                AreReflectionsEnabled = referencedSettings.AreReflectionsEnabled;
                 ReflectionDirection = referencedSettings.ReflectionDirection;
                 ReflectionOverlay = referencedSettings.ReflectionOverlay;
                 ReflectionOffset = referencedSettings.ReflectionOffset;

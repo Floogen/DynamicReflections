@@ -1,4 +1,5 @@
-﻿using HarmonyLib;
+﻿using DynamicReflections.Framework.Managers;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -48,11 +49,44 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             }
         }
 
-        private static bool DrawTilePrefix(IDisplayDevice __instance, Tile? tile, Location location, float layerDepth)
+        private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Color ___m_modulationColour, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
         {
-            if (tile is null || DynamicReflections.currentWaterSettings.IsEnabled is false)
+            if (tile is null || DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
             {
                 return true;
+            }
+
+            if (DynamicReflections.isFilteringPuddles is true)
+            {
+                if (tile.Properties.TryGetValue("PuddleIndex", out var puddleIndex) && (int)puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                {
+                    var tileXOffset = 0;
+                    var tileYOffset = puddleIndex * 16;
+                    if (tile.Properties.TryGetValue("BigPuddleIndex", out var bigPuddleIndex) && (int)bigPuddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                    {
+                        tileXOffset = bigPuddleIndex * 16;
+                    }
+
+                    int effectIndex = 0;
+                    if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffect))
+                    {
+                        effectIndex = (int)puddleEffect;
+                    }
+
+                    float rotation = 0f;
+                    if (tile.Properties.TryGetValue("PuddleRotation", out var puddleRotation))
+                    {
+                        rotation = (float)puddleRotation;
+                    }
+
+                    ___m_tilePosition.X = location.X;
+                    ___m_tilePosition.Y = location.Y;
+                    Vector2 origin = new Vector2(8f, 8f);
+                    ___m_tilePosition.X += origin.X * (float)Layer.zoom;
+                    ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
+                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tileXOffset, tileYOffset, 16, 16), DynamicReflections.currentPuddleSettings.PuddleColor, rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
+                }
+                return false;
             }
 
             if (DynamicReflections.isDrawingWaterReflection is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)

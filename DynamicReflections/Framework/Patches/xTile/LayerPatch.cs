@@ -31,6 +31,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
         internal void Apply(Harmony harmony)
         {
             harmony.Patch(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), prefix: new HarmonyMethod(GetType(), nameof(DrawPrefix)));
+            harmony.Patch(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), postfix: new HarmonyMethod(GetType(), nameof(DrawPostfix)));
 
             harmony.CreateReversePatcher(AccessTools.Method(_object, nameof(Layer.Draw), new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(bool), typeof(int) }), new HarmonyMethod(GetType(), nameof(DrawReversePatch))).Patch();
 
@@ -59,6 +60,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 return true;
             }
 
+            DynamicReflections.isDrawingPuddles = false;
             DynamicReflections.isDrawingWaterReflection = false;
             DynamicReflections.isDrawingMirrorReflection = false;
 
@@ -81,6 +83,22 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 {
                     DynamicReflections.isFilteringWater = true;
                     SpriteBatchToolkit.RenderWaterReflectionPlayerSprite();
+
+                }
+
+                // Handle preliminary puddles reflection and draw logic
+                if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is true)
+                {
+                    DynamicReflections.isFilteringPuddles = true;
+                    SpriteBatchToolkit.RenderPuddles();
+                    DynamicReflections.isFilteringPuddles = false;
+                    DynamicReflections.isDrawingPuddles = true;
+                }
+                if (DynamicReflections.shouldDrawPuddlesReflection is true)
+                {
+                    DynamicReflections.isFilteringPuddles = true;
+                    SpriteBatchToolkit.RenderPuddleReflectionPlayerSprite();
+                    DynamicReflections.isFilteringPuddles = false;
                 }
 
                 // Resume previous SpriteBatch
@@ -100,6 +118,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
                     SpriteBatchToolkit.DrawRenderedPlayer(isWavy: DynamicReflections.currentWaterSettings.IsReflectionWavy);
+
 
                     DynamicReflections.isFilteringWater = false;
                     DynamicReflections.isDrawingWaterReflection = true;
@@ -127,6 +146,33 @@ namespace DynamicReflections.Framework.Patches.Tiles
             }
 
             return true;
+        }
+
+        private static void DrawPostfix(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)
+        {
+            if (__instance is null || String.IsNullOrEmpty(__instance.Id))
+            {
+                return;
+            }
+
+            if (__instance.Id.Equals("Back", StringComparison.OrdinalIgnoreCase) is true)
+            {
+                if (DynamicReflections.isDrawingPuddles is true)
+                {
+                    // Draw the puddles ontop of the "Back" layer
+                    DynamicReflections.isFilteringPuddles = true;
+                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+                    DynamicReflections.isFilteringPuddles = false;
+
+                    SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
+
+                    // Draw puddle reflection
+                    SpriteBatchToolkit.DrawPuddleReflection(DynamicReflections.puddlesRenderTarget);
+
+                    // Resume previous SpriteBatch
+                    SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
+                }
+            }
         }
 
         internal static void DrawReversePatch(Layer __instance, IDisplayDevice displayDevice, xTile.Dimensions.Rectangle mapViewport, Location displayOffset, bool wrapAround, int pixelZoom)

@@ -18,6 +18,7 @@ using DynamicReflections.Framework.Models.Settings;
 using System.Text.Json;
 using DynamicReflections.Framework.External.GenericModConfigMenu;
 using StardewValley.Locations;
+using StardewValley.Menus;
 
 namespace DynamicReflections
 {
@@ -30,11 +31,15 @@ namespace DynamicReflections
 
         // Managers
         internal static ApiManager apiManager;
+        internal static AssetManager assetManager;
         internal static MirrorsManager mirrorsManager;
+        internal static PuddleManager puddleManager;
 
         // Config options
         internal static ModConfig modConfig;
+        internal static string[] activeLocationNames = new string[2];
         internal static WaterSettings currentWaterSettings = new WaterSettings();
+        internal static PuddleSettings currentPuddleSettings = new PuddleSettings();
 
         // Water reflection variables
         internal static Vector2? waterReflectionPosition;
@@ -42,6 +47,11 @@ namespace DynamicReflections
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
+
+        // Puddle reflection variables
+        internal static bool shouldDrawPuddlesReflection;
+        internal static bool isFilteringPuddles;
+        internal static bool isDrawingPuddles;
 
         // Mirror reflection variables
         internal static FarmerSprite mirrorReflectionSprite;
@@ -55,11 +65,13 @@ namespace DynamicReflections
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
         internal static RenderTarget2D playerWaterReflectionRender;
+        internal static RenderTarget2D playerPuddleReflectionRender;
         internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
+        internal static RenderTarget2D puddlesRenderTarget;
         internal static RasterizerState rasterizer;
 
         public override void Entry(IModHelper helper)
@@ -71,7 +83,9 @@ namespace DynamicReflections
 
             // Load the managers
             apiManager = new ApiManager(monitor);
+            assetManager = new AssetManager(modHelper);
             mirrorsManager = new MirrorsManager();
+            puddleManager = new PuddleManager();
 
             try
             {
@@ -82,6 +96,7 @@ namespace DynamicReflections
                 new DisplayDevicePatch(monitor, modHelper).Apply(harmony);
                 new ToolPatch(monitor, modHelper).Apply(harmony);
                 new FurniturePatch(monitor, modHelper).Apply(harmony);
+                new GameLocationPatch(monitor, modHelper).Apply(harmony);
             }
             catch (Exception e)
             {
@@ -94,16 +109,31 @@ namespace DynamicReflections
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;
+            helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.World.FurnitureListChanged += OnFurnitureListChanged;
             helper.Events.Player.Warped += OnWarped;
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.GameLoop.DayEnding += OnDayEnding;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         }
 
         private void OnWindowResized(object sender, StardewModdingAPI.Events.WindowResizedEventArgs e)
         {
             LoadRenderers();
+        }
+
+        private void OnButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (Context.IsWorldReady is false || Game1.activeClickableMenu is not null)
+            {
+                return;
+            }
+
+            if (e.Button == modConfig.QuickMenuKey && Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            {
+                apiManager.GetGenericModConfigMenuApi().OpenModMenu(ModManifest);
+            }
         }
 
         private void OnFurnitureListChanged(object sender, StardewModdingAPI.Events.FurnitureListChangedEventArgs e)
@@ -155,8 +185,19 @@ namespace DynamicReflections
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
+            SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
+
+            if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
+            {
+                int puddlesPercentage = 0;
+                if (Game1.IsRainingHere(e.NewLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"))
+                {
+                    puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
+                }
+                DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
+            }
         }
 
         private void OnUpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)
@@ -165,35 +206,22 @@ namespace DynamicReflections
             {
                 return;
             }
-
-            // Handle mirror-viewport issue
-            if (Game1.getMostRecentViewportMotion() != Vector2.Zero && DynamicReflections.activeMirrorPositions.Count > 0)
+            else if (Game1.activeClickableMenu is null)
             {
-                // TODO: Determine why maskedPlayerMirrorReflectionRenders aren't updating when the viewport moves
-                for (int i = 0; i < DynamicReflections.activeMirrorPositions.Count; i++)
-                {
-                    var position = DynamicReflections.activeMirrorPositions[i];
-                    if (DynamicReflections.mirrors.ContainsKey(position) && DynamicReflections.mirrors[position].FurnitureLink is not null)
-                    {
-                        if (maskedPlayerMirrorReflectionRenders[i] is not null)
-                        {
-                            maskedPlayerMirrorReflectionRenders[i].Dispose();
-                        }
+                GMCMHelper.RefreshLocationListing();
+                modConfig.LastSelectedLocation = GMCMHelper.DEFAULT_LOCATION;
+            }
 
-                        maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                        Game1.graphics.GraphicsDevice,
-                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                        false,
-                        Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                        DepthFormat.None);
-                    }
-                }
+            // Handle the puddle reflection
+            DynamicReflections.shouldDrawPuddlesReflection = false;
+            if (currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
+            {
+                DynamicReflections.shouldDrawPuddlesReflection = true;
             }
 
             // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
-            if (currentWaterSettings.IsEnabled && currentWaterSettings is not null)
+            if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
                 var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.ReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;
@@ -309,8 +337,25 @@ namespace DynamicReflections
 
         private void OnDayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
+            // Populate the location-based settings
+            GMCMHelper.RefreshLocationListing();
+
+            // Hook into GMCM, if applicable
+            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            {
+                GMCMHelper.Register(apiManager.GetGenericModConfigMenuApi(), this, unregisterOld: true, loadLocationNames: true);
+            }
+
+            SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
+
+            DynamicReflections.puddleManager.Reset();
+        }
+
+        private void OnDayEnding(object sender, StardewModdingAPI.Events.DayEndingEventArgs e)
+        {
+            Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] = Game1.IsRainingHere(Game1.player.currentLocation).ToString();
         }
 
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
@@ -320,30 +365,14 @@ namespace DynamicReflections
 
             // Set our default configuration file
             modConfig = Helper.ReadConfig<ModConfig>();
+            modConfig.LocalWaterReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.WaterReflectionSettings;
+            modConfig.LocalPuddleReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.PuddleReflectionSettings;
+            modConfig.LastSelectedLocation = GMCMHelper.DEFAULT_LOCATION;
 
             // Hook into GMCM, if applicable
             if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
             {
-                var configApi = apiManager.GetGenericModConfigMenuApi();
-                configApi.Register(ModManifest, () => modConfig = new ModConfig(), delegate { Helper.WriteConfig(modConfig); SetWaterReflectionSettings(); LoadRenderers(); });
-
-                // Register the standard settings
-                configApi.RegisterLabel(ModManifest, Helper.Translation.Get("config.general_settings.title"), String.Empty);
-                configApi.AddBoolOption(ModManifest, () => modConfig.AreMirrorReflectionsEnabled, value => modConfig.AreMirrorReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.mirror_reflections"));
-                configApi.AddBoolOption(ModManifest, () => modConfig.AreWaterReflectionsEnabled, value => modConfig.AreWaterReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.water_reflections"));
-
-                configApi.RegisterLabel(ModManifest, Helper.Translation.Get("config.water_settings.title"), String.Empty);
-                configApi.AddNumberOption(ModManifest, () => (int)modConfig.WaterReflectionSettings.ReflectionDirection, value => modConfig.WaterReflectionSettings.ReflectionDirection = (Direction)value, () => Helper.Translation.Get("config.water_settings.reflection_direction"), tooltip: () => Helper.Translation.Get("config.water_settings.reflection_direction.description"), min: 0, max: 2, interval: 2);
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.R, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(value, modConfig.WaterReflectionSettings.ReflectionOverlay.G, modConfig.WaterReflectionSettings.ReflectionOverlay.B, modConfig.WaterReflectionSettings.ReflectionOverlay.A), () => Helper.Translation.Get("config.water_settings.color.r"), min: 0, max: 255, interval: 1);
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.G, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(modConfig.WaterReflectionSettings.ReflectionOverlay.R, value, modConfig.WaterReflectionSettings.ReflectionOverlay.B, modConfig.WaterReflectionSettings.ReflectionOverlay.A), () => Helper.Translation.Get("config.water_settings.color.g"), min: 0, max: 255, interval: 1);
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.B, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(modConfig.WaterReflectionSettings.ReflectionOverlay.R, modConfig.WaterReflectionSettings.ReflectionOverlay.G, value, modConfig.WaterReflectionSettings.ReflectionOverlay.A), () => Helper.Translation.Get("config.water_settings.color.b"), min: 0, max: 255, interval: 1);
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOverlay.A, value => modConfig.WaterReflectionSettings.ReflectionOverlay = new Color(modConfig.WaterReflectionSettings.ReflectionOverlay.R, modConfig.WaterReflectionSettings.ReflectionOverlay.G, modConfig.WaterReflectionSettings.ReflectionOverlay.B, value), () => Helper.Translation.Get("config.water_settings.color.a"), min: 0, max: 255, interval: 1);
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOffset.X, value => modConfig.WaterReflectionSettings.ReflectionOffset = new Vector2(value, modConfig.WaterReflectionSettings.ReflectionOffset.Y), () => Helper.Translation.Get("config.water_settings.offset.x"), interval: 0.1f);
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.ReflectionOffset.Y, value => modConfig.WaterReflectionSettings.ReflectionOffset = new Vector2(modConfig.WaterReflectionSettings.ReflectionOffset.X, value), () => Helper.Translation.Get("config.water_settings.offset.y"), interval: 0.1f);
-                configApi.AddBoolOption(ModManifest, () => modConfig.WaterReflectionSettings.IsReflectionWavy, value => modConfig.WaterReflectionSettings.IsReflectionWavy = value, () => Helper.Translation.Get("config.water_settings.is_wavy"));
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveSpeed, value => modConfig.WaterReflectionSettings.WaveSpeed = value, () => Helper.Translation.Get("config.water_settings.wave_speed"));
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveAmplitude, value => modConfig.WaterReflectionSettings.WaveAmplitude = value, () => Helper.Translation.Get("config.water_settings.wave_amplitude"));
-                configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveFrequency, value => modConfig.WaterReflectionSettings.WaveFrequency = value, () => Helper.Translation.Get("config.water_settings.wave_frequency"));
+                GMCMHelper.Register(apiManager.GetGenericModConfigMenuApi(), this);
             }
 
             // Load in our shaders
@@ -405,24 +434,140 @@ namespace DynamicReflections
             }
         }
 
-        private void SetWaterReflectionSettings()
+        internal void SetPuddleReflectionSettings()
         {
-            if (currentWaterSettings is null)
+            if (currentPuddleSettings is null)
             {
-                currentWaterSettings = new WaterSettings();
+                currentPuddleSettings = new PuddleSettings();
             }
-            currentWaterSettings.Reset(modConfig.WaterReflectionSettings);
 
             if (Context.IsWorldReady is false || Game1.currentLocation is null || Game1.currentLocation.Map is null)
             {
                 return;
             }
+            currentPuddleSettings.Reset(modConfig.GetCurrentPuddleSettings(Game1.currentLocation));
+
+            // Set the map specific puddle settings
             var map = Game1.currentLocation.Map;
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_IsEnabled))
+            {
+                currentPuddleSettings.AreReflectionsEnabled = map.Properties[PuddleSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ShouldGeneratePuddles))
+            {
+                currentPuddleSettings.ShouldGeneratePuddles = map.Properties[PuddleSettings.MapProperty_ShouldGeneratePuddles].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ShouldPlaySplashSound))
+            {
+                currentPuddleSettings.ShouldPlaySplashSound = map.Properties[PuddleSettings.MapProperty_ShouldPlaySplashSound].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ShouldRainSplashPuddles))
+            {
+                currentPuddleSettings.ShouldRainSplashPuddles = map.Properties[PuddleSettings.MapProperty_ShouldRainSplashPuddles].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddleReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[PuddleSettings.MapProperty_PuddleReflectionOffset]) is Vector2 offset)
+                    {
+                        currentPuddleSettings.ReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddlePercentageWhileRaining))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_PuddlePercentageWhileRaining], out var percentage))
+                {
+                    currentPuddleSettings.PuddlePercentageWhileRaining = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddlePercentageAfterRaining))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_PuddlePercentageAfterRaining], out var percentage))
+                {
+                    currentPuddleSettings.PuddlePercentageAfterRaining = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_BigPuddleChance))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_BigPuddleChance], out var percentage))
+                {
+                    currentPuddleSettings.BigPuddleChance = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_MillisecondsBetweenRaindropSplashes))
+            {
+                if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_MillisecondsBetweenRaindropSplashes], out var percentage))
+                {
+                    currentPuddleSettings.MillisecondsBetweenRaindropSplashes = percentage;
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddleColor))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Color>(map.Properties[PuddleSettings.MapProperty_PuddleColor]) is Color overlay)
+                    {
+                        currentPuddleSettings.PuddleColor = overlay;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_PuddleColor from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_PuddleColor from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_RippleColor))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Color>(map.Properties[PuddleSettings.MapProperty_RippleColor]) is Color overlay)
+                    {
+                        currentPuddleSettings.RippleColor = overlay;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_RippleColor from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_RippleColor from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+        }
+
+        internal void SetWaterReflectionSettings()
+        {
+            if (currentWaterSettings is null)
+            {
+                currentWaterSettings = new WaterSettings();
+            }
+
+            if (Context.IsWorldReady is false || Game1.currentLocation is null || Game1.currentLocation.Map is null)
+            {
+                return;
+            }
+            currentWaterSettings.Reset(modConfig.GetCurrentWaterSettings(Game1.currentLocation));
 
             // Set the map specific water settings
+            var map = Game1.currentLocation.Map;
             if (map.Properties.ContainsKey(WaterSettings.MapProperty_IsEnabled))
             {
-                currentWaterSettings.IsEnabled = map.Properties[WaterSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+                currentWaterSettings.AreReflectionsEnabled = map.Properties[WaterSettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
             }
 
             if (map.Properties.ContainsKey(WaterSettings.MapProperty_ReflectionDirection))
@@ -564,105 +709,37 @@ namespace DynamicReflections
             }
         }
 
-        private void LoadRenderers()
+        internal void LoadRenderers()
         {
+            // Handle the render targets
+            RegenerateRenderer(ref playerWaterReflectionRender);
+            RegenerateRenderer(ref playerPuddleReflectionRender);
+            RegenerateRenderer(ref puddlesRenderTarget);
 
-            if (playerWaterReflectionRender is not null)
+            RegenerateRenderer(ref mirrorsLayerRenderTarget);
+            RegenerateRenderer(ref mirrorsFurnitureRenderTarget);
+
+            if (maskedPlayerMirrorReflectionRenders is null)
             {
-                playerWaterReflectionRender.Dispose();
+                maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             }
-
-            playerWaterReflectionRender = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            if (mirrorsLayerRenderTarget is not null)
-            {
-                mirrorsLayerRenderTarget.Dispose();
-            }
-
-            mirrorsLayerRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            if (mirrorsFurnitureRenderTarget is not null)
-            {
-                mirrorsFurnitureRenderTarget.Dispose();
-            }
-
-            mirrorsFurnitureRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
-            if (maskedPlayerMirrorReflectionRenders is not null)
-            {
-                foreach (var mirrorPlayerRender in maskedPlayerMirrorReflectionRenders)
-                {
-                    if (mirrorPlayerRender is not null)
-                    {
-                        mirrorPlayerRender.Dispose();
-                    }
-                }
-            }
-            maskedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             for (int i = 0; i < 3; i++)
             {
-                maskedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
+                RegenerateRenderer(ref maskedPlayerMirrorReflectionRenders[i]);
             }
 
-            if (composedPlayerMirrorReflectionRenders is not null)
+            if (composedPlayerMirrorReflectionRenders is null)
             {
-                foreach (var mirrorPlayerRender in composedPlayerMirrorReflectionRenders)
-                {
-                    if (mirrorPlayerRender is not null)
-                    {
-                        mirrorPlayerRender.Dispose();
-                    }
-                }
+                composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             }
-            composedPlayerMirrorReflectionRenders = new RenderTarget2D[3];
             for (int i = 0; i < 3; i++)
             {
-                composedPlayerMirrorReflectionRenders[i] = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
+                RegenerateRenderer(ref composedPlayerMirrorReflectionRenders[i]);
             }
 
-            if (inBetweenRenderTarget is not null)
-            {
-                inBetweenRenderTarget.Dispose();
-            }
+            RegenerateRenderer(ref inBetweenRenderTarget);
 
-            inBetweenRenderTarget = new RenderTarget2D(
-                Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
-                false,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
-                DepthFormat.None);
-
+            // Handle the rasterizer
             if (rasterizer is not null)
             {
                 rasterizer.Dispose();
@@ -670,6 +747,22 @@ namespace DynamicReflections
 
             rasterizer = new RasterizerState();
             rasterizer.CullMode = CullMode.CullClockwiseFace;
+        }
+
+        private void RegenerateRenderer(ref RenderTarget2D renderTarget2D)
+        {
+            if (renderTarget2D is not null)
+            {
+                renderTarget2D.Dispose();
+            }
+
+            renderTarget2D = new RenderTarget2D(
+                Game1.graphics.GraphicsDevice,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                false,
+                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
+                DepthFormat.None);
         }
 
         private bool IsTileWithinActiveMirror(int tileY)
