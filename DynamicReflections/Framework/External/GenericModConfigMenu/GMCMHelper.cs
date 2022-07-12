@@ -36,7 +36,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             if (loadLocationNames is true)
             {
                 configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.location_specific.title"), () => Helper.Translation.Get("config.location_specific.description"));
-                configApi.AddTextOption(ModManifest, () => DynamicReflections.modConfig.LastSelectedLocation, value => DynamicReflections.modConfig.LastSelectedLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.modConfig.LocalWaterReflectionSettings.Keys.OrderBy(k => k).ToArray(), fieldId: LOCATION_SELECTOR_ID);
+                configApi.AddTextOption(ModManifest, () => DynamicReflections.modConfig.LastSelectedLocation, value => DynamicReflections.modConfig.LastSelectedLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.activeLocationNames, fieldId: LOCATION_SELECTOR_ID);
                 configApi.OnFieldChanged(ModManifest, (key, value) => HandleFieldChange(key, value));
             }
             configApi.AddParagraph(ModManifest, () => String.Empty);
@@ -47,6 +47,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].OverrideDefaultSettings, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].OverrideDefaultSettings = value, () => Helper.Translation.Get("config.general_settings.override_default_settings"), () => Helper.Translation.Get("config.general_settings.override_default_settings.description"));
 
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.title"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].AreReflectionsEnabled, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].AreReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.water_reflections"));
             configApi.AddTextOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionDirection.ToString(), value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionDirection = (Direction)Enum.Parse(typeof(Direction), value), () => Helper.Translation.Get("config.water_settings.reflection_direction"), tooltip: () => Helper.Translation.Get("config.water_settings.reflection_direction.description"), new string[] { Direction.North.ToString(), Direction.South.ToString() });
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOffset.X, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOffset = new Vector2(value, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOffset.Y), () => Helper.Translation.Get("config.water_settings.offset.x"), interval: 0.1f);
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOffset.Y, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOffset = new Vector2(DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOffset.X, value), () => Helper.Translation.Get("config.water_settings.offset.y"), interval: 0.1f);
@@ -71,6 +72,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].OverrideDefaultSettings, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].OverrideDefaultSettings = value, () => Helper.Translation.Get("config.general_settings.override_default_settings"), () => Helper.Translation.Get("config.general_settings.override_default_settings.description"));
 
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.title"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].AreReflectionsEnabled, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].AreReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.puddle_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldGeneratePuddles, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldGeneratePuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_generate_puddles"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldPlaySplashSound, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldPlaySplashSound = value, () => Helper.Translation.Get("config.puddle_settings.should_play_splash_sound"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldRainSplashPuddles, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldRainSplashPuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_rain_splash_puddles"));
@@ -91,6 +93,8 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.B, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor = new Color(DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.R, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.G, value, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.A), () => Helper.Translation.Get("config.puddle_settings.ripple_color.b"), min: 0, max: 255, interval: 1);
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.A, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor = new Color(DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.R, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.G, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.B, value), () => Helper.Translation.Get("config.puddle_settings.ripple_color.a"), min: 0, max: 255, interval: 1);
             configApi.AddPageLink(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.link.return_main"));
+
+            configApi.AddKeybind(ModManifest, () => DynamicReflections.modConfig.QuickMenuKey, value => DynamicReflections.modConfig.QuickMenuKey = value, () => Helper.Translation.Get("config.general_settings.shortcut_key"), () => Helper.Translation.Get("config.general_settings.shortcut_key.description"));
         }
 
         private static void HandleFieldChange(string key, object value)
@@ -113,20 +117,47 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             DynamicReflections.modConfig.LocalWaterReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.WaterReflectionSettings;
             DynamicReflections.modConfig.LocalPuddleReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.PuddleReflectionSettings;
 
+
             // Populate the location-based settings
             RefreshLocationListing(reset: true);
         }
 
         internal static void RefreshLocationListing(bool reset = false)
         {
+            var location = Game1.currentLocation;
+            if (location is null)
+            {
+                return;
+            }
+            else if (reset is true || DynamicReflections.modConfig.LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
+            {
+                DynamicReflections.modConfig.LocalWaterReflectionSettings[location.NameOrUniqueName] = GetDefaultLocationSpecificWaterSettings(location);
+                DynamicReflections.modConfig.LocalPuddleReflectionSettings[location.NameOrUniqueName] = new PuddleSettings();
+            }
+
+            DynamicReflections.activeLocationNames[0] = DEFAULT_LOCATION;
+            DynamicReflections.activeLocationNames[1] = location.NameOrUniqueName;
+
+            /*
             foreach (var location in Game1.locations.Where(l => l is not null && l.IsOutdoors))
             {
                 if (reset is true || DynamicReflections.modConfig.LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
                 {
-                    DynamicReflections.modConfig.LocalWaterReflectionSettings[location.NameOrUniqueName] = new WaterSettings();
+                    DynamicReflections.modConfig.LocalWaterReflectionSettings[location.NameOrUniqueName] = GetDefaultLocationSpecificWaterSettings(location);
                     DynamicReflections.modConfig.LocalPuddleReflectionSettings[location.NameOrUniqueName] = new PuddleSettings();
                 }
             }
+            */
+        }
+
+        internal static WaterSettings GetDefaultLocationSpecificWaterSettings(GameLocation location)
+        {
+            switch (location.NameOrUniqueName)
+            {
+                case "Beach":
+                    return new WaterSettings() { ReflectionOffset = new Vector2(0f, 1f) };
+            }
+            return new WaterSettings();
         }
     }
 }

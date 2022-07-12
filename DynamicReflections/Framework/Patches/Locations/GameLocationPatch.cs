@@ -42,6 +42,11 @@ namespace DynamicReflections.Framework.Patches.Tools
                 }
             }
 
+            if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is false)
+            {
+                return;
+            }
+
             var playerTilePosition = Game1.player.getTileLocationPoint();
             if (__instance.lastTouchActionLocation.Equals(Vector2.Zero) && Int32.TryParse(__instance.doesTileHaveProperty(playerTilePosition.X, playerTilePosition.Y, "PuddleIndex", "Back"), out int puddleIndex) && puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
             {

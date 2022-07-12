@@ -8,6 +8,8 @@
   "config.general_settings.link.return_main": "Return to the Main Page",
   "config.general_settings.override_default_settings": "Override Default Settings",
   "config.general_settings.override_default_settings.description": "If enabled, this location will ignore the default settings. Ignored when used on the 'Default' location.",
+  "config.general_settings.shortcut_key": "Settings Shortcut Key",
+  "config.general_settings.shortcut_key.description": "When pressing this key, this menu will appear for quick configurations.",
 
   "config.location_specific.title": "Location Specific Settings",
   "config.location_specific.selector": "Target Location",

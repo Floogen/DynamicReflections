@@ -37,6 +37,7 @@ namespace DynamicReflections
 
         // Config options
         internal static ModConfig modConfig;
+        internal static string[] activeLocationNames = new string[2];
         internal static WaterSettings currentWaterSettings = new WaterSettings();
         internal static PuddleSettings currentPuddleSettings = new PuddleSettings();
 
@@ -108,6 +109,7 @@ namespace DynamicReflections
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;
+            helper.Events.Input.ButtonPressed += OnButtonPressed;
             helper.Events.World.FurnitureListChanged += OnFurnitureListChanged;
             helper.Events.Player.Warped += OnWarped;
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
@@ -119,6 +121,19 @@ namespace DynamicReflections
         private void OnWindowResized(object sender, StardewModdingAPI.Events.WindowResizedEventArgs e)
         {
             LoadRenderers();
+        }
+
+        private void OnButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
+        {
+            if (Context.IsWorldReady is false || Game1.activeClickableMenu is not null)
+            {
+                return;
+            }
+
+            if (e.Button == modConfig.QuickMenuKey && Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            {
+                apiManager.GetGenericModConfigMenuApi().OpenModMenu(ModManifest);
+            }
         }
 
         private void OnFurnitureListChanged(object sender, StardewModdingAPI.Events.FurnitureListChangedEventArgs e)
@@ -193,6 +208,7 @@ namespace DynamicReflections
             }
             else if (Game1.activeClickableMenu is null)
             {
+                GMCMHelper.RefreshLocationListing();
                 modConfig.LastSelectedLocation = GMCMHelper.DEFAULT_LOCATION;
             }
 

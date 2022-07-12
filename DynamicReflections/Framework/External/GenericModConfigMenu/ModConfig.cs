@@ -1,4 +1,5 @@
 ﻿using DynamicReflections.Framework.Models.Settings;
+using StardewModdingAPI;
 using StardewValley;
 using System;
 using System.Collections.Generic;
@@ -18,6 +19,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public Dictionary<string, WaterSettings> LocalWaterReflectionSettings { get; set; } = new Dictionary<string, WaterSettings>();
         public Dictionary<string, PuddleSettings> LocalPuddleReflectionSettings { get; set; } = new Dictionary<string, PuddleSettings>();
         public string LastSelectedLocation { get; set; }
+        public SButton QuickMenuKey { get; set; } = SButton.R;
 
         public WaterSettings GetCurrentWaterSettings(GameLocation location)
         {
