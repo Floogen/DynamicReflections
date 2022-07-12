@@ -96,7 +96,9 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 }
                 if (DynamicReflections.shouldDrawPuddlesReflection is true)
                 {
+                    DynamicReflections.isFilteringPuddles = true;
                     SpriteBatchToolkit.RenderPuddleReflectionPlayerSprite();
+                    DynamicReflections.isFilteringPuddles = false;
                 }
 
                 // Resume previous SpriteBatch

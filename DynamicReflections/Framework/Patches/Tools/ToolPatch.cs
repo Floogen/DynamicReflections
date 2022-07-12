@@ -30,7 +30,7 @@ namespace DynamicReflections.Framework.Patches.Tools
 
         private static void DoesShowTileLocationMarkerPostfix(Tool __instance, ref bool __result)
         {
-            if (DynamicReflections.isFilteringMirror || DynamicReflections.isFilteringWater)
+            if (DynamicReflections.isFilteringMirror || DynamicReflections.isFilteringWater || DynamicReflections.isFilteringPuddles)
             {
                 __result = false;
             }
