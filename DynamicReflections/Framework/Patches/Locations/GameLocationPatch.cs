@@ -19,6 +19,8 @@ namespace DynamicReflections.Framework.Patches.Tools
     {
         private readonly Type _type = typeof(GameLocation);
         private static double _elapsedMilliseconds;
+        private static int _cooldownCounter;
+        private static List<Point> _puddlesOnCooldown = new List<Point>();
 
         internal GameLocationPatch(IMonitor modMonitor, IModHelper modHelper) : base(modMonitor, modHelper)
         {
@@ -83,11 +85,20 @@ namespace DynamicReflections.Framework.Patches.Tools
                         for (int i = 0; i < Game1.random.Next(1, 5); i++)
                         {
                             var puddleTile = puddles[Game1.random.Next(puddles.Count)];
-                            if (Game1.random.NextDouble() > 0.5)
+                            if (_puddlesOnCooldown.Any(p => p.X == puddleTile.X && p.Y == puddleTile.Y) is false && Game1.random.NextDouble() > 0.5)
                             {
                                 GenerateRipple(__instance, puddleTile);
+                                _puddlesOnCooldown.Add(puddleTile);
                             }
                         }
+                    }
+
+                    // Iterate the cooldown counter
+                    _cooldownCounter -= 1;
+                    if (_cooldownCounter < 0)
+                    {
+                        _puddlesOnCooldown.Clear();
+                        _cooldownCounter = 5;
                     }
                 }
             }

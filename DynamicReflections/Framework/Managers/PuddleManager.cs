@@ -67,14 +67,21 @@ namespace DynamicReflections.Framework.Managers
                     }
                 }
 
+                if (percentOfDiggableTiles == 0)
+                {
+                    return;
+                }
+
                 for (int i = 0; i < diggableTiles.Count / percentOfDiggableTiles; i++)
                 {
                     var tilePosition = GetRandomTile(random, diggableTiles);
-                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleIndex"] = random.Next(0, PUDDLES_POOL);
-                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleEffect"] = random.Next(0, 4);
-                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleRotation"] = Microsoft.Xna.Framework.MathHelper.ToRadians(90 * random.Next(0, 4));
+                    var puddleIndex = random.Next(DEFAULT_PUDDLE_INDEX, PUDDLES_POOL);
 
-                    _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = true;
+                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleIndex"] = puddleIndex;
+                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleEffect"] = random.Next(0, 4);
+                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleRotation"] = MathHelper.ToRadians(90 * random.Next(0, 4));
+
+                    _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = puddleIndex != DEFAULT_PUDDLE_INDEX;
                 }
             }
         }

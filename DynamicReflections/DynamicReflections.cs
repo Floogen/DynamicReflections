@@ -110,6 +110,7 @@ namespace DynamicReflections
             helper.Events.Player.Warped += OnWarped;
             helper.Events.GameLoop.UpdateTicked += OnUpdateTicked;
             helper.Events.GameLoop.DayStarted += OnDayStarted;
+            helper.Events.GameLoop.DayEnding += OnDayEnding;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
         }
 
@@ -172,10 +173,12 @@ namespace DynamicReflections
 
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
-                if (Game1.IsRainingHere(e.NewLocation) || Game1.wasRainingYesterday)
+                int puddlesPercentage = 0;
+                if (Game1.IsRainingHere(e.NewLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"))
                 {
-                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: Game1.IsRainingHere(e.NewLocation) ? 20 : 10);
+                    puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? 20 : 10;
                 }
+                DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
             }
         }
 
@@ -308,6 +311,11 @@ namespace DynamicReflections
             DetectMirrorsForActiveLocation();
 
             DynamicReflections.puddleManager.Reset();
+        }
+
+        private void OnDayEnding(object sender, StardewModdingAPI.Events.DayEndingEventArgs e)
+        {
+            Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] = Game1.IsRainingHere(Game1.player.currentLocation).ToString();
         }
 
         private void OnGameLaunched(object sender, StardewModdingAPI.Events.GameLaunchedEventArgs e)
