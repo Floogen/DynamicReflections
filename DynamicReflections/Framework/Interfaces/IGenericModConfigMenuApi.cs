@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
+using StardewValley;
 
 namespace DynamicReflections.Framework.Interfaces
 {
@@ -14,7 +15,11 @@ namespace DynamicReflections.Framework.Interfaces
 
         void RegisterLabel(IManifest mod, string labelName, string labelDesc);
         void RegisterPageLabel(IManifest mod, string labelName, string labelDesc, string newPage);
-        void RegisterImage(IManifest mod, string texPath, Rectangle? texRect = null, int scale = 4);
+        void AddSectionTitle(IManifest mod, Func<string> text, Func<string> tooltip = null);
+        void AddParagraph(IManifest mod, Func<string> text);
+        void AddImage(IManifest mod, Func<Texture2D> texture, Rectangle? texturePixelArea = null, int scale = Game1.pixelZoom);
+        void AddPage(IManifest mod, string pageId, Func<string> pageTitle = null);
+        void AddPageLink(IManifest mod, string pageId, Func<string> text, Func<string> tooltip = null);
 
         void RegisterSimpleOption(IManifest mod, string optionName, string optionDesc, Func<bool> optionGet, Action<bool> optionSet);
 
