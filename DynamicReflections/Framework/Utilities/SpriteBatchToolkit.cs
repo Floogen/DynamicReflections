@@ -370,6 +370,10 @@ namespace DynamicReflections.Framework.Utilities
 
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
 
+            var targetPosition = Game1.player.Position;
+            targetPosition -= DynamicReflections.currentPuddleSettings.ReflectionOffset * 64f;
+            Game1.player.Position = targetPosition;
+
             Game1.player.draw(Game1.spriteBatch);
 
             Game1.player.Position = oldPosition;

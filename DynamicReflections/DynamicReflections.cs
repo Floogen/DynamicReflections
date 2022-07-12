@@ -469,6 +469,22 @@ namespace DynamicReflections
                 currentPuddleSettings.ShouldRainSplashPuddles = map.Properties[PuddleSettings.MapProperty_ShouldRainSplashPuddles].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
             }
 
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddleReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[PuddleSettings.MapProperty_PuddleReflectionOffset]) is Vector2 offset)
+                    {
+                        currentPuddleSettings.ReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
             if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddlePercentageWhileRaining))
             {
                 if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_PuddlePercentageWhileRaining], out var percentage))

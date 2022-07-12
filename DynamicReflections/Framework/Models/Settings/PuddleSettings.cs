@@ -23,6 +23,8 @@ namespace DynamicReflections.Framework.Models.Settings
         public const string MapProperty_ShouldRainSplashPuddles = "ShouldRainSplashPuddles";
         public bool ShouldRainSplashPuddles { get; set; } = true;
 
+        public const string MapProperty_PuddleReflectionOffset = "PuddleReflectionOffset";
+        public Vector2 ReflectionOffset { get; set; } = Vector2.Zero;
 
         public const string MapProperty_PuddlePercentageWhileRaining = "PuddlePercentageWhileRaining";
         public int PuddlePercentageWhileRaining { get; set; } = 20;
@@ -53,6 +55,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 ShouldGeneratePuddles = true;
                 ShouldPlaySplashSound = true;
                 ShouldRainSplashPuddles = true;
+                ReflectionOffset = Vector2.Zero;
                 PuddlePercentageWhileRaining = 20;
                 PuddlePercentageAfterRaining = 10;
                 BigPuddleChance = 25;
@@ -67,6 +70,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 ShouldGeneratePuddles = referencedSettings.ShouldGeneratePuddles;
                 ShouldPlaySplashSound = referencedSettings.ShouldPlaySplashSound;
                 ShouldRainSplashPuddles = referencedSettings.ShouldRainSplashPuddles;
+                ReflectionOffset = referencedSettings.ReflectionOffset;
                 PuddlePercentageWhileRaining = referencedSettings.PuddlePercentageWhileRaining;
                 PuddlePercentageAfterRaining = referencedSettings.PuddlePercentageAfterRaining;
                 BigPuddleChance = referencedSettings.BigPuddleChance;
