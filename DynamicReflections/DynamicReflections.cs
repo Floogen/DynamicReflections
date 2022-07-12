@@ -170,7 +170,13 @@ namespace DynamicReflections
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
 
-            DynamicReflections.puddleManager.Generate(e.NewLocation);
+            if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
+            {
+                if (Game1.IsRainingHere(e.NewLocation) || Game1.wasRainingYesterday)
+                {
+                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: Game1.IsRainingHere(e.NewLocation) ? 20 : 10);
+                }
+            }
         }
 
         private void OnUpdateTicked(object sender, StardewModdingAPI.Events.UpdateTickedEventArgs e)

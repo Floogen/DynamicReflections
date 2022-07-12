@@ -1,7 +1,7 @@
-﻿using StardewValley;
+﻿using Microsoft.Xna.Framework;
+using StardewValley;
 using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -23,7 +23,7 @@ namespace DynamicReflections.Framework.Managers
             _locationToPuddleTiles = new Dictionary<GameLocation, bool[,]>();
         }
 
-        public void Generate(GameLocation location)
+        public void Generate(GameLocation location, int percentOfDiggableTiles = 10)
         {
             puddleRippleSprites = new List<TemporaryAnimatedSprite>();
             if (location is null || location.Map is null)
@@ -40,7 +40,7 @@ namespace DynamicReflections.Framework.Managers
                 return;
             }
 
-            GenerateByPercentage(location);
+            GenerateByPercentage(location, percentOfDiggableTiles);
         }
 
         private void GenerateByPercentage(GameLocation location, int percentOfDiggableTiles = 10)
@@ -59,7 +59,7 @@ namespace DynamicReflections.Framework.Managers
                         {
                             backLayer.Tiles[x, y].Properties["PuddleIndex"] = DEFAULT_PUDDLE_INDEX;
 
-                            if (backLayer.Tiles[x, y].TileIndexProperties.TryGetValue("Diggable", out _))
+                            if (String.IsNullOrEmpty(location.doesTileHaveProperty(x, y, "Diggable", "Back")) is false && location.isTileHoeDirt(new Microsoft.Xna.Framework.Vector2(x, y)) is false && location.isTileLocationTotallyClearAndPlaceable(x, y) && DoesPointHavePreviousNeighbor(location, new Point(x, y)) is false)
                             {
                                 diggableTiles.Add(new Point(x, y));
                             }
@@ -70,12 +70,11 @@ namespace DynamicReflections.Framework.Managers
                 for (int i = 0; i < diggableTiles.Count / percentOfDiggableTiles; i++)
                 {
                     var tilePosition = GetRandomTile(random, diggableTiles);
-                    if (String.IsNullOrEmpty(location.doesTileHaveProperty(tilePosition.X, tilePosition.Y, "Diggable", "Back")) is false && location.isTileHoeDirt(new Microsoft.Xna.Framework.Vector2(tilePosition.X, tilePosition.Y)) is false && location.isTileLocationTotallyClearAndPlaceable(tilePosition.X, tilePosition.Y) && DoesPointHavePreviousNeighbor(location, new Point(tilePosition.X, tilePosition.Y)) is false)
-                    {
-                        backLayer.Tiles[(int)tilePosition.X, (int)tilePosition.Y].Properties["PuddleIndex"] = random.Next(DEFAULT_PUDDLE_INDEX, PUDDLES_POOL);
-                        backLayer.Tiles[(int)tilePosition.X, (int)tilePosition.Y].Properties["PuddleEffect"] = random.Next(0, 4);
-                        backLayer.Tiles[(int)tilePosition.X, (int)tilePosition.Y].Properties["PuddleRotation"] = Microsoft.Xna.Framework.MathHelper.ToRadians(90 * random.Next(0, 4));
-                    }
+                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleIndex"] = random.Next(0, PUDDLES_POOL);
+                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleEffect"] = random.Next(0, 4);
+                    backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleRotation"] = Microsoft.Xna.Framework.MathHelper.ToRadians(90 * random.Next(0, 4));
+
+                    _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = true;
                 }
             }
         }
@@ -116,25 +115,25 @@ namespace DynamicReflections.Framework.Managers
         public bool DoesPointHavePreviousNeighbor(GameLocation location, Point point)
         {
             var offsetPoint = new Point(point.X - 1, point.Y);
-            if (GetPuddleTileIndex(location, offsetPoint.X, offsetPoint.Y) is true)
+            if (IsTilePuddle(location, offsetPoint.X, offsetPoint.Y) is true)
             {
                 return true;
             }
 
             offsetPoint = new Point(point.X + 1, point.Y);
-            if (GetPuddleTileIndex(location, offsetPoint.X, offsetPoint.Y) is true)
+            if (IsTilePuddle(location, offsetPoint.X, offsetPoint.Y) is true)
             {
                 return true;
             }
 
             offsetPoint = new Point(point.X, point.Y - 1);
-            if (GetPuddleTileIndex(location, offsetPoint.X, offsetPoint.Y) is true)
+            if (IsTilePuddle(location, offsetPoint.X, offsetPoint.Y) is true)
             {
                 return true;
             }
 
             offsetPoint = new Point(point.X, point.Y + 1);
-            if (GetPuddleTileIndex(location, offsetPoint.X, offsetPoint.Y) is true)
+            if (IsTilePuddle(location, offsetPoint.X, offsetPoint.Y) is true)
             {
                 return true;
             }
@@ -142,7 +141,7 @@ namespace DynamicReflections.Framework.Managers
             return false;
         }
 
-        public bool GetPuddleTileIndex(GameLocation location, int x, int y)
+        public bool IsTilePuddle(GameLocation location, int x, int y)
         {
             if (_locationToPuddleTiles[location] is null || x < 0 || y < 0 || _locationToPuddleTiles[location].GetLength(0) <= x || _locationToPuddleTiles[location].GetLength(1) <= y)
             {
@@ -150,6 +149,48 @@ namespace DynamicReflections.Framework.Managers
             }
 
             return _locationToPuddleTiles[location][x, y];
+        }
+
+        public List<Point> GetPuddleTiles(GameLocation location, bool limitToView = false)
+        {
+            var puddles = new List<Point>();
+            if (_locationToPuddleTiles.ContainsKey(location) is false)
+            {
+                return puddles;
+            }
+
+            int tileWidth = Game1.pixelZoom * 16;
+            int tileHeight = Game1.pixelZoom * 16;
+            int tileXMin = ((Game1.viewport.X >= 0) ? (Game1.viewport.X / tileWidth) : ((Game1.viewport.X - tileWidth + 1) / tileWidth));
+            int tileYMin = ((Game1.viewport.Y >= 0) ? (Game1.viewport.Y / tileHeight) : ((Game1.viewport.Y - tileHeight + 1) / tileHeight));
+            if (tileXMin < 0)
+            {
+                tileXMin = 0;
+            }
+            if (tileYMin < 0)
+            {
+                tileYMin = 0;
+            }
+            int tileColumns = 1 + (Game1.viewport.Size.Width - 1) / tileWidth;
+            int tileRows = 1 + (Game1.viewport.Size.Height - 1) / tileHeight;
+            int tileXMax = tileXMin + tileColumns;
+            int tileYMax = tileYMin + tileRows;
+
+            for (int x = 0; x < _locationToPuddleTiles[location].GetLength(0); x++)
+            {
+                for (int y = 0; y < _locationToPuddleTiles[location].GetLength(1); y++)
+                {
+                    if (_locationToPuddleTiles[location][x, y] is true)
+                    {
+                        if (limitToView is false || (limitToView is true && x >= tileXMin && x < tileXMax && y >= tileYMin && y < tileYMax))
+                        {
+                            puddles.Add(new Point(x, y));
+                        }
+                    }
+                }
+            }
+
+            return puddles;
         }
     }
 }

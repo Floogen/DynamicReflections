@@ -56,6 +56,7 @@ namespace DynamicReflections.Framework.Patches.Tools
                         yOffset += 20f;
                         break;
                 }
+
                 TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(Game1.player.getStandingX() - xOffset, Game1.player.getStandingY() - yOffset), flicker: false, flipped: false, 0f, 0f, new Color(255, 255, 255, 155), 1f, 0f, 0f, 0f);
                 splashSprite.acceleration = new Vector2(Game1.player.xVelocity, Game1.player.yVelocity);
                 DynamicReflections.puddleManager.puddleRippleSprites.Add(splashSprite);
@@ -74,22 +75,35 @@ namespace DynamicReflections.Framework.Patches.Tools
             {
                 _elapsedMilliseconds = 0;
 
-                var puddles = DynamicReflections.puddleManager.GetPuddleTiles(__instance, limitToView: true);
-                if (puddles.Count > 0)
+                if (Game1.IsRainingHere(__instance))
                 {
-                    for (int i = 0; i < Game1.random.Next(1, 5); i++)
+                    var puddles = DynamicReflections.puddleManager.GetPuddleTiles(__instance, limitToView: true);
+                    if (puddles.Count > 0)
                     {
-                        var puddleTile = puddles[Game1.random.Next(puddles.Count)];
-                        if (Game1.random.NextDouble() > 0.5)
+                        for (int i = 0; i < Game1.random.Next(1, 5); i++)
                         {
-                            TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(puddleTile.X, puddleTile.Y) * 64f, flicker: false, flipped: false, 0f, 0f, new Color(255, 255, 255, 155), 1f, 0f, 0f, 0f);
-                            DynamicReflections.puddleManager.puddleRippleSprites.Add(splashSprite);
-
-                            TemporaryAnimatedSprite dropletSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(2 * 64, 18 * 64, 64, 64), Game1.random.Next(75, 125), 5, 1, new Vector2(puddleTile.X, puddleTile.Y - 0.5f) * 64f, flicker: false, flipped: false, 0f, 0f, new Color(141, 181, 216, 91), 1f, 0f, 0f, 0f);
-                            __instance.temporarySprites.Add(dropletSprite);
+                            var puddleTile = puddles[Game1.random.Next(puddles.Count)];
+                            if (Game1.random.NextDouble() > 0.5)
+                            {
+                                GenerateRipple(__instance, puddleTile);
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        private static void GenerateRipple(GameLocation location, Point puddleTile, bool playSound = false)
+        {
+            TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(puddleTile.X, puddleTile.Y) * 64f, flicker: false, flipped: false, 0f, 0f, new Color(255, 255, 255, 155), 1f, 0f, 0f, 0f);
+            DynamicReflections.puddleManager.puddleRippleSprites.Add(splashSprite);
+
+            TemporaryAnimatedSprite dropletSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(2 * 64, 18 * 64, 64, 64), Game1.random.Next(75, 125), 5, 1, new Vector2(puddleTile.X, puddleTile.Y - 0.5f) * 64f, flicker: false, flipped: false, 0f, 0f, new Color(141, 181, 216, 91), 1f, 0f, 0f, 0f);
+            location.temporarySprites.Add(dropletSprite);
+
+            if (playSound)
+            {
+                location.playSound(Game1.random.NextDouble() > 0.5 ? "slosh" : "waterSlosh");
             }
         }
     }
