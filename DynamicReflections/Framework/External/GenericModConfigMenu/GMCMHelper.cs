@@ -131,9 +131,13 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             {
                 return;
             }
-            else if (reset is true || DynamicReflections.modConfig.LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
+
+            if (reset is true || DynamicReflections.modConfig.LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
             {
                 DynamicReflections.modConfig.LocalWaterReflectionSettings[location.NameOrUniqueName] = GetDefaultLocationSpecificWaterSettings(location);
+            }
+            if (reset is true || DynamicReflections.modConfig.LocalPuddleReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
+            {
                 DynamicReflections.modConfig.LocalPuddleReflectionSettings[location.NameOrUniqueName] = new PuddleSettings();
             }
 
