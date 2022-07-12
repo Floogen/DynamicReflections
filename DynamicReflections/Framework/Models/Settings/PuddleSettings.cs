@@ -39,6 +39,9 @@ namespace DynamicReflections.Framework.Models.Settings
         public const string MapProperty_RippleColor = "RippleColor";
         public Color RippleColor { get; set; } = new Color(255, 255, 255, 155);
 
+
+        public bool OverrideDefaultSettings { get; set; }
+
         public void Reset(PuddleSettings referencedSettings = null)
         {
             if (referencedSettings is null)
@@ -52,6 +55,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 MillisecondsBetweenRaindropSplashes = 500;
                 PuddleColor = new Color(91, 91, 91, 91);
                 RippleColor = new Color(255, 255, 255, 155);
+                OverrideDefaultSettings = false;
             }
             else
             {

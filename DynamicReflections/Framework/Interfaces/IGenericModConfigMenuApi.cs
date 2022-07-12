@@ -30,5 +30,6 @@ namespace DynamicReflections.Framework.Interfaces
 
         void RegisterComplexOption(IManifest mod, string optionName, string optionDesc, Func<Vector2, object, object> widgetUpdate, Func<SpriteBatch, Vector2, object, object> widgetDraw, Action<object> onSave);
         void OnFieldChanged(IManifest mod, Action<string, object> onChange);
+        void Unregister(IManifest mod);
     }
 }

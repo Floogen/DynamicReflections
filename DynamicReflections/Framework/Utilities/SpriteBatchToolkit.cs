@@ -399,7 +399,7 @@ namespace DynamicReflections.Framework.Utilities
             var oldDirection = Game1.player.FacingDirection;
             var oldSprite = Game1.player.FarmerSprite;
 
-            if (DynamicReflections.modConfig.WaterReflectionSettings.ReflectionDirection == Models.Settings.Direction.South)
+            if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
             {
                 var scale = Matrix.CreateScale(1, -1, 1);
                 var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y * 2, 0);
@@ -430,7 +430,7 @@ namespace DynamicReflections.Framework.Utilities
             DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
 
-            Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay);
+            Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
 
             Game1.spriteBatch.End();
         }

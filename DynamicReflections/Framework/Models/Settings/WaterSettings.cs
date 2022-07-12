@@ -27,7 +27,6 @@ namespace DynamicReflections.Framework.Models.Settings
 
         public const string MapProperty_ReflectionOverlay = "WaterReflectionOverlay";
         public Color ReflectionOverlay { get; set; } = Color.White;
-        private Color _actualReflectionOverlay;
 
         public const string MapProperty_ReflectionOffset = "WaterReflectionOffset";
         public Vector2 ReflectionOffset { get; set; } = new Vector2(0f, 1.5f);
@@ -44,6 +43,9 @@ namespace DynamicReflections.Framework.Models.Settings
         public const string MapProperty_WaveFrequency = "WaterReflectionWaveFrequency";
         public float WaveFrequency { get; set; } = 50f;
 
+
+        public bool OverrideDefaultSettings { get; set; }
+
         public void Reset(WaterSettings referencedSettings = null)
         {
             if (referencedSettings is null)
@@ -56,6 +58,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 WaveSpeed = 1f;
                 WaveAmplitude = 0.01f;
                 WaveFrequency = 50f;
+                OverrideDefaultSettings = false;
             }
             else
             {
