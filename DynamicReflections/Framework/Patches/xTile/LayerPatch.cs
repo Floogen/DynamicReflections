@@ -59,7 +59,6 @@ namespace DynamicReflections.Framework.Patches.Tiles
             {
                 return true;
             }
-            DynamicReflections.shouldDrawPuddlesReflection = true;
 
             DynamicReflections.isDrawingPuddles = false;
             DynamicReflections.isDrawingWaterReflection = false;

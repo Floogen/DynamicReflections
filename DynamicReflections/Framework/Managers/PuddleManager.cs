@@ -67,7 +67,7 @@ namespace DynamicReflections.Framework.Managers
                     }
                 }
 
-                if (percentOfDiggableTiles == 0)
+                if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is false || percentOfDiggableTiles == 0)
                 {
                     return;
                 }

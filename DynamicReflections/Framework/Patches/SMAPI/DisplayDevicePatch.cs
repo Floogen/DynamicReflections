@@ -56,8 +56,6 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return true;
             }
 
-            // TODO: Implement puddles by selecting random Diggable tiles on warp, then drawing the mask before drawing the reflection
-            // TODO: Move this component to postfix to draw the actual puddle / reflection?
             if (DynamicReflections.isFilteringPuddles is true)
             {
                 if (tile.Properties.TryGetValue("PuddleIndex", out var puddleIndex) && (int)puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
@@ -79,7 +77,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                     Vector2 origin = new Vector2(8f, 8f);
                     ___m_tilePosition.X += origin.X * (float)Layer.zoom;
                     ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, puddleIndex * 16, 16, 16), new Color(91, 91, 91, 91), rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
+                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, puddleIndex * 16, 16, 16), DynamicReflections.currentPuddleSettings.PuddleColor, rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
                 }
                 return false;
             }

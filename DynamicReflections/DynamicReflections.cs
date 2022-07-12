@@ -37,6 +37,7 @@ namespace DynamicReflections
         // Config options
         internal static ModConfig modConfig;
         internal static WaterSettings currentWaterSettings = new WaterSettings();
+        internal static PuddleSettings currentPuddleSettings = new PuddleSettings();
 
         // Water reflection variables
         internal static Vector2? waterReflectionPosition;
@@ -168,6 +169,7 @@ namespace DynamicReflections
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
+            SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
 
@@ -176,7 +178,7 @@ namespace DynamicReflections
                 int puddlesPercentage = 0;
                 if (Game1.IsRainingHere(e.NewLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"))
                 {
-                    puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? 20 : 10;
+                    puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
                 }
                 DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
             }
@@ -189,9 +191,16 @@ namespace DynamicReflections
                 return;
             }
 
+            // Handle the puddle reflection
+            DynamicReflections.shouldDrawPuddlesReflection = false;
+            if (currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
+            {
+                DynamicReflections.shouldDrawPuddlesReflection = true;
+            }
+
             // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
-            if (currentWaterSettings.AreReflectionsEnabled && currentWaterSettings is not null)
+            if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
                 var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.ReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;
@@ -307,6 +316,7 @@ namespace DynamicReflections
 
         private void OnDayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
+            SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
 
@@ -336,6 +346,7 @@ namespace DynamicReflections
                 configApi.RegisterLabel(ModManifest, Helper.Translation.Get("config.general_settings.title"), String.Empty);
                 configApi.AddBoolOption(ModManifest, () => modConfig.AreMirrorReflectionsEnabled, value => modConfig.AreMirrorReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.mirror_reflections"));
                 configApi.AddBoolOption(ModManifest, () => modConfig.AreWaterReflectionsEnabled, value => modConfig.AreWaterReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.water_reflections"));
+                configApi.AddBoolOption(ModManifest, () => modConfig.ArePuddleReflectionsEnabled, value => modConfig.ArePuddleReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.puddle_reflections"));
 
                 configApi.RegisterLabel(ModManifest, Helper.Translation.Get("config.water_settings.title"), String.Empty);
                 configApi.AddNumberOption(ModManifest, () => (int)modConfig.WaterReflectionSettings.ReflectionDirection, value => modConfig.WaterReflectionSettings.ReflectionDirection = (Direction)value, () => Helper.Translation.Get("config.water_settings.reflection_direction"), tooltip: () => Helper.Translation.Get("config.water_settings.reflection_direction.description"), min: 0, max: 2, interval: 2);
@@ -349,6 +360,8 @@ namespace DynamicReflections
                 configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveSpeed, value => modConfig.WaterReflectionSettings.WaveSpeed = value, () => Helper.Translation.Get("config.water_settings.wave_speed"));
                 configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveAmplitude, value => modConfig.WaterReflectionSettings.WaveAmplitude = value, () => Helper.Translation.Get("config.water_settings.wave_amplitude"));
                 configApi.AddNumberOption(ModManifest, () => modConfig.WaterReflectionSettings.WaveFrequency, value => modConfig.WaterReflectionSettings.WaveFrequency = value, () => Helper.Translation.Get("config.water_settings.wave_frequency"));
+
+                // TODO: Implement puddle settings for config UI
             }
 
             // Load in our shaders
@@ -408,6 +421,24 @@ namespace DynamicReflections
                     Monitor.Log($"Failed to load the content pack {contentPack.Manifest.UniqueID}: {ex}", LogLevel.Warn);
                 }
             }
+        }
+
+        private void SetPuddleReflectionSettings()
+        {
+            if (currentPuddleSettings is null)
+            {
+                currentPuddleSettings = new PuddleSettings();
+            }
+            currentPuddleSettings.Reset(modConfig.PuddleReflectionSettings);
+
+            if (Context.IsWorldReady is false || Game1.currentLocation is null || Game1.currentLocation.Map is null)
+            {
+                return;
+            }
+            var map = Game1.currentLocation.Map;
+
+            // Set the map specific puddle settings
+            // TODO: The above
         }
 
         private void SetWaterReflectionSettings()
