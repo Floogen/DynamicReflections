@@ -86,15 +86,17 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
                 }
 
-                // Handle preliminary puddles reflection logic
-                if (DynamicReflections.shouldDrawPuddlesReflection is true)
+                // Handle preliminary puddles reflection and draw logic
+                if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is true)
                 {
                     DynamicReflections.isFilteringPuddles = true;
                     SpriteBatchToolkit.RenderPuddles();
                     DynamicReflections.isFilteringPuddles = false;
-
-                    SpriteBatchToolkit.RenderPuddleReflectionPlayerSprite();
                     DynamicReflections.isDrawingPuddles = true;
+                }
+                if (DynamicReflections.shouldDrawPuddlesReflection is true)
+                {
+                    SpriteBatchToolkit.RenderPuddleReflectionPlayerSprite();
                 }
 
                 // Resume previous SpriteBatch

@@ -59,7 +59,7 @@ namespace DynamicReflections.Framework.Patches.Tools
                         break;
                 }
 
-                TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(Game1.player.getStandingX() - xOffset, Game1.player.getStandingY() - yOffset), flicker: false, flipped: false, 0f, 0f, new Color(255, 255, 255, 155), 1f, 0f, 0f, 0f);
+                TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(Game1.player.getStandingX() - xOffset, Game1.player.getStandingY() - yOffset), flicker: false, flipped: false, 0f, 0f, DynamicReflections.currentPuddleSettings.RippleColor, 1f, 0f, 0f, 0f);
                 splashSprite.acceleration = new Vector2(Game1.player.xVelocity, Game1.player.yVelocity);
                 DynamicReflections.puddleManager.puddleRippleSprites.Add(splashSprite);
 

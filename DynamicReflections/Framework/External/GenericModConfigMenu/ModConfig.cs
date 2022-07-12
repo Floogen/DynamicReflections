@@ -11,7 +11,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
     {
         public bool AreWaterReflectionsEnabled { get { return WaterReflectionSettings.AreReflectionsEnabled; } set { WaterReflectionSettings.AreReflectionsEnabled = value; } }
         public bool AreMirrorReflectionsEnabled { get; set; } = true;
-        public bool ArePuddleReflectionsEnabled { get; set; } = true;
+        public bool ArePuddleReflectionsEnabled { get { return PuddleReflectionSettings.AreReflectionsEnabled; } set { PuddleReflectionSettings.AreReflectionsEnabled = value; } }
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();
         public PuddleSettings PuddleReflectionSettings { get; set; } = new PuddleSettings();
     }
