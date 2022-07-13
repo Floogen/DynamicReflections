@@ -17,8 +17,11 @@ namespace DynamicReflections.Framework.Managers
 
         public AssetManager(IModHelper helper)
         {
+            // Get the asset folder path
+            var assetFolderPath = helper.ModContent.GetInternalAssetName(Path.Combine("Framework", "Assets")).Name;
+
             // Load in the puddles tilesheet
-            PuddlesTileSheetTexture = helper.ModContent.Load<Texture2D>(Path.Combine(helper.DirectoryPath, "Framework", "Assets", "Textures", "puddles_sheet.png"));
+            PuddlesTileSheetTexture = helper.ModContent.Load<Texture2D>(Path.Combine(assetFolderPath, "Textures", "puddles_sheet.png"));
         }
     }
 }
