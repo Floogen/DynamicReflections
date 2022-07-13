@@ -192,12 +192,18 @@ namespace DynamicReflections
 
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
-                int puddlesPercentage = 0;
-                if (Game1.IsRainingHere(e.NewLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"))
+                // TODO: Revise the below line for SDV v1.6, as the Desert exception should no longer be needed
+                bool canRainHere = e.NewLocation.GetLocationContext() != GameLocation.LocationContext.MAX && e.NewLocation.Name.Equals("Desert") is false;
+                if (canRainHere is true)
                 {
-                    puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
+                    int puddlesPercentage = 0;
+                    if (Game1.IsRainingHere(e.NewLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"))
+                    {
+                        puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
+                    }
+                    Monitor.Log($"{puddlesPercentage} | {e.NewLocation.locationContext}", LogLevel.Debug);
+                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
                 }
-                DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
             }
         }
 
