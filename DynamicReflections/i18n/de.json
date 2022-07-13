@@ -28,7 +28,7 @@
   "config.water_settings.is_wavy": "Wellenförmige Reflektionen aktivieren",
   "config.water_settings.wave_speed": "Wellengeschwindigkeit",
   "config.water_settings.wave_amplitude": "Wellenamplitude",
-  "config.water_settings.wave_frequency": "Wellenfrequenz"
+  "config.water_settings.wave_frequency": "Wellenfrequenz",
 
   "config.puddle_settings.title": "Pfützenspezifische Einstellungen",
   "config.puddle_settings.link": "Zu den Pfützen-Einstellungen",
