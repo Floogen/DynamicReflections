@@ -6,3 +6,4 @@
 Dynamic Reflections has been generously translated into several languages by the following users:
 
 * **German** -  NightFright2k19
+* **Thai** - ellipszist
