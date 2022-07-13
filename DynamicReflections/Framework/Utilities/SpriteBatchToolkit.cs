@@ -445,6 +445,10 @@ namespace DynamicReflections.Framework.Utilities
             {
                 Game1.background.draw(Game1.spriteBatch);
             }
+            else if (Game1.currentLocation is not null)
+            {
+                Game1.currentLocation.drawBackground(Game1.spriteBatch);
+            }
         }
     }
 }
