@@ -1,12 +1,24 @@
-﻿{
+{
   // Config
   "config.general_settings.title": "Allgemeine Einstellungen",
   "config.general_settings.water_reflections": "Wasserreflektionen aktivieren",
   "config.general_settings.mirror_reflections": "Spiegelreflektionen aktivieren",
+  "config.general_settings.link.click_here": "Hier klicken",
+  "config.general_settings.link.return_main": "Zurück zur Hauptseite",
+  "config.general_settings.override_default_settings": "Standardeinstellungen überbrücken",
+  "config.general_settings.override_default_settings.description": "Falls aktiviert wird dieser Ort die Standardeinstellungen ignorieren. Wird ignoriert wenn am 'Standard'-Ort verwendet.",
+  "config.general_settings.shortcut_key": "Tastenkürzel für Einstellungen",
+  "config.general_settings.shortcut_key.description": "Dieses Menü erscheint für Schnellkonfigurationen, wenn die zugewiesene Taste gedrückt wird.",
+
+  "config.location_specific.title": "Ortsspezifische Einstellungen",
+  "config.location_specific.selector": "Zielort",
+  "config.location_specific.description": "'Standard' verwenden, um die Standardeinstellungen für alle Orte anzupassen.",
 
   "config.water_settings.title": "Wasserspezifische Einstellungen",
+  "config.water_settings.link": "Zu den Wasser-Einstellungen",
   "config.water_settings.reflection_direction": "Reflektionsrichtung",
   "config.water_settings.reflection_direction.description": "0 für nördliche, 2 für südliche Reflektionen.",
+  "config.water_settings.color.title": "Overlay-Farbe für Reflektionen",
   "config.water_settings.color.r": "Reflektion: Overlay-Farbe (R)",
   "config.water_settings.color.g": "Reflektion: Overlay-Farbe (G)",
   "config.water_settings.color.b": "Reflektion: Overlay-Farbe (B)",
@@ -17,4 +29,25 @@
   "config.water_settings.wave_speed": "Wellengeschwindigkeit",
   "config.water_settings.wave_amplitude": "Wellenamplitude",
   "config.water_settings.wave_frequency": "Wellenfrequenz"
+
+  "config.puddle_settings.title": "Pfützenspezifische Einstellungen",
+  "config.puddle_settings.link": "Zu den Pfützen-Einstellungen",
+  "config.puddle_settings.should_generate_puddles": "Pfützen generieren",
+  "config.puddle_settings.should_play_splash_sound": "Spritz-Sound für Pfützen verwenden",
+  "config.puddle_settings.should_rain_splash_puddles": "Regen verursacht Spritzer in Pfützen",
+  "config.puddle_settings.puddle_percentage_while_raining": "Pfützen-Prozentanteil während Regen",
+  "config.puddle_settings.puddle_percentage_after_raining": "Pfützen-Prozentanteil nach Regen",
+  "config.puddle_settings.big_puddle_chance": "Change für große Pfützen",
+  "config.puddle_settings.milliseconds_between_raindrop_splashes": "Pause zwischen Regentropfen-Spritzern",
+  "config.puddle_settings.milliseconds_between_raindrop_splashes_description": "Millisekunden zwischen Regentropfen-Spritzern.",
+  "config.puddle_settings.puddle_color.title": "Pfützenfarbe",
+  "config.puddle_settings.puddle_color.r": "Pfützenfarbe (R)",
+  "config.puddle_settings.puddle_color.g": "Pfützenfarbe (G)",
+  "config.puddle_settings.puddle_color.b": "Pfützenfarbe (B)",
+  "config.puddle_settings.puddle_color.a": "Pfützenfarbe (A)",
+  "config.puddle_settings.ripple_color.title": "Kräuselfarbe",
+  "config.puddle_settings.ripple_color.r": "Kräuselfarbe (R)",
+  "config.puddle_settings.ripple_color.g": "Kräuselfarbe (G)",
+  "config.puddle_settings.ripple_color.b": "Kräuselfarbe (B)",
+  "config.puddle_settings.ripple_color.a": "Kräuselfarbe (A)"
 }
