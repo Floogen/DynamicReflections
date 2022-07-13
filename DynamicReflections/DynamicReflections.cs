@@ -201,7 +201,7 @@ namespace DynamicReflections
                     {
                         puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
                     }
-                    Monitor.Log($"{puddlesPercentage} | {e.NewLocation.locationContext}", LogLevel.Debug);
+
                     DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
                 }
             }
@@ -213,7 +213,15 @@ namespace DynamicReflections
             {
                 return;
             }
-            else if (Game1.activeClickableMenu is null)
+
+            // Handle updating the GMCM menu
+            var waterSettings = modConfig.GetCurrentWaterSettings(Game1.currentLocation);
+            GMCMHelper.IsLocationOverridingWaterDefault = waterSettings.OverrideDefaultSettings && waterSettings != DynamicReflections.modConfig.WaterReflectionSettings;
+
+            var puddleSettings = modConfig.GetCurrentPuddleSettings(Game1.currentLocation);
+            GMCMHelper.IsLocationOverridingPuddleDefault = puddleSettings.OverrideDefaultSettings && puddleSettings != DynamicReflections.modConfig.PuddleReflectionSettings;
+
+            if (Game1.activeClickableMenu is null)
             {
                 GMCMHelper.RefreshLocationListing();
                 modConfig.LastSelectedLocation = GMCMHelper.DEFAULT_LOCATION;

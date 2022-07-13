@@ -12,6 +12,9 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 {
     internal class GMCMHelper
     {
+        internal static bool IsLocationOverridingWaterDefault;
+        internal static bool IsLocationOverridingPuddleDefault;
+
         internal static readonly string DEFAULT_LOCATION = "Default";
         private static readonly string LOCATION_SELECTOR_ID = "PeacefulEnd.DynamicReflections.LocationSelector.Id";
         private static string _currentLocation = DEFAULT_LOCATION;
@@ -39,6 +42,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
                 configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.location_specific.title"), () => Helper.Translation.Get("config.location_specific.description"));
                 configApi.AddTextOption(ModManifest, () => DynamicReflections.modConfig.LastSelectedLocation, value => DynamicReflections.modConfig.LastSelectedLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.activeLocationNames, fieldId: LOCATION_SELECTOR_ID);
                 configApi.OnFieldChanged(ModManifest, (key, value) => HandleFieldChange(key, value));
+                configApi.AddParagraph(ModManifest, () => $"Default Water Settings Overriden by Current Location: {IsLocationOverridingWaterDefault}\n\nDefault Puddle Settings Overriden by Current Location: {IsLocationOverridingPuddleDefault}");
             }
             configApi.AddParagraph(ModManifest, () => String.Empty);
 
