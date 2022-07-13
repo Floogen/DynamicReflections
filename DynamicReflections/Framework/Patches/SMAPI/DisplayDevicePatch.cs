@@ -58,25 +58,25 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
             if (DynamicReflections.isFilteringPuddles is true)
             {
-                if (tile.Properties.TryGetValue("PuddleIndex", out var puddleIndex) && (int)puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                if (tile.Properties.TryGetValue("PuddleIndex", out var puddleValue) && Int32.TryParse(puddleValue, out int puddleIndex) && puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
                 {
                     var tileXOffset = 0;
                     var tileYOffset = puddleIndex * 16;
-                    if (tile.Properties.TryGetValue("BigPuddleIndex", out var bigPuddleIndex) && (int)bigPuddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                    if (tile.Properties.TryGetValue("BigPuddleIndex", out var bigPuddleValue) && Int32.TryParse(bigPuddleValue, out int bigPuddleIndex) && bigPuddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
                     {
                         tileXOffset = bigPuddleIndex * 16;
                     }
 
                     int effectIndex = 0;
-                    if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffect))
+                    if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffectValue) && Int32.TryParse(puddleEffectValue, out int puddleEffect))
                     {
-                        effectIndex = (int)puddleEffect;
+                        effectIndex = puddleEffect;
                     }
 
                     float rotation = 0f;
-                    if (tile.Properties.TryGetValue("PuddleRotation", out var puddleRotation))
+                    if (tile.Properties.TryGetValue("PuddleRotation", out var puddleRotationValue) && float.TryParse(puddleRotationValue, out float puddleRotation))
                     {
-                        rotation = (float)puddleRotation;
+                        rotation = puddleRotation;
                     }
 
                     ___m_tilePosition.X = location.X;
