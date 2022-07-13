@@ -37,7 +37,7 @@
   "config.puddle_settings.should_rain_splash_puddles": "Regen verursacht Spritzer in Pfützen",
   "config.puddle_settings.puddle_percentage_while_raining": "Pfützen-Prozentanteil während Regen",
   "config.puddle_settings.puddle_percentage_after_raining": "Pfützen-Prozentanteil nach Regen",
-  "config.puddle_settings.big_puddle_chance": "Change für große Pfützen",
+  "config.puddle_settings.big_puddle_chance": "Chance für große Pfützen",
   "config.puddle_settings.milliseconds_between_raindrop_splashes": "Pause zwischen Regentropfen-Spritzern",
   "config.puddle_settings.milliseconds_between_raindrop_splashes_description": "Millisekunden zwischen Regentropfen-Spritzern.",
   "config.puddle_settings.puddle_color.title": "Pfützenfarbe",
