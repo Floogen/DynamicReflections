@@ -237,15 +237,15 @@ namespace DynamicReflections
             DynamicReflections.shouldDrawWaterReflection = false;
             if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
-                var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.ReflectionOffset.Y > 0 ? -1 : 1;
+                var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.PlayerReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;
-                playerPosition += currentWaterSettings.ReflectionOffset * 64 * positionInverter;
+                playerPosition += currentWaterSettings.PlayerReflectionOffset * 64 * positionInverter;
                 DynamicReflections.waterReflectionPosition = playerPosition;
                 DynamicReflections.waterReflectionTilePosition = playerPosition / 64f;
 
                 // Hide the reflection if it will show up out of bounds on the map or not drawn on water tile
                 var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
-                for (int yOffset = -1; yOffset <= Math.Ceiling(currentWaterSettings.ReflectionOffset.Y); yOffset++)
+                for (int yOffset = -1; yOffset <= Math.Ceiling(currentWaterSettings.PlayerReflectionOffset.Y); yOffset++)
                 {
                     var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
                     if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
@@ -381,7 +381,6 @@ namespace DynamicReflections
             modConfig = Helper.ReadConfig<ModConfig>();
             modConfig.LocalWaterReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.WaterReflectionSettings;
             modConfig.LocalPuddleReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.PuddleReflectionSettings;
-            modConfig.LastSelectedLocation = GMCMHelper.DEFAULT_LOCATION;
 
             // Hook into GMCM, if applicable
             if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
@@ -494,8 +493,24 @@ namespace DynamicReflections
                 }
                 catch (Exception ex)
                 {
-                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOffset from the map {map.Id}!", LogLevel.Warn);
-                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_PuddleReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_PuddleReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_NPCReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[PuddleSettings.MapProperty_NPCReflectionOffset]) is Vector2 offset)
+                    {
+                        currentPuddleSettings.NPCReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_NPCReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_NPCReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
                 }
             }
 
@@ -630,13 +645,29 @@ namespace DynamicReflections
                 {
                     if (JsonSerializer.Deserialize<Vector2>(map.Properties[WaterSettings.MapProperty_ReflectionOffset]) is Vector2 offset)
                     {
-                        currentWaterSettings.ReflectionOffset = offset;
+                        currentWaterSettings.PlayerReflectionOffset = offset;
                     }
                 }
                 catch (Exception ex)
                 {
                     Monitor.Log($"Failed to get WaterSettings.MapProperty_ReflectionOffset from the map {map.Id}!", LogLevel.Warn);
                     Monitor.Log($"Failed to get WaterSettings.MapProperty_ReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_NPCReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[WaterSettings.MapProperty_NPCReflectionOffset]) is Vector2 offset)
+                    {
+                        currentWaterSettings.NPCReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_NPCReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_NPCReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
                 }
             }
 

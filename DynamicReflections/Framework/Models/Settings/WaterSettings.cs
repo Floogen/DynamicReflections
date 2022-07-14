@@ -29,7 +29,9 @@ namespace DynamicReflections.Framework.Models.Settings
         public Color ReflectionOverlay { get; set; } = Color.White;
 
         public const string MapProperty_ReflectionOffset = "WaterReflectionOffset";
-        public Vector2 ReflectionOffset { get; set; } = new Vector2(0f, 1.5f);
+        public Vector2 PlayerReflectionOffset { get; set; } = new Vector2(0f, 1.5f);
+        public const string MapProperty_NPCReflectionOffset = "WaterNPCReflectionOffset";
+        public Vector2 NPCReflectionOffset { get; set; } = new Vector2(0f, 1.1f);
 
         public const string MapProperty_IsReflectionWavy = "IsWaterReflectionWavy";
         public bool IsReflectionWavy { get; set; } = false;
@@ -53,7 +55,8 @@ namespace DynamicReflections.Framework.Models.Settings
                 AreReflectionsEnabled = true;
                 ReflectionDirection = Direction.South;
                 ReflectionOverlay = Color.White;
-                ReflectionOffset = new Vector2(0f, 1.5f);
+                PlayerReflectionOffset = new Vector2(0f, 1.5f);
+                NPCReflectionOffset = new Vector2(0f, 1.1f);
                 IsReflectionWavy = false;
                 WaveSpeed = 1f;
                 WaveAmplitude = 0.01f;
@@ -65,7 +68,8 @@ namespace DynamicReflections.Framework.Models.Settings
                 AreReflectionsEnabled = referencedSettings.AreReflectionsEnabled;
                 ReflectionDirection = referencedSettings.ReflectionDirection;
                 ReflectionOverlay = referencedSettings.ReflectionOverlay;
-                ReflectionOffset = referencedSettings.ReflectionOffset;
+                PlayerReflectionOffset = referencedSettings.PlayerReflectionOffset;
+                NPCReflectionOffset = referencedSettings.NPCReflectionOffset;
                 IsReflectionWavy = referencedSettings.IsReflectionWavy;
                 WaveSpeed = referencedSettings.WaveSpeed;
                 WaveAmplitude = referencedSettings.WaveAmplitude;
