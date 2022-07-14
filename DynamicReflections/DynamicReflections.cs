@@ -68,6 +68,8 @@ namespace DynamicReflections
         internal static RenderTarget2D playerPuddleReflectionRender;
         internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
+        internal static RenderTarget2D npcWaterReflectionRender;
+        internal static RenderTarget2D npcPuddleReflectionRender;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
@@ -775,6 +777,8 @@ namespace DynamicReflections
             // Handle the render targets
             RegenerateRenderer(ref playerWaterReflectionRender);
             RegenerateRenderer(ref playerPuddleReflectionRender);
+            RegenerateRenderer(ref npcWaterReflectionRender);
+            RegenerateRenderer(ref npcPuddleReflectionRender);
             RegenerateRenderer(ref puddlesRenderTarget);
 
             RegenerateRenderer(ref mirrorsLayerRenderTarget);

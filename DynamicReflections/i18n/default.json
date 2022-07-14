@@ -10,6 +10,13 @@
   "config.general_settings.override_default_settings.description": "If enabled, this location will ignore the default settings. Ignored when used on the 'Default' location.",
   "config.general_settings.shortcut_key": "Settings Shortcut Key",
   "config.general_settings.shortcut_key.description": "When pressing the given key, this menu will appear for quick configurations.",
+  "config.general_settings.effects": "Effects",
+
+  "config.general_settings.reflection_offets": "Reflection Settings",
+  "config.general_settings.player_offsets": "Player Reflection Offsets",
+  "config.general_settings.npc_offsets": "NPC Reflection Offsets",
+  "config.water_settings.offset.x": "X Offset",
+  "config.water_settings.offset.y": "Y Offset",
 
   "config.location_specific.title": "Location Specific Settings",
   "config.location_specific.selector": "Target Location",
@@ -24,8 +31,6 @@
   "config.water_settings.color.g": "Reflection Overlay Color (G)",
   "config.water_settings.color.b": "Reflection Overlay Color (B)",
   "config.water_settings.color.a": "Reflection Overlay Color (A)",
-  "config.water_settings.offset.x": "Reflection X Offset",
-  "config.water_settings.offset.y": "Reflection Y Offset",
   "config.water_settings.is_wavy": "Enable Wavy Reflections",
   "config.water_settings.wave_speed": "Wave Speed",
   "config.water_settings.wave_amplitude": "Wave Amplitude",

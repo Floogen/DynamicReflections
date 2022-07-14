@@ -317,12 +317,84 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
+        internal static void RenderWaterReflectionNPCs()
+        {
+            if (Game1.currentLocation is null || Game1.currentLocation.characters is null)
+            {
+                return;
+            }
+
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.npcWaterReflectionRender);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            foreach (var npc in Game1.currentLocation.characters)
+            {
+                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
+                {
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, npc.Position + DynamicReflections.currentWaterSettings.NPCReflectionOffset * 64).Y * 2, 0);
+
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                }
+                else
+                {
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                }
+
+                npc.draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+            }
+
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+
+        internal static void RenderPuddleReflectionNPCs()
+        {
+            if (Game1.currentLocation is null || Game1.currentLocation.characters is null)
+            {
+                return;
+            }
+
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.npcPuddleReflectionRender);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            foreach (var npc in Game1.currentLocation.characters)
+            {
+                var scale = Matrix.CreateScale(1, -1, 1);
+                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, npc.Position + DynamicReflections.currentPuddleSettings.NPCReflectionOffset * 64).Y * 2, 0);
+
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+
+                npc.draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+            }
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
         internal static void DrawPuddleReflection(Texture2D mask)
         {
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
             Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
 
             Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
+            Game1.spriteBatch.Draw(DynamicReflections.npcPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
 
             Game1.spriteBatch.End();
         }
@@ -343,6 +415,7 @@ namespace DynamicReflections.Framework.Utilities
 
                     // Draw the "Back" layer with just the puddles
                     LayerPatch.DrawReversePatch(backLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
+
                     Game1.spriteBatch.End();
                 }
             }
@@ -435,6 +508,7 @@ namespace DynamicReflections.Framework.Utilities
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
 
             Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+            Game1.spriteBatch.Draw(DynamicReflections.npcWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
 
             Game1.spriteBatch.End();
         }

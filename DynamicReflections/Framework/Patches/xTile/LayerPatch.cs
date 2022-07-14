@@ -83,7 +83,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 {
                     DynamicReflections.isFilteringWater = true;
                     SpriteBatchToolkit.RenderWaterReflectionPlayerSprite();
-
+                    SpriteBatchToolkit.RenderWaterReflectionNPCs();
+                    SpriteBatchToolkit.RenderPuddleReflectionNPCs();
                 }
 
                 // Handle preliminary puddles reflection and draw logic
@@ -118,7 +119,6 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
                     SpriteBatchToolkit.DrawRenderedPlayer(isWavy: DynamicReflections.currentWaterSettings.IsReflectionWavy);
-
 
                     DynamicReflections.isFilteringWater = false;
                     DynamicReflections.isDrawingWaterReflection = true;
