@@ -40,7 +40,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             if (loadLocationNames is true)
             {
                 configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.location_specific.title"), () => Helper.Translation.Get("config.location_specific.description"));
-                configApi.AddTextOption(ModManifest, () => DynamicReflections.modConfig.LastSelectedLocation, value => DynamicReflections.modConfig.LastSelectedLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.activeLocationNames, fieldId: LOCATION_SELECTOR_ID);
+                configApi.AddTextOption(ModManifest, () => _currentLocation, value => _currentLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.activeLocationNames, fieldId: LOCATION_SELECTOR_ID);
                 configApi.OnFieldChanged(ModManifest, (key, value) => HandleFieldChange(key, value));
                 configApi.AddParagraph(ModManifest, () => $"Default Water Settings Overriden by Current Location: {IsLocationOverridingWaterDefault}\n\nDefault Puddle Settings Overriden by Current Location: {IsLocationOverridingPuddleDefault}");
             }
@@ -119,14 +119,12 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             }
 
             _currentLocation = value.ToString();
-            DynamicReflections.modConfig.LastSelectedLocation = _currentLocation;
         }
 
         internal static void ResetConfig()
         {
             DynamicReflections.modConfig = new ModConfig();
 
-            DynamicReflections.modConfig.LastSelectedLocation = DEFAULT_LOCATION;
             DynamicReflections.modConfig.LocalWaterReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.WaterReflectionSettings;
             DynamicReflections.modConfig.LocalPuddleReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.PuddleReflectionSettings;
 
@@ -144,6 +142,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             {
                 return;
             }
+            _currentLocation = IsLocationOverridingWaterDefault || IsLocationOverridingWaterDefault ? location.NameOrUniqueName : _currentLocation;
 
             if (reset is true || DynamicReflections.modConfig.LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
             {

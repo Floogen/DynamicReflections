@@ -18,7 +18,6 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public PuddleSettings PuddleReflectionSettings { get; set; } = new PuddleSettings();
         public Dictionary<string, WaterSettings> LocalWaterReflectionSettings { get; set; } = new Dictionary<string, WaterSettings>();
         public Dictionary<string, PuddleSettings> LocalPuddleReflectionSettings { get; set; } = new Dictionary<string, PuddleSettings>();
-        public string LastSelectedLocation { get; set; }
         public SButton QuickMenuKey { get; set; } = SButton.R;
 
         public WaterSettings GetCurrentWaterSettings(GameLocation location)

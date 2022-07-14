@@ -224,7 +224,6 @@ namespace DynamicReflections
             if (Game1.activeClickableMenu is null)
             {
                 GMCMHelper.RefreshLocationListing();
-                modConfig.LastSelectedLocation = GMCMHelper.DEFAULT_LOCATION;
             }
 
             // Handle the puddle reflection
