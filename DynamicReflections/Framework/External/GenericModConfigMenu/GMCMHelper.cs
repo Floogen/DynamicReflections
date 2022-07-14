@@ -34,6 +34,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreMirrorReflectionsEnabled, value => DynamicReflections.modConfig.AreMirrorReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.mirror_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreWaterReflectionsEnabled, value => DynamicReflections.modConfig.AreWaterReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.water_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.ArePuddleReflectionsEnabled, value => DynamicReflections.modConfig.ArePuddleReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.puddle_reflections"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreNPCReflectionsEnabled, value => DynamicReflections.modConfig.AreNPCReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.npc_reflections"));
             configApi.AddKeybind(ModManifest, () => DynamicReflections.modConfig.QuickMenuKey, value => DynamicReflections.modConfig.QuickMenuKey = value, () => Helper.Translation.Get("config.general_settings.shortcut_key"), () => Helper.Translation.Get("config.general_settings.shortcut_key.description"));
 
             configApi.AddParagraph(ModManifest, () => String.Empty);

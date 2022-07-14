@@ -230,14 +230,14 @@ namespace DynamicReflections
 
             // Handle the puddle reflection
             DynamicReflections.shouldDrawPuddlesReflection = false;
-            if (currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
+            if (modConfig.ArePuddleReflectionsEnabled is not false && currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
             {
                 DynamicReflections.shouldDrawPuddlesReflection = true;
             }
 
             // Handle the water reflection
             DynamicReflections.shouldDrawWaterReflection = false;
-            if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
+            if (modConfig.AreWaterReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
                 var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.PlayerReflectionOffset.Y > 0 ? -1 : 1;
                 var playerPosition = Game1.player.Position;
