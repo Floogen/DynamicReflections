@@ -532,6 +532,22 @@ namespace DynamicReflections
                 }
             }
 
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_ReflectionOverlay))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Color>(map.Properties[PuddleSettings.MapProperty_ReflectionOverlay]) is Color overlay)
+                    {
+                        currentPuddleSettings.ReflectionOverlay = overlay;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOverlay from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_ReflectionOverlay from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
             if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddleColor))
             {
                 try

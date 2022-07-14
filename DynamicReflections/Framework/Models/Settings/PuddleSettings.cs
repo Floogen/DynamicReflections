@@ -38,6 +38,9 @@ namespace DynamicReflections.Framework.Models.Settings
         public const string MapProperty_MillisecondsBetweenRaindropSplashes = "MillisecondsBetweenRaindropSplashes";
         public int MillisecondsBetweenRaindropSplashes { get; set; } = 500;
 
+        public const string MapProperty_ReflectionOverlay = "PuddleReflectionOverlay";
+        public Color ReflectionOverlay { get; set; } = new Color(255, 255, 255, 155);
+
         public const string MapProperty_PuddleColor = "PuddleColor";
         public Color PuddleColor { get; set; } = new Color(91, 91, 91, 91);
 
@@ -60,6 +63,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 PuddlePercentageAfterRaining = 10;
                 BigPuddleChance = 25;
                 MillisecondsBetweenRaindropSplashes = 500;
+                ReflectionOverlay = new Color(255, 255, 255, 155);
                 PuddleColor = new Color(91, 91, 91, 91);
                 RippleColor = new Color(255, 255, 255, 155);
                 OverrideDefaultSettings = false;
@@ -75,6 +79,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 PuddlePercentageAfterRaining = referencedSettings.PuddlePercentageAfterRaining;
                 BigPuddleChance = referencedSettings.BigPuddleChance;
                 MillisecondsBetweenRaindropSplashes = referencedSettings.MillisecondsBetweenRaindropSplashes;
+                ReflectionOverlay = referencedSettings.ReflectionOverlay;
                 PuddleColor = referencedSettings.PuddleColor;
                 RippleColor = referencedSettings.RippleColor;
             }

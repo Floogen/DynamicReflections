@@ -322,7 +322,7 @@ namespace DynamicReflections.Framework.Utilities
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
             Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
 
-            Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, new Color(255, 255, 255, 155));
+            Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
 
             Game1.spriteBatch.End();
         }
