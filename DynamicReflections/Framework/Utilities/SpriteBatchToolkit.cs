@@ -332,10 +332,15 @@ namespace DynamicReflections.Framework.Utilities
 
             foreach (var npc in Game1.currentLocation.characters)
             {
+                if (DynamicReflections.npcToWaterReflectionPosition.ContainsKey(npc) is false)
+                {
+                    continue;
+                }
+
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
                     var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, npc.Position + DynamicReflections.currentWaterSettings.NPCReflectionOffset * 64).Y * 2, 0);
+                    var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, DynamicReflections.npcToWaterReflectionPosition[npc]).Y * 2, 0);
 
                     Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
                 }

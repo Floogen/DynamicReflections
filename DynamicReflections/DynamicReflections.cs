@@ -42,6 +42,7 @@ namespace DynamicReflections
         internal static PuddleSettings currentPuddleSettings = new PuddleSettings();
 
         // Water reflection variables
+        internal static Dictionary<NPC, Vector2> npcToWaterReflectionPosition = new Dictionary<NPC, Vector2>();
         internal static Vector2? waterReflectionPosition;
         internal static Vector2? waterReflectionTilePosition;
         internal static bool shouldDrawWaterReflection;
@@ -266,6 +267,32 @@ namespace DynamicReflections
                     waterReflectionEffect.Parameters["Phase"].SetValue(phase);
                     waterReflectionEffect.Parameters["Frequency"].SetValue(currentWaterSettings.WaveFrequency);
                     waterReflectionEffect.Parameters["Amplitude"].SetValue(currentWaterSettings.WaveAmplitude);
+                }
+            }
+
+            if (modConfig.AreNPCReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
+            {
+                npcToWaterReflectionPosition.Clear();
+                if (Game1.currentLocation is not null && Game1.currentLocation.characters is not null)
+                {
+                    foreach (var npc in Game1.currentLocation.characters)
+                    {
+                        var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.NPCReflectionOffset.Y > 0 ? -1 : 1;
+                        var npcPosition = npc.Position;
+                        npcPosition += currentWaterSettings.NPCReflectionOffset * 64 * positionInverter;
+
+                        // Hide the reflection if it will show up out of bounds on the map or not drawn on water tile
+                        var waterReflectionPosition = npcPosition / 64f;
+                        for (int yOffset = -1; yOffset <= Math.Ceiling(currentWaterSettings.NPCReflectionOffset.Y); yOffset++)
+                        {
+                            var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
+                            if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                            {
+                                npcToWaterReflectionPosition[npc] = npcPosition;
+                                break;
+                            }
+                        }
+                    }
                 }
             }
 
