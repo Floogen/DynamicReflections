@@ -58,34 +58,13 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
             if (DynamicReflections.isFilteringPuddles is true)
             {
-                if (tile.Properties.TryGetValue("PuddleIndex", out var puddleValue) && Int32.TryParse(puddleValue, out int puddleIndex) && puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
-                {
-                    var tileXOffset = 0;
-                    var tileYOffset = puddleIndex * 16;
-                    if (tile.Properties.TryGetValue("BigPuddleIndex", out var bigPuddleValue) && Int32.TryParse(bigPuddleValue, out int bigPuddleIndex) && bigPuddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
-                    {
-                        tileXOffset = bigPuddleIndex * 16;
-                    }
+                DrawPuddleTile(tile, ref ___m_tilePosition, ___m_spriteBatchAlpha, location, layerDepth);
+                return false;
+            }
 
-                    int effectIndex = 0;
-                    if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffectValue) && Int32.TryParse(puddleEffectValue, out int puddleEffect))
-                    {
-                        effectIndex = puddleEffect;
-                    }
-
-                    float rotation = 0f;
-                    if (tile.Properties.TryGetValue("PuddleRotation", out var puddleRotationValue) && float.TryParse(puddleRotationValue, out float puddleRotation))
-                    {
-                        rotation = puddleRotation;
-                    }
-
-                    ___m_tilePosition.X = location.X;
-                    ___m_tilePosition.Y = location.Y;
-                    Vector2 origin = new Vector2(8f, 8f);
-                    ___m_tilePosition.X += origin.X * (float)Layer.zoom;
-                    ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-                    ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tileXOffset, tileYOffset, 16, 16), DynamicReflections.currentPuddleSettings.PuddleColor, rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
-                }
+            if (DynamicReflections.isFilteringSky is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
+            {
+                DrawSkyTile(tile, ref ___m_tilePosition, ___m_spriteBatchAlpha, location, layerDepth);
                 return false;
             }
 
@@ -99,6 +78,59 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             }
 
             return true;
+        }
+
+        private static void DrawSkyTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)
+        {
+            if (tile.Properties.TryGetValue("SkyIndex", out var skyValue) && Int32.TryParse(skyValue, out int skyIndex))
+            {
+                var tilePoint = SkyManager.GetTilePoint(skyIndex);
+
+                int effectIndex = 0;
+                if (tile.Properties.TryGetValue("SkyEffect", out var skyEffectValue) && Int32.TryParse(skyEffectValue, out int skyEffect))
+                {
+                    effectIndex = skyEffect;
+                }
+
+                ___m_tilePosition.X = location.X;
+                ___m_tilePosition.Y = location.Y;
+                Vector2 origin = new Vector2(8f, 8f);
+                ___m_tilePosition.X += origin.X * (float)Layer.zoom;
+                ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
+                ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.NightSkyTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tilePoint.X * 16, tilePoint.Y * 16, 16, 16), Color.White * DynamicReflections.skyAlpha, 0f, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
+            }
+        }
+
+        private static void DrawPuddleTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)
+        {
+            if (tile.Properties.TryGetValue("PuddleIndex", out var puddleValue) && Int32.TryParse(puddleValue, out int puddleIndex) && puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+            {
+                var tileXOffset = 0;
+                var tileYOffset = puddleIndex * 16;
+                if (tile.Properties.TryGetValue("BigPuddleIndex", out var bigPuddleValue) && Int32.TryParse(bigPuddleValue, out int bigPuddleIndex) && bigPuddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+                {
+                    tileXOffset = bigPuddleIndex * 16;
+                }
+
+                int effectIndex = 0;
+                if (tile.Properties.TryGetValue("PuddleEffect", out var puddleEffectValue) && Int32.TryParse(puddleEffectValue, out int puddleEffect))
+                {
+                    effectIndex = puddleEffect;
+                }
+
+                float rotation = 0f;
+                if (tile.Properties.TryGetValue("PuddleRotation", out var puddleRotationValue) && float.TryParse(puddleRotationValue, out float puddleRotation))
+                {
+                    rotation = puddleRotation;
+                }
+
+                ___m_tilePosition.X = location.X;
+                ___m_tilePosition.Y = location.Y;
+                Vector2 origin = new Vector2(8f, 8f);
+                ___m_tilePosition.X += origin.X * (float)Layer.zoom;
+                ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
+                ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.PuddlesTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tileXOffset, tileYOffset, 16, 16), DynamicReflections.currentPuddleSettings.PuddleColor, rotation, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
+            }
         }
     }
 }

@@ -42,6 +42,14 @@ namespace DynamicReflections.Framework.Patches.Tools
                 }
             }
 
+            foreach (var skySprite in DynamicReflections.skyManager.skyEffectSprites.ToList())
+            {
+                if (skySprite.update(time))
+                {
+                    DynamicReflections.skyManager.skyEffectSprites.Remove(skySprite);
+                }
+            }
+
             if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is false)
             {
                 return;

@@ -301,6 +301,26 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
+        internal static void RenderWaterReflectionNightSky()
+        {
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.nightSkyRenderTarget);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+            //Game1.spriteBatch.Draw(DynamicReflections.assetManager.NightSkyTexture, Vector2.Zero, new Microsoft.Xna.Framework.Rectangle(0, 0, 1500, 300), Color.White);
+
+            Game1.spriteBatch.End();
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
         internal static void RenderWaterReflectionPlayerSprite()
         {
             // Set the render target

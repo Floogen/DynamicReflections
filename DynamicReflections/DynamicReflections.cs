@@ -34,6 +34,7 @@ namespace DynamicReflections
         internal static AssetManager assetManager;
         internal static MirrorsManager mirrorsManager;
         internal static PuddleManager puddleManager;
+        internal static SkyManager skyManager;
 
         // Config options
         internal static ModConfig modConfig;
@@ -62,9 +63,17 @@ namespace DynamicReflections
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
 
+        // Sky related reflection variables
+        internal static float skyAlpha = 0.5f;
+        internal static float waterAlpha = 0.5f;
+        internal static bool shouldDrawNightSky;
+        internal static bool isFilteringSky;
+
         // Effects and RenderTarget2Ds
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
+        internal static RenderTarget2D nightSkyRenderTarget;
+        internal static RenderTarget2D cloudRenderTarget;
         internal static RenderTarget2D playerWaterReflectionRender;
         internal static RenderTarget2D playerPuddleReflectionRender;
         internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
@@ -89,6 +98,7 @@ namespace DynamicReflections
             assetManager = new AssetManager(modHelper);
             mirrorsManager = new MirrorsManager();
             puddleManager = new PuddleManager();
+            skyManager = new SkyManager();
 
             try
             {
@@ -207,6 +217,8 @@ namespace DynamicReflections
 
                     DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
                 }
+
+                DynamicReflections.skyManager.Generate(e.NewLocation);
             }
         }
 
@@ -227,6 +239,34 @@ namespace DynamicReflections
             if (Game1.activeClickableMenu is null)
             {
                 GMCMHelper.RefreshLocationListing();
+            }
+
+            // Handle the sky reflections
+            DynamicReflections.shouldDrawNightSky = false;
+            if (modConfig.AreSkyReflectionsEnabled is not false && Game1.isDarkOut())
+            {
+                DynamicReflections.shouldDrawNightSky = true;
+
+                if (Game1.timeOfDay < 2200) // Less then 10 PM
+                {
+                    DynamicReflections.waterAlpha = 0.35f;
+                }
+                else if (Game1.timeOfDay < 2300) // Less then 11 PM
+                {
+                    DynamicReflections.waterAlpha = 0.075f;
+                }
+                else
+                {
+                    DynamicReflections.waterAlpha = 0.05f;
+                }
+
+                DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
+
+
+                if (e.IsMultipleOf(5))
+                {
+                    DynamicReflections.skyManager.AttemptEffects(Game1.currentLocation);
+                }
             }
 
             // Handle the puddle reflection
@@ -802,6 +842,8 @@ namespace DynamicReflections
         internal void LoadRenderers()
         {
             // Handle the render targets
+            RegenerateRenderer(ref nightSkyRenderTarget);
+            RegenerateRenderer(ref cloudRenderTarget);
             RegenerateRenderer(ref playerWaterReflectionRender);
             RegenerateRenderer(ref playerPuddleReflectionRender);
             RegenerateRenderer(ref npcWaterReflectionRender);

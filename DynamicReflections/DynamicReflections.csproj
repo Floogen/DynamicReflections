@@ -31,7 +31,13 @@
 		<None Update="Framework\Assets\Shaders\wavy.mgfx">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
+		<None Update="Framework\Assets\Textures\night_sky_sheet.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
 		<None Update="Framework\Assets\Textures\puddles_sheet.png">
+			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
+		</None>
+		<None Update="Framework\Assets\Textures\sky_effects_sheet.png">
 			<CopyToOutputDirectory>Always</CopyToOutputDirectory>
 		</None>
 		<None Update="i18n\de.json">
