@@ -68,6 +68,12 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return false;
             }
 
+            if (DynamicReflections.isFilteringStar is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
+            {
+                DrawStarTile(tile, ref ___m_tilePosition, ___m_spriteBatchAlpha, location, layerDepth);
+                return false;
+            }
+
             if (DynamicReflections.isDrawingWaterReflection is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
             {
                 return false;
@@ -82,9 +88,24 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
         private static void DrawSkyTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)
         {
-            if (tile.Properties.TryGetValue("SkyIndex", out var skyValue) && Int32.TryParse(skyValue, out int skyIndex))
+            ___m_tilePosition.X = location.X;
+            ___m_tilePosition.Y = location.Y;
+            Vector2 origin = new Vector2(8f, 8f);
+            ___m_tilePosition.X += origin.X * (float)Layer.zoom;
+            ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
+            ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.NightSkyTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 16), Color.White * DynamicReflections.skyAlpha, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
+
+        }
+
+        private static void DrawStarTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)
+        {
+            if (tile.Properties.TryGetValue("SkyIndex", out var skyValue) && Int32.TryParse(skyValue, out int skyIndex) && skyIndex != SkyManager.DEFAULT_SKY_INDEX)
             {
                 var tilePoint = SkyManager.GetTilePoint(skyIndex);
+                if (tilePoint.X == 0 && tilePoint.Y == 0)
+                {
+                    return;
+                }
 
                 int effectIndex = 0;
                 if (tile.Properties.TryGetValue("SkyEffect", out var skyEffectValue) && Int32.TryParse(skyEffectValue, out int skyEffect))
@@ -92,12 +113,18 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                     effectIndex = skyEffect;
                 }
 
+                float alpha = 1f;
+                if (tile.Properties.TryGetValue("SkyAlpha", out var skyAlphaValue) && float.TryParse(skyAlphaValue, out float skyAlpha))
+                {
+                    alpha = skyAlpha;
+                }
+
                 ___m_tilePosition.X = location.X;
                 ___m_tilePosition.Y = location.Y;
                 Vector2 origin = new Vector2(8f, 8f);
                 ___m_tilePosition.X += origin.X * (float)Layer.zoom;
                 ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-                ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.NightSkyTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tilePoint.X * 16, tilePoint.Y * 16, 16, 16), Color.White * DynamicReflections.skyAlpha, 0f, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
+                ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.NightSkyTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(tilePoint.X * 16, tilePoint.Y * 16, 16, 16), Color.White * alpha, 0f, origin, Layer.zoom, (SpriteEffects)effectIndex, layerDepth);
             }
         }
 

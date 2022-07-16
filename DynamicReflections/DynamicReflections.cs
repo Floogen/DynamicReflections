@@ -68,6 +68,7 @@ namespace DynamicReflections
         internal static float waterAlpha = 0.5f;
         internal static bool shouldDrawNightSky;
         internal static bool isFilteringSky;
+        internal static bool isFilteringStar;
 
         // Effects and RenderTarget2Ds
         internal static Effect waterReflectionEffect;
@@ -263,7 +264,7 @@ namespace DynamicReflections
                 DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
 
 
-                if (e.IsMultipleOf(5))
+                if (Game1.game1.IsActive && e.IsMultipleOf(5))
                 {
                     DynamicReflections.skyManager.AttemptEffects(Game1.currentLocation);
                 }
