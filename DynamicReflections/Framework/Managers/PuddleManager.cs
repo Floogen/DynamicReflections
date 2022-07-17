@@ -117,6 +117,7 @@ namespace DynamicReflections.Framework.Managers
                             backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["BigPuddleIndex"] = puddleEffect is (0 or 2) ? 1 : 2;
                             backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleEffect"] = puddleEffect;
                             backLayer.Tiles[tilePosition.X, tilePosition.Y].Properties["PuddleRotation"] = puddleRotation;
+                            _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = true;
 
                             backLayer.Tiles[tilePosition.X + 1, tilePosition.Y].Properties["PuddleIndex"] = puddleEffect is (0 or 1) ? adjustedPuddleIndex : adjustedPuddleIndex + 1;
                             backLayer.Tiles[tilePosition.X + 1, tilePosition.Y].Properties["BigPuddleIndex"] = puddleEffect is (0 or 2) ? 2 : 1;
@@ -136,9 +137,15 @@ namespace DynamicReflections.Framework.Managers
                             backLayer.Tiles[tilePosition.X + 1, tilePosition.Y + 1].Properties["PuddleRotation"] = puddleRotation;
                             _locationToPuddleTiles[location][tilePosition.X + 1, tilePosition.Y + 1] = true;
                         }
+                        else
+                        {
+                            _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = puddleIndex != DEFAULT_PUDDLE_INDEX;
+                        }
                     }
-
-                    _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = puddleIndex != DEFAULT_PUDDLE_INDEX;
+                    else
+                    {
+                        _locationToPuddleTiles[location][tilePosition.X, tilePosition.Y] = puddleIndex != DEFAULT_PUDDLE_INDEX;
+                    }
                 }
             }
         }
