@@ -96,30 +96,38 @@ namespace DynamicReflections.Framework.Managers
                 {
                     return;
                 }
-
                 var randomWaterTilePoint = GetRandomTile(Game1.random, GetSkyTiles(location, true));
-                if (Game1.random.NextDouble() < 0.25)
+
+                var leftTile = backLayer.PickTile(new Location((randomWaterTilePoint.X - 1) * 64, randomWaterTilePoint.Y * 64), Game1.viewport.Size);
+                var topTile = backLayer.PickTile(new Location(randomWaterTilePoint.X * 64, (randomWaterTilePoint.Y - 1) * 64), Game1.viewport.Size);
+                if (leftTile is not null && location.isWaterTile(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y) is false)
                 {
                     // Trigger event with this tile as starting point
-                    skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y)));
-                }
-                else
-                {
-                    var leftTile = backLayer.PickTile(new Location((randomWaterTilePoint.X - 1) * 64, randomWaterTilePoint.Y * 64), Game1.viewport.Size);
-                    if (leftTile is not null && location.isWaterTile(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y) is false)
+                    if (Game1.random.NextDouble() < 0.10)
                     {
-                        // Trigger event with this tile as starting point
+                        skyEffectSprites.AddRange(GenerateComet(new Point(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y)));
+                    }
+                    else
+                    {
                         skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y)));
-                        return;
                     }
-
-                    var topTile = backLayer.PickTile(new Location(randomWaterTilePoint.X * 64, (randomWaterTilePoint.Y - 1) * 64), Game1.viewport.Size);
-                    if (topTile is not null && location.isWaterTile(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1) is false)
+                }
+                else if (topTile is not null && location.isWaterTile(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1) is false)
+                {
+                    // Trigger event with this tile as starting point
+                    if (Game1.random.NextDouble() < 0.10)
                     {
-                        // Trigger event with this tile as starting point
-                        skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1)));
-                        return;
+                        skyEffectSprites.AddRange(GenerateComet(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1)));
                     }
+                    else
+                    {
+                        skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1)));
+                    }
+                }
+                else if (Game1.random.NextDouble() < 0.05)
+                {
+                    // Trigger event with this tile as starting point
+                    skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y)));
                 }
             }
         }
@@ -132,6 +140,24 @@ namespace DynamicReflections.Framework.Managers
             shootingStar.acceleration = new Vector2(speed, speed);
 
             return shootingStar;
+        }
+
+        private List<TemporaryAnimatedSprite> GenerateComet(Point point)
+        {
+            float speed = (float)Math.Min(Game1.random.NextDouble() + 0.02f, 0.5f);
+            float scale = (float)(Game1.random.Next(1, 3) + Game1.random.NextDouble());
+
+            var segments = new List<TemporaryAnimatedSprite>();
+            for (int i = 0; i < Game1.random.Next(5, 20); i++)
+            {
+                var offset = 0.1f * i;
+                var cometSegment = new TemporaryAnimatedSprite(DynamicReflections.assetManager.SkyEffectsTileSheetTexturePath, new Microsoft.Xna.Framework.Rectangle(0, 0, 32, 32), Game1.random.Next(30, 150), offset == 0 ? 1 : 3, 36, new Vector2(point.X - offset, point.Y - offset) * 64f, flicker: false, flipped: false, 0f, 0f, Color.White, scale - offset * 2, 0f, 0f, 0f);
+
+                cometSegment.acceleration = new Vector2(speed, speed);
+                segments.Add(cometSegment);
+            }
+
+            return segments;
         }
 
         private List<Point> GetSkyTiles(GameLocation location, bool limitToView = false)

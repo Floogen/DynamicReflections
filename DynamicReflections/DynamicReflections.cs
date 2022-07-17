@@ -251,22 +251,26 @@ namespace DynamicReflections
                 if (Game1.timeOfDay < 2200) // Less then 10 PM
                 {
                     DynamicReflections.waterAlpha = 0.35f;
+
+                    DynamicReflections.skyAlpha = 1f - (2200 - Game1.timeOfDay) * 0.005f;
                 }
                 else if (Game1.timeOfDay < 2300) // Less then 11 PM
                 {
                     DynamicReflections.waterAlpha = 0.075f;
+                    DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
                 }
                 else
                 {
-                    DynamicReflections.waterAlpha = 0.05f;
+                    DynamicReflections.waterAlpha = 0.00f;
+                    DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
                 }
 
-                DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
-
-
-                if (Game1.game1.IsActive && e.IsMultipleOf(5))
+                if (Game1.game1.IsActive && e.IsMultipleOf(300))
                 {
-                    DynamicReflections.skyManager.AttemptEffects(Game1.currentLocation);
+                    for (int i = 0; i < Game1.random.Next(1, 5); i++)
+                    {
+                        DynamicReflections.skyManager.AttemptEffects(Game1.currentLocation);
+                    }
                 }
             }
 
