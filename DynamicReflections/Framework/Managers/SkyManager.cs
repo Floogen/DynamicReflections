@@ -41,7 +41,7 @@ namespace DynamicReflections.Framework.Managers
             }
             else if (_locationToSkyTiles.ContainsKey(location) is true && _locationToSkyTiles[location] is not null)
             {
-                //return;
+                return;
             }
 
             GeneratePerTile(location);
@@ -59,7 +59,7 @@ namespace DynamicReflections.Framework.Managers
                 {
                     for (int y = 0; y < backLayer.LayerHeight; y++)
                     {
-                        if (location.isWaterTile(x, y))
+                        if (location.isWaterTile(x, y) || (DynamicReflections.puddleManager is not null && DynamicReflections.puddleManager.IsTilePuddle(location, x, y)))
                         {
                             _locationToSkyTiles[location][x, y] = true;
                             _locationToSkyPoints[location].Add(new Point(x, y));
@@ -127,7 +127,7 @@ namespace DynamicReflections.Framework.Managers
                 else if (Game1.random.NextDouble() < 0.075)
                 {
                     // Trigger event with this tile as starting point
-                    if (Game1.random.NextDouble() < 0.001)
+                    if (Game1.random.NextDouble() < 0.0001)
                     {
                         skyEffectSprites.Add(GenerateEasterEgg(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y)));
                     }
@@ -179,10 +179,10 @@ namespace DynamicReflections.Framework.Managers
 
         private List<Point> GetSkyTiles(GameLocation location, bool limitToView = false)
         {
-            var puddles = new List<Point>();
+            var tiles = new List<Point>();
             if (_locationToSkyPoints.ContainsKey(location) is false)
             {
-                return puddles;
+                return tiles;
             }
 
             int tileWidth = Game1.pixelZoom * 16;
@@ -206,11 +206,16 @@ namespace DynamicReflections.Framework.Managers
             {
                 if (limitToView is false || (limitToView is true && point.X >= tileXMin && point.X < tileXMax && point.Y >= tileYMin && point.Y < tileYMax))
                 {
-                    puddles.Add(new Point(point.X, point.Y));
+                    tiles.Add(new Point(point.X, point.Y));
                 }
             }
 
-            return puddles;
+            if (DynamicReflections.puddleManager is not null)
+            {
+                tiles.AddRange(DynamicReflections.puddleManager.GetPuddleTiles(location, true));
+            }
+
+            return tiles;
         }
     }
 }

@@ -243,29 +243,30 @@ namespace DynamicReflections
             }
 
             // Handle the sky reflections
+            var targetDarkTime = Game1.getTrulyDarkTime() + 100;
             DynamicReflections.shouldDrawNightSky = false;
-            if (modConfig.AreSkyReflectionsEnabled is not false && Game1.isDarkOut())
+            if (modConfig.AreSkyReflectionsEnabled is not false && Game1.timeOfDay >= targetDarkTime)
             {
                 DynamicReflections.shouldDrawNightSky = true;
-
-                if (Game1.timeOfDay < 2200) // Less then 10 PM
+                if (Game1.timeOfDay < targetDarkTime + 100) // Less then 10 PM
                 {
                     DynamicReflections.waterAlpha = 0.35f;
 
-                    DynamicReflections.skyAlpha = 1f - (2200 - Game1.timeOfDay) * 0.005f;
+                    DynamicReflections.skyAlpha = 1f - ((targetDarkTime + 100) - Game1.timeOfDay) * 0.005f;
                 }
-                else if (Game1.timeOfDay < 2300) // Less then 11 PM
+                else if (Game1.timeOfDay < targetDarkTime + 200) // Less then 11 PM
                 {
                     DynamicReflections.waterAlpha = 0.075f;
-                    DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
+                    DynamicReflections.skyAlpha = Math.Min(0.95f, 1f - ((targetDarkTime + 125) - Game1.timeOfDay) * 0.005f);
                 }
                 else
                 {
-                    DynamicReflections.waterAlpha = 0.00f;
-                    DynamicReflections.skyAlpha = 1f - DynamicReflections.waterAlpha;
+                    DynamicReflections.waterAlpha = 0.05f;
+                    DynamicReflections.skyAlpha = 1f;
                 }
 
-                if (Game1.game1.IsActive && e.IsMultipleOf(300))
+                bool isMeteorShower = true;
+                if (Game1.game1.IsActive && e.IsMultipleOf((uint)(isMeteorShower ? 5 : 300)))
                 {
                     for (int i = 0; i < Game1.random.Next(1, 5); i++)
                     {

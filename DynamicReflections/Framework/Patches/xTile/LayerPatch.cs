@@ -132,32 +132,11 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 // Draw the sky reflection
                 if (DynamicReflections.isFilteringSky is true)
                 {
-                    DynamicReflections.isFilteringSky = false;
-                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
-                    DynamicReflections.isFilteringSky = true;
-                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
-                    DynamicReflections.isFilteringSky = false;
-
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
-                    var lightingBlend = new BlendState
-                    {
-                        ColorBlendFunction = BlendFunction.Add,
-                        ColorDestinationBlend = Blend.BlendFactor,
-                        ColorSourceBlend = Blend.SourceColor
-                        // ColorDestinationBlend = Blend.Zero,
-                        // ColorSourceBlend = Blend.SourceColor
-                    };
-                    // TODO: Remove background from stars and call the star background draw here to see if we can brighten it
 
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, lightingBlend, SamplerState.PointClamp);
-                    DynamicReflections.isFilteringStar = true;
-                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
-                    DynamicReflections.isFilteringStar = false;
-                    foreach (var skyEffect in DynamicReflections.skyManager.skyEffectSprites.ToList())
-                    {
-                        skyEffect.draw(Game1.spriteBatch);
-                    }
-                    Game1.spriteBatch.End();
+                    SpriteBatchToolkit.RenderWaterReflectionNightSky();
+                    SpriteBatchToolkit.DrawNightSky();
+
                     // Resume previous SpriteBatch
                     SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
                 }

@@ -309,16 +309,47 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
 
-            //Game1.spriteBatch.Draw(DynamicReflections.assetManager.NightSkyTexture, Vector2.Zero, new Microsoft.Xna.Framework.Rectangle(0, 0, 1500, 300), Color.White);
+            if (Game1.currentLocation is not null && Game1.currentLocation.Map is not null)
+            {
+                if (Game1.currentLocation.Map.GetLayer("Back") is var backLayer && backLayer is not null)
+                {
+                    Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
-            Game1.spriteBatch.End();
+                    DynamicReflections.isFilteringSky = false;
+                    LayerPatch.DrawReversePatch(backLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
+                    DynamicReflections.isFilteringSky = true;
+                    LayerPatch.DrawReversePatch(backLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
+                    DynamicReflections.isFilteringSky = false;
+
+                    Game1.spriteBatch.End();
+
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+
+                    DynamicReflections.isFilteringStar = true;
+                    LayerPatch.DrawReversePatch(backLayer, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, wrapAround: false, 4);
+                    DynamicReflections.isFilteringStar = false;
+
+                    foreach (var skyEffect in DynamicReflections.skyManager.skyEffectSprites.ToList())
+                    {
+                        skyEffect.draw(Game1.spriteBatch);
+                    }
+                    Game1.spriteBatch.End();
+                }
+            }
+
 
             // Drop the render target
             SpriteBatchToolkit.StopRendering();
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        internal static void DrawNightSky()
+        {
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.Opaque, SamplerState.PointClamp);
+            Game1.spriteBatch.Draw(DynamicReflections.nightSkyRenderTarget, Vector2.Zero, Color.White);
+            Game1.spriteBatch.End();
         }
 
         internal static void RenderWaterReflectionPlayerSprite()
@@ -417,6 +448,11 @@ namespace DynamicReflections.Framework.Utilities
         {
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
             Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
+
+            if (DynamicReflections.shouldDrawNightSky)
+            {
+                Game1.spriteBatch.Draw(DynamicReflections.nightSkyRenderTarget, Vector2.Zero, Color.White);
+            }
 
             Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
 

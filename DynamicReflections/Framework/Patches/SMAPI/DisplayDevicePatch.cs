@@ -62,13 +62,13 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return false;
             }
 
-            if (DynamicReflections.isFilteringSky is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
+            if (DynamicReflections.isFilteringSky is true)
             {
                 DrawSkyTile(tile, ref ___m_tilePosition, ___m_spriteBatchAlpha, location, layerDepth);
                 return false;
             }
 
-            if (DynamicReflections.isFilteringStar is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
+            if (DynamicReflections.isFilteringStar is true)
             {
                 DrawStarTile(tile, ref ___m_tilePosition, ___m_spriteBatchAlpha, location, layerDepth);
                 return false;
@@ -88,13 +88,15 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 
         private static void DrawSkyTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)
         {
-            ___m_tilePosition.X = location.X;
-            ___m_tilePosition.Y = location.Y;
-            Vector2 origin = new Vector2(8f, 8f);
-            ___m_tilePosition.X += origin.X * (float)Layer.zoom;
-            ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
-            ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.NightSkyTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 16), Color.White * DynamicReflections.skyAlpha, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
-
+            if (tile.Properties.TryGetValue("SkyIndex", out var skyValue) && Int32.TryParse(skyValue, out int skyIndex))
+            {
+                ___m_tilePosition.X = location.X;
+                ___m_tilePosition.Y = location.Y;
+                Vector2 origin = new Vector2(8f, 8f);
+                ___m_tilePosition.X += origin.X * (float)Layer.zoom;
+                ___m_tilePosition.Y += origin.X * (float)Layer.zoom;
+                ___m_spriteBatchAlpha.Draw(DynamicReflections.assetManager.NightSkyTileSheetTexture, ___m_tilePosition, new Microsoft.Xna.Framework.Rectangle(0, 0, 16, 16), Color.White * DynamicReflections.skyAlpha, 0f, origin, Layer.zoom, SpriteEffects.None, layerDepth);
+            }
         }
 
         private static void DrawStarTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)
