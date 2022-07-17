@@ -124,10 +124,17 @@ namespace DynamicReflections.Framework.Managers
                         skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1)));
                     }
                 }
-                else if (Game1.random.NextDouble() < 0.05)
+                else if (Game1.random.NextDouble() < 0.075)
                 {
                     // Trigger event with this tile as starting point
-                    skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y)));
+                    if (Game1.random.NextDouble() < 0.001)
+                    {
+                        skyEffectSprites.Add(GenerateEasterEgg(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y)));
+                    }
+                    else
+                    {
+                        skyEffectSprites.Add(GenerateShootingStar(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y)));
+                    }
                 }
             }
         }
@@ -140,6 +147,16 @@ namespace DynamicReflections.Framework.Managers
             shootingStar.acceleration = new Vector2(speed, speed);
 
             return shootingStar;
+        }
+
+        private TemporaryAnimatedSprite GenerateEasterEgg(Point point)
+        {
+            var easterEgg = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(640, 784, 16, 16), Game1.random.Next(150, 300), 4, 12, new Vector2(point.X, point.Y) * 64f, flicker: false, flipped: false, 0f, 0f, Color.Gray, 3f, 0f, 0f, 0f);
+
+            float speed = (float)Math.Min(Game1.random.NextDouble() + 0.01f, 0.1f);
+            easterEgg.acceleration = new Vector2(speed, speed);
+
+            return easterEgg;
         }
 
         private List<TemporaryAnimatedSprite> GenerateComet(Point point)
