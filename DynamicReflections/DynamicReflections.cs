@@ -147,7 +147,7 @@ namespace DynamicReflections
                 return;
             }
 
-            if (e.Button == modConfig.QuickMenuKey && Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            if (e.Button == modConfig.QuickMenuKey && Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.GetGenericModConfigMenuApi() is not null)
             {
                 apiManager.GetGenericModConfigMenuApi().OpenModMenu(ModManifest);
             }
@@ -438,7 +438,7 @@ namespace DynamicReflections
             GMCMHelper.RefreshLocationListing();
 
             // Hook into GMCM, if applicable
-            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.GetGenericModConfigMenuApi() is not null)
             {
                 GMCMHelper.Register(apiManager.GetGenericModConfigMenuApi(), this, unregisterOld: true, loadLocationNames: true);
             }
