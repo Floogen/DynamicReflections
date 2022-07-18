@@ -34,12 +34,14 @@ namespace DynamicReflections
         internal static AssetManager assetManager;
         internal static MirrorsManager mirrorsManager;
         internal static PuddleManager puddleManager;
+        internal static SkyManager skyManager;
 
         // Config options
         internal static ModConfig modConfig;
         internal static string[] activeLocationNames = new string[2];
         internal static WaterSettings currentWaterSettings = new WaterSettings();
         internal static PuddleSettings currentPuddleSettings = new PuddleSettings();
+        internal static SkySettings currentSkySettings = new SkySettings();
 
         // Water reflection variables
         internal static Dictionary<NPC, Vector2> npcToWaterReflectionPosition = new Dictionary<NPC, Vector2>();
@@ -62,9 +64,19 @@ namespace DynamicReflections
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
 
+        // Sky related reflection variables
+        internal static float skyAlpha = 0.5f;
+        internal static float waterAlpha = 0.5f;
+        internal static bool isMeteorShower = false;
+        internal static bool shouldDrawNightSky;
+        internal static bool isFilteringSky;
+        internal static bool isFilteringStar;
+
         // Effects and RenderTarget2Ds
         internal static Effect waterReflectionEffect;
         internal static Effect mirrorReflectionEffect;
+        internal static RenderTarget2D nightSkyRenderTarget;
+        internal static RenderTarget2D cloudRenderTarget;
         internal static RenderTarget2D playerWaterReflectionRender;
         internal static RenderTarget2D playerPuddleReflectionRender;
         internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
@@ -89,6 +101,7 @@ namespace DynamicReflections
             assetManager = new AssetManager(modHelper);
             mirrorsManager = new MirrorsManager();
             puddleManager = new PuddleManager();
+            skyManager = new SkyManager();
 
             try
             {
@@ -134,7 +147,7 @@ namespace DynamicReflections
                 return;
             }
 
-            if (e.Button == modConfig.QuickMenuKey && Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            if (e.Button == modConfig.QuickMenuKey && Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.GetGenericModConfigMenuApi() is not null)
             {
                 apiManager.GetGenericModConfigMenuApi().OpenModMenu(ModManifest);
             }
@@ -189,6 +202,7 @@ namespace DynamicReflections
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
+            SetSkyReflectionSettings();
             SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
@@ -207,6 +221,8 @@ namespace DynamicReflections
 
                     DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
                 }
+
+                DynamicReflections.skyManager.Generate(e.NewLocation);
             }
         }
 
@@ -224,9 +240,47 @@ namespace DynamicReflections
             var puddleSettings = modConfig.GetCurrentPuddleSettings(Game1.currentLocation);
             GMCMHelper.IsLocationOverridingPuddleDefault = puddleSettings.OverrideDefaultSettings && puddleSettings != DynamicReflections.modConfig.PuddleReflectionSettings;
 
+            var skySettings = modConfig.GetCurrentSkySettings(Game1.currentLocation);
+            GMCMHelper.IsLocationOverridingSkyDefault = skySettings.OverrideDefaultSettings && skySettings != DynamicReflections.modConfig.SkyReflectionSettings;
+
             if (Game1.activeClickableMenu is null)
             {
                 GMCMHelper.RefreshLocationListing();
+            }
+
+            // Handle the sky reflections
+            var targetDarkTime = Game1.getTrulyDarkTime() + 100;
+            DynamicReflections.shouldDrawNightSky = false;
+            if (modConfig.AreSkyReflectionsEnabled is not false && currentSkySettings is not null && currentSkySettings.AreReflectionsEnabled && Game1.IsRainingHere(Game1.currentLocation) is false && Game1.timeOfDay >= targetDarkTime)
+            {
+                DynamicReflections.shouldDrawNightSky = true;
+                if (Game1.timeOfDay < targetDarkTime + 100) // Less then 10 PM
+                {
+                    DynamicReflections.waterAlpha = 0.35f;
+
+                    DynamicReflections.skyAlpha = 1f - ((targetDarkTime + 100) - Game1.timeOfDay) * 0.005f;
+                }
+                else if (Game1.timeOfDay < targetDarkTime + 200) // Less then 11 PM
+                {
+                    DynamicReflections.waterAlpha = 0.075f;
+                    DynamicReflections.skyAlpha = Math.Min(0.95f, 1f - ((targetDarkTime + 125) - Game1.timeOfDay) * 0.005f);
+                }
+                else
+                {
+                    DynamicReflections.waterAlpha = 0.05f;
+                    DynamicReflections.skyAlpha = 1f;
+                }
+
+                var secondsIntervalForShootingStar = Math.Max(1, (DynamicReflections.currentSkySettings.MillisecondsBetweenShootingStarAttempt / 1000f) * 60);
+                var secondsIntervalForMeteorShower = Math.Max(1, (DynamicReflections.currentSkySettings.MillisecondsBetweenShootingStarAttemptDuringMeteorShower / 1000f) * 60);
+                if (Game1.game1.IsActive && DynamicReflections.currentSkySettings.AreShootingStarsEnabled && e.IsMultipleOf((uint)(isMeteorShower ? secondsIntervalForMeteorShower : secondsIntervalForShootingStar)))
+                {
+                    var maxShootingStars = Math.Max(2, DynamicReflections.currentSkySettings.MaxShootingStarAttemptsPerInterval);
+                    for (int i = 0; i < Game1.random.Next(1, maxShootingStars); i++)
+                    {
+                        DynamicReflections.skyManager.AttemptEffects(Game1.currentLocation);
+                    }
+                }
             }
 
             // Handle the puddle reflection
@@ -384,11 +438,12 @@ namespace DynamicReflections
             GMCMHelper.RefreshLocationListing();
 
             // Hook into GMCM, if applicable
-            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
+            if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.GetGenericModConfigMenuApi() is not null)
             {
                 GMCMHelper.Register(apiManager.GetGenericModConfigMenuApi(), this, unregisterOld: true, loadLocationNames: true);
             }
 
+            SetSkyReflectionSettings();
             SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
@@ -410,6 +465,7 @@ namespace DynamicReflections
             modConfig = Helper.ReadConfig<ModConfig>();
             modConfig.LocalWaterReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.WaterReflectionSettings;
             modConfig.LocalPuddleReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.PuddleReflectionSettings;
+            modConfig.LocalSkyReflectionSettings[GMCMHelper.DEFAULT_LOCATION] = modConfig.SkyReflectionSettings;
 
             // Hook into GMCM, if applicable
             if (Helper.ModRegistry.IsLoaded("spacechase0.GenericModConfigMenu") && apiManager.HookIntoGenericModConfigMenu(Helper))
@@ -476,7 +532,78 @@ namespace DynamicReflections
             }
         }
 
-        internal void SetPuddleReflectionSettings()
+
+        internal void SetSkyReflectionSettings(bool recalculate = false)
+        {
+            if (currentSkySettings is null)
+            {
+                currentSkySettings = new SkySettings();
+            }
+
+            if (Context.IsWorldReady is false || Game1.currentLocation is null || Game1.currentLocation.Map is null)
+            {
+                return;
+            }
+            currentSkySettings.Reset(modConfig.GetCurrentSkySettings(Game1.currentLocation));
+
+            // Check if today should have a meteor shower
+            isMeteorShower = false;
+            if (Game1.random.NextDouble() <= modConfig.MeteorShowerNightChance / 100f)
+            {
+                isMeteorShower = true;
+            }
+
+            // Set the map specific puddle settings
+            var map = Game1.currentLocation.Map;
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_IsEnabled))
+            {
+                currentSkySettings.AreReflectionsEnabled = map.Properties[SkySettings.MapProperty_IsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_AreShootingStarsEnabled))
+            {
+                currentSkySettings.AreShootingStarsEnabled = map.Properties[SkySettings.MapProperty_AreShootingStarsEnabled].ToString().Equals("T", StringComparison.OrdinalIgnoreCase);
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_MillisecondsBetweenShootingStarAttempt))
+            {
+                if (Int32.TryParse(map.Properties[SkySettings.MapProperty_MillisecondsBetweenShootingStarAttempt], out var milliseconds))
+                {
+                    currentSkySettings.MillisecondsBetweenShootingStarAttempt = milliseconds;
+                }
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_MaxShootingStarAttemptsPerInterval))
+            {
+                if (Int32.TryParse(map.Properties[SkySettings.MapProperty_MaxShootingStarAttemptsPerInterval], out var max))
+                {
+                    currentSkySettings.MaxShootingStarAttemptsPerInterval = max;
+                }
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_CometChance))
+            {
+                if (Int32.TryParse(map.Properties[SkySettings.MapProperty_CometChance], out var chance))
+                {
+                    currentSkySettings.CometChance = chance;
+                }
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_MillisecondsBetweenShootingStarAttemptDuringMeteorShower))
+            {
+                if (Int32.TryParse(map.Properties[SkySettings.MapProperty_MillisecondsBetweenShootingStarAttemptDuringMeteorShower], out var milliseconds))
+                {
+                    currentSkySettings.MillisecondsBetweenShootingStarAttemptDuringMeteorShower = milliseconds;
+                }
+            }
+
+            if (recalculate && DynamicReflections.skyManager is not null && Game1.currentLocation is not null)
+            {
+                DynamicReflections.skyManager.Generate(Game1.currentLocation, force: true);
+            }
+        }
+
+        internal void SetPuddleReflectionSettings(bool recalculate = false)
         {
             if (currentPuddleSettings is null)
             {
@@ -621,6 +748,12 @@ namespace DynamicReflections
                     Monitor.Log($"Failed to get PuddleSettings.MapProperty_RippleColor from the map {map.Id}!", LogLevel.Warn);
                     Monitor.Log($"Failed to get PuddleSettings.MapProperty_RippleColor from the map {map.Id}: {ex}", LogLevel.Trace);
                 }
+            }
+
+            // TODO: Implement this as a button in the config
+            if (recalculate && DynamicReflections.puddleManager is not null && Game1.currentLocation is not null)
+            {
+                DynamicReflections.puddleManager.Generate(Game1.currentLocation, force: true);
             }
         }
 
@@ -802,6 +935,8 @@ namespace DynamicReflections
         internal void LoadRenderers()
         {
             // Handle the render targets
+            RegenerateRenderer(ref nightSkyRenderTarget);
+            RegenerateRenderer(ref cloudRenderTarget);
             RegenerateRenderer(ref playerWaterReflectionRender);
             RegenerateRenderer(ref playerPuddleReflectionRender);
             RegenerateRenderer(ref npcWaterReflectionRender);

@@ -22,6 +22,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
     internal class LayerPatch : PatchTemplate
     {
         private readonly Type _object = typeof(Layer);
+        private static Color _waterColor;
 
         internal LayerPatch(IMonitor modMonitor, IModHelper modHelper) : base(modMonitor, modHelper)
         {
@@ -93,6 +94,16 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     SpriteBatchToolkit.RenderPuddleReflectionNPCs();
                 }
 
+                _waterColor = Game1.currentLocation.waterColor.Value;
+                if (DynamicReflections.modConfig.AreSkyReflectionsEnabled is true)
+                {
+                    if (DynamicReflections.shouldDrawNightSky)
+                    {
+                        DynamicReflections.isFilteringSky = true;
+                        Game1.currentLocation.waterColor.Value = new Color(60, 240, 255) * DynamicReflections.waterAlpha;
+                    }
+                }
+
                 // Handle preliminary puddles reflection and draw logic
                 if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is true)
                 {
@@ -113,11 +124,26 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
                 // Draw the filtered layer, if needed
                 SpriteBatchToolkit.HandleBackgroundDraw();
-                if (DynamicReflections.isFilteringWater is false)
+                if (DynamicReflections.isFilteringWater is false && DynamicReflections.isFilteringSky is false)
                 {
                     return true;
                 }
-                LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+
+                // Draw the sky reflection
+                if (DynamicReflections.isFilteringSky is true)
+                {
+                    SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
+
+                    SpriteBatchToolkit.RenderWaterReflectionNightSky();
+                    SpriteBatchToolkit.DrawNightSky();
+
+                    // Resume previous SpriteBatch
+                    SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
+                }
+                else
+                {
+                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+                }
 
                 // Draw the water reflection
                 if (DynamicReflections.isFilteringWater is true)
@@ -135,6 +161,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
             }
             else if (__instance.Id.Equals("Buildings", StringComparison.OrdinalIgnoreCase) is true)
             {
+                Game1.currentLocation.waterColor.Value = _waterColor;
+
                 // Draw the cached Mirrors layer
                 Game1.spriteBatch.Draw(DynamicReflections.mirrorsLayerRenderTarget, Vector2.Zero, Color.White);
 

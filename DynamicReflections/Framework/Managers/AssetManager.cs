@@ -14,6 +14,8 @@ namespace DynamicReflections.Framework.Managers
     internal class AssetManager
     {
         internal Texture2D PuddlesTileSheetTexture { get; }
+        internal Texture2D NightSkyTileSheetTexture { get; }
+        internal string SkyEffectsTileSheetTexturePath { get; }
 
         public AssetManager(IModHelper helper)
         {
@@ -22,6 +24,8 @@ namespace DynamicReflections.Framework.Managers
 
             // Load in the puddles tilesheet
             PuddlesTileSheetTexture = helper.ModContent.Load<Texture2D>(Path.Combine(assetFolderPath, "Textures", "puddles_sheet.png"));
+            NightSkyTileSheetTexture = helper.ModContent.Load<Texture2D>(Path.Combine(assetFolderPath, "Textures", "night_sky_sheet.png"));
+            SkyEffectsTileSheetTexturePath = helper.ModContent.GetInternalAssetName(Path.Combine(assetFolderPath, "Textures", "sky_effects_sheet.png")).Name;
         }
     }
 }

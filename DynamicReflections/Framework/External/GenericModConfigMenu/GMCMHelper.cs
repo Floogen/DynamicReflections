@@ -14,6 +14,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
     {
         internal static bool IsLocationOverridingWaterDefault;
         internal static bool IsLocationOverridingPuddleDefault;
+        internal static bool IsLocationOverridingSkyDefault;
 
         internal static readonly string DEFAULT_LOCATION = "Default";
         private static readonly string LOCATION_SELECTOR_ID = "PeacefulEnd.DynamicReflections.LocationSelector.Id";
@@ -27,7 +28,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             {
                 configApi.Unregister(ModManifest);
             }
-            configApi.Register(ModManifest, () => ResetConfig(), delegate { Helper.WriteConfig(DynamicReflections.modConfig); dynamicReflections.SetWaterReflectionSettings(); dynamicReflections.SetPuddleReflectionSettings(); dynamicReflections.LoadRenderers(); });
+            configApi.Register(ModManifest, () => ResetConfig(), delegate { Helper.WriteConfig(DynamicReflections.modConfig); dynamicReflections.SetWaterReflectionSettings(); dynamicReflections.SetPuddleReflectionSettings(); dynamicReflections.SetSkyReflectionSettings(recalculate: true); dynamicReflections.LoadRenderers(); });
 
             // Register the standard settings
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.title"));
@@ -35,6 +36,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreWaterReflectionsEnabled, value => DynamicReflections.modConfig.AreWaterReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.water_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.ArePuddleReflectionsEnabled, value => DynamicReflections.modConfig.ArePuddleReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.puddle_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreNPCReflectionsEnabled, value => DynamicReflections.modConfig.AreNPCReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.npc_reflections"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreSkyReflectionsEnabled, value => DynamicReflections.modConfig.AreSkyReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.sky_reflections"));
             configApi.AddKeybind(ModManifest, () => DynamicReflections.modConfig.QuickMenuKey, value => DynamicReflections.modConfig.QuickMenuKey = value, () => Helper.Translation.Get("config.general_settings.shortcut_key"), () => Helper.Translation.Get("config.general_settings.shortcut_key.description"));
 
             configApi.AddParagraph(ModManifest, () => String.Empty);
@@ -43,7 +45,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
                 configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.location_specific.title"), () => Helper.Translation.Get("config.location_specific.description"));
                 configApi.AddTextOption(ModManifest, () => _currentLocation, value => _currentLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.activeLocationNames, fieldId: LOCATION_SELECTOR_ID);
                 configApi.OnFieldChanged(ModManifest, (key, value) => HandleFieldChange(key, value));
-                configApi.AddParagraph(ModManifest, () => $"Default Water Settings Overriden by Current Location: {IsLocationOverridingWaterDefault}\n\nDefault Puddle Settings Overriden by Current Location: {IsLocationOverridingPuddleDefault}");
+                configApi.AddParagraph(ModManifest, () => $"Default Water Settings Overriden by Current Location: {IsLocationOverridingWaterDefault}\n\nDefault Puddle Settings Overriden by Current Location: {IsLocationOverridingPuddleDefault}\n\nDefault Sky Settings Overriden by Current Location: {IsLocationOverridingSkyDefault}");
             }
             configApi.AddParagraph(ModManifest, () => String.Empty);
 
@@ -79,7 +81,6 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 
             configApi.AddPage(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.title"));
             configApi.AddPageLink(ModManifest, "puddle_settings", () => Helper.Translation.Get("config.puddle_settings.link"));
-            configApi.AddParagraph(ModManifest, () => $"{Environment.NewLine}");
 
             configApi.AddPage(ModManifest, "puddle_settings", () => Helper.Translation.Get("config.puddle_settings.title"));
             configApi.AddSectionTitle(ModManifest, () => _currentLocation);
@@ -124,6 +125,28 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.A, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor = new Color(DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.R, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.G, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].RippleColor.B, value), () => Helper.Translation.Get("config.puddle_settings.ripple_color.a"), min: 0, max: 255, interval: 1);
 
             configApi.AddPageLink(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.link.return_main"));
+
+            configApi.AddPage(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.title"));
+            configApi.AddPageLink(ModManifest, "sky_settings", () => Helper.Translation.Get("config.sky_settings.link"));
+            configApi.AddParagraph(ModManifest, () => $"{Environment.NewLine}");
+
+            configApi.AddPage(ModManifest, "sky_settings", () => Helper.Translation.Get("config.sky_settings.title"));
+            configApi.AddSectionTitle(ModManifest, () => _currentLocation);
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].OverrideDefaultSettings, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].OverrideDefaultSettings = value, () => Helper.Translation.Get("config.general_settings.override_default_settings"), () => Helper.Translation.Get("config.general_settings.override_default_settings.description"));
+
+            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.title"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].AreReflectionsEnabled, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].AreReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.sky_reflections"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].AreShootingStarsEnabled, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].AreShootingStarsEnabled = value, () => Helper.Translation.Get("config.sky_settings.shooting_stars_enabled"));
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].StarDensityPercentage, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].StarDensityPercentage = value, () => Helper.Translation.Get("config.sky_settings.star_density"), min: 0, max: 100, interval: 1);
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.MeteorShowerNightChance, value => DynamicReflections.modConfig.MeteorShowerNightChance = value, () => Helper.Translation.Get("config.sky_settings.meteor_shower_chance"), tooltip: () => Helper.Translation.Get("config.sky_settings.meteor_shower_chance.description"), min: 0, max: 100, interval: 1);
+
+            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.sky_settings.shooting_stars.title"));
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].MaxShootingStarAttemptsPerInterval, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].MaxShootingStarAttemptsPerInterval = value, () => Helper.Translation.Get("config.sky_settings.max_shooting_stars_per_attempt"), tooltip: () => Helper.Translation.Get("config.sky_settings.max_shooting_stars_per_attempt.description"), min: 1, max: 100, interval: 1);
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].CometChance, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].CometChance = value, () => Helper.Translation.Get("config.sky_settings.comet_chance"), min: 0, max: 100, interval: 1);
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].MillisecondsBetweenShootingStarAttempt, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].MillisecondsBetweenShootingStarAttempt = value, () => Helper.Translation.Get("config.sky_settings.milliseconds_between_stars"), tooltip: () => Helper.Translation.Get("config.sky_settings.milliseconds_between_stars.description"), min: 50, max: 10000, interval: 50);
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].MillisecondsBetweenShootingStarAttemptDuringMeteorShower, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].MillisecondsBetweenShootingStarAttemptDuringMeteorShower = value, () => Helper.Translation.Get("config.sky_settings.milliseconds_between_stars_during_meteor_shower"), tooltip: () => Helper.Translation.Get("config.sky_settings.milliseconds_between_stars.description"), min: 50, max: 10000, interval: 50);
+
+            configApi.AddPageLink(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.link.return_main"));
         }
 
         private static void HandleFieldChange(string key, object value)
@@ -142,6 +165,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 
             DynamicReflections.modConfig.LocalWaterReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.WaterReflectionSettings;
             DynamicReflections.modConfig.LocalPuddleReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.PuddleReflectionSettings;
+            DynamicReflections.modConfig.LocalSkyReflectionSettings[DEFAULT_LOCATION] = DynamicReflections.modConfig.SkyReflectionSettings;
 
 
             // Populate the location-based settings
@@ -157,7 +181,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             {
                 return;
             }
-            _currentLocation = IsLocationOverridingWaterDefault || IsLocationOverridingWaterDefault ? location.NameOrUniqueName : _currentLocation;
+            _currentLocation = IsLocationOverridingWaterDefault || IsLocationOverridingPuddleDefault || IsLocationOverridingSkyDefault ? location.NameOrUniqueName : _currentLocation;
 
             if (reset is true || DynamicReflections.modConfig.LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
             {
@@ -166,6 +190,10 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             if (reset is true || DynamicReflections.modConfig.LocalPuddleReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
             {
                 DynamicReflections.modConfig.LocalPuddleReflectionSettings[location.NameOrUniqueName] = new PuddleSettings();
+            }
+            if (reset is true || DynamicReflections.modConfig.LocalSkyReflectionSettings.ContainsKey(location.NameOrUniqueName) is false)
+            {
+                DynamicReflections.modConfig.LocalSkyReflectionSettings[location.NameOrUniqueName] = new SkySettings();
             }
 
             DynamicReflections.activeLocationNames[0] = DEFAULT_LOCATION;
