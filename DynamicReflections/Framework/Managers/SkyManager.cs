@@ -27,7 +27,7 @@ namespace DynamicReflections.Framework.Managers
             _locationToSkyPoints = new Dictionary<GameLocation, List<Point>>();
         }
 
-        public void Generate(GameLocation location)
+        public void Generate(GameLocation location, bool force = false)
         {
             skyEffectSprites = new List<TemporaryAnimatedSprite>();
             if (location is null || location.Map is null)
@@ -39,7 +39,7 @@ namespace DynamicReflections.Framework.Managers
             {
                 Reset();
             }
-            else if (_locationToSkyTiles.ContainsKey(location) is true && _locationToSkyTiles[location] is not null)
+            else if (force is false && _locationToSkyTiles.ContainsKey(location) is true && _locationToSkyTiles[location] is not null)
             {
                 return;
             }
@@ -55,6 +55,7 @@ namespace DynamicReflections.Framework.Managers
                 _locationToSkyTiles[location] = new bool[backLayer.LayerWidth, backLayer.LayerHeight];
                 _locationToSkyPoints[location] = new List<Point>();
 
+                double starDensityPercentage = DynamicReflections.currentSkySettings.StarDensityPercentage / 100f;
                 for (int x = 0; x < backLayer.LayerWidth; x++)
                 {
                     for (int y = 0; y < backLayer.LayerHeight; y++)
@@ -63,7 +64,7 @@ namespace DynamicReflections.Framework.Managers
                         {
                             _locationToSkyTiles[location][x, y] = true;
                             _locationToSkyPoints[location].Add(new Point(x, y));
-                            backLayer.Tiles[x, y].Properties["SkyIndex"] = random.NextDouble() < 0.55 ? DEFAULT_SKY_INDEX : random.Next(DEFAULT_SKY_INDEX, SKY_TILES_X * SKY_TILES_Y);
+                            backLayer.Tiles[x, y].Properties["SkyIndex"] = random.NextDouble() > starDensityPercentage ? DEFAULT_SKY_INDEX : random.Next(DEFAULT_SKY_INDEX, SKY_TILES_X * SKY_TILES_Y);
                             backLayer.Tiles[x, y].Properties["SkyEffect"] = random.Next(0, 4);
                             backLayer.Tiles[x, y].Properties["SkyAlpha"] = random.NextDouble() < 0.55 ? (float)random.NextDouble() : 1f;
                         }
@@ -97,13 +98,14 @@ namespace DynamicReflections.Framework.Managers
                     return;
                 }
                 var randomWaterTilePoint = GetRandomTile(Game1.random, GetSkyTiles(location, true));
+                double cometChance = DynamicReflections.currentSkySettings.CometChance / 100f;
 
                 var leftTile = backLayer.PickTile(new Location((randomWaterTilePoint.X - 1) * 64, randomWaterTilePoint.Y * 64), Game1.viewport.Size);
                 var topTile = backLayer.PickTile(new Location(randomWaterTilePoint.X * 64, (randomWaterTilePoint.Y - 1) * 64), Game1.viewport.Size);
                 if (leftTile is not null && location.isWaterTile(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y) is false)
                 {
                     // Trigger event with this tile as starting point
-                    if (Game1.random.NextDouble() < 0.10)
+                    if (Game1.random.NextDouble() < cometChance)
                     {
                         skyEffectSprites.AddRange(GenerateComet(new Point(randomWaterTilePoint.X - 1, randomWaterTilePoint.Y)));
                     }
@@ -115,7 +117,7 @@ namespace DynamicReflections.Framework.Managers
                 else if (topTile is not null && location.isWaterTile(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1) is false)
                 {
                     // Trigger event with this tile as starting point
-                    if (Game1.random.NextDouble() < 0.10)
+                    if (Game1.random.NextDouble() < cometChance)
                     {
                         skyEffectSprites.AddRange(GenerateComet(new Point(randomWaterTilePoint.X, randomWaterTilePoint.Y - 1)));
                     }

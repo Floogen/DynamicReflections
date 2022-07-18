@@ -23,7 +23,7 @@ namespace DynamicReflections.Framework.Managers
             _locationToPuddleTiles = new Dictionary<GameLocation, bool[,]>();
         }
 
-        public void Generate(GameLocation location, int percentOfDiggableTiles = 10)
+        public void Generate(GameLocation location, int percentOfDiggableTiles = 10, bool force = false)
         {
             puddleRippleSprites = new List<TemporaryAnimatedSprite>();
             if (location is null || location.Map is null)
@@ -35,7 +35,7 @@ namespace DynamicReflections.Framework.Managers
             {
                 Reset();
             }
-            else if (_locationToPuddleTiles.ContainsKey(location) is true && _locationToPuddleTiles[location] is not null)
+            else if (force is false && _locationToPuddleTiles.ContainsKey(location) is true && _locationToPuddleTiles[location] is not null)
             {
                 return;
             }
