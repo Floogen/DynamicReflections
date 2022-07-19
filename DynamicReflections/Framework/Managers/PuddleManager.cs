@@ -224,7 +224,7 @@ namespace DynamicReflections.Framework.Managers
 
         public bool IsTilePuddle(GameLocation location, int x, int y)
         {
-            if (_locationToPuddleTiles[location] is null || x < 0 || y < 0 || _locationToPuddleTiles[location].GetLength(0) <= x || _locationToPuddleTiles[location].GetLength(1) <= y)
+            if (_locationToPuddleTiles.ContainsKey(location) is false || _locationToPuddleTiles[location] is null || x < 0 || y < 0 || _locationToPuddleTiles[location].GetLength(0) <= x || _locationToPuddleTiles[location].GetLength(1) <= y)
             {
                 return false;
             }

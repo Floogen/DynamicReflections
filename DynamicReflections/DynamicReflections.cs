@@ -598,7 +598,7 @@ namespace DynamicReflections
                 }
             }
 
-            if (recalculate && DynamicReflections.skyManager is not null && Game1.currentLocation is not null)
+            if (recalculate && DynamicReflections.skyManager is not null && Game1.currentLocation is not null && Game1.currentLocation.IsOutdoors is true)
             {
                 DynamicReflections.skyManager.Generate(Game1.currentLocation, force: true);
             }
