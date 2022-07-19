@@ -60,9 +60,27 @@ namespace DynamicReflections.Framework.Managers
                             backLayer.Tiles[x, y].Properties["PuddleIndex"] = DEFAULT_PUDDLE_INDEX;
                             backLayer.Tiles[x, y].Properties["BigPuddleIndex"] = DEFAULT_PUDDLE_INDEX;
 
-                            if (String.IsNullOrEmpty(location.doesTileHaveProperty(x, y, "Diggable", "Back")) is false && location.isTileHoeDirt(new Microsoft.Xna.Framework.Vector2(x, y)) is false && location.isTileLocationTotallyClearAndPlaceable(x, y))
+                            if (location.isTileLocationTotallyClearAndPlaceable(x, y) is false)
+                            {
+                                continue;
+                            }
+
+                            if (String.IsNullOrEmpty(location.doesTileHaveProperty(x, y, "Diggable", "Back")) is false && location.isTileHoeDirt(new Microsoft.Xna.Framework.Vector2(x, y)) is false)
                             {
                                 diggableTiles.Add(new Point(x, y));
+                            }
+                            else
+                            {
+                                string stepType = Game1.currentLocation.doesTileHaveProperty(x, y, "Type", "Buildings");
+                                if (stepType == null || stepType.Length < 1)
+                                {
+                                    stepType = Game1.currentLocation.doesTileHaveProperty(x, y, "Type", "Back");
+                                }
+
+                                if (stepType == "Dirt" || stepType == "Stone")
+                                {
+                                    diggableTiles.Add(new Point(x, y));
+                                }
                             }
                         }
                     }
