@@ -50,6 +50,7 @@ namespace DynamicReflections
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
+        internal static bool shouldSkipWaterOverlay;
 
         // Puddle reflection variables
         internal static bool shouldDrawPuddlesReflection;
@@ -217,9 +218,10 @@ namespace DynamicReflections
                     if (Game1.IsRainingHere(e.NewLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"))
                     {
                         puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
+                        puddlesPercentage = Math.Max(1, (100 - puddlesPercentage));
                     }
 
-                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: Math.Max(1, (100 - puddlesPercentage)));
+                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
                 }
 
                 DynamicReflections.skyManager.Generate(e.NewLocation);
@@ -983,10 +985,18 @@ namespace DynamicReflections
                 renderTarget2D.Dispose();
             }
 
+            var height = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight;
+            var width = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
+            if (Game1.game1 is not null && Game1.game1.screen is not null)
+            {
+                height = Game1.game1.screen.Height;
+                width = Game1.game1.screen.Width;
+            }
+
             renderTarget2D = new RenderTarget2D(
                 Game1.graphics.GraphicsDevice,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth,
-                Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight,
+                width,
+                height,
                 false,
                 Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferFormat,
                 DepthFormat.None);

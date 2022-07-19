@@ -101,6 +101,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     {
                         DynamicReflections.isFilteringSky = true;
                         Game1.currentLocation.waterColor.Value = new Color(60, 240, 255) * DynamicReflections.waterAlpha;
+                        SpriteBatchToolkit.RenderWaterReflectionNightSky();
                     }
                 }
 
@@ -129,20 +130,13 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     return true;
                 }
 
-                // Draw the sky reflection
-                if (DynamicReflections.isFilteringSky is true)
-                {
-                    SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
-
-                    SpriteBatchToolkit.RenderWaterReflectionNightSky();
-                    SpriteBatchToolkit.DrawNightSky();
-
-                    // Resume previous SpriteBatch
-                    SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
-                }
-                else
+                // Handle Visible Fish Compatability
+                if (DynamicReflections.modHelper.ModRegistry.IsLoaded("shekurika.WaterFish"))
                 {
                     LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+                    DynamicReflections.shouldSkipWaterOverlay = true;
+                    Game1.currentLocation.drawWater(Game1.spriteBatch);
+                    DynamicReflections.shouldSkipWaterOverlay = false;
                 }
 
                 // Draw the water reflection
@@ -158,6 +152,18 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     // Resume previous SpriteBatch
                     SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
                 }
+
+                // Draw the sky reflection
+                if (DynamicReflections.shouldDrawNightSky is true)
+                {
+                    SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
+
+                    SpriteBatchToolkit.DrawNightSky();
+
+                    // Resume previous SpriteBatch
+                    SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
+                }
+
             }
             else if (__instance.Id.Equals("Buildings", StringComparison.OrdinalIgnoreCase) is true)
             {
