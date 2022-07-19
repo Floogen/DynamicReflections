@@ -219,7 +219,7 @@ namespace DynamicReflections
                         puddlesPercentage = Game1.IsRainingHere(e.NewLocation) ? currentPuddleSettings.PuddlePercentageWhileRaining : currentPuddleSettings.PuddlePercentageAfterRaining;
                     }
 
-                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: puddlesPercentage);
+                    DynamicReflections.puddleManager.Generate(e.NewLocation, percentOfDiggableTiles: Math.Max(1, (100 - puddlesPercentage)));
                 }
 
                 DynamicReflections.skyManager.Generate(e.NewLocation);
