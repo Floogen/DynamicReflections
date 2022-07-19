@@ -381,7 +381,7 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            foreach (var npc in Game1.currentLocation.characters)
+            foreach (var npc in DynamicReflections.GetActiveNPCs(Game1.currentLocation))
             {
                 if (DynamicReflections.npcToWaterReflectionPosition.ContainsKey(npc) is false)
                 {
@@ -404,7 +404,6 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.spriteBatch.End();
             }
-
 
             // Drop the render target
             SpriteBatchToolkit.StopRendering();

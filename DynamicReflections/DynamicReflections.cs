@@ -326,10 +326,11 @@ namespace DynamicReflections
 
             if (modConfig.AreNPCReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
+                Monitor.LogOnce(Game1.currentLocation.Name, LogLevel.Debug);
                 npcToWaterReflectionPosition.Clear();
                 if (Game1.currentLocation is not null && Game1.currentLocation.characters is not null)
                 {
-                    foreach (var npc in Game1.currentLocation.characters)
+                    foreach (var npc in GetActiveNPCs(Game1.currentLocation))
                     {
                         var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.NPCReflectionOffset.Y > 0 ? -1 : 1;
                         var npcPosition = npc.Position;
@@ -1134,6 +1135,26 @@ namespace DynamicReflections
             }
 
             return initialDirection;
+        }
+
+        internal static List<NPC> GetActiveNPCs(GameLocation location)
+        {
+            var npcs = new List<NPC>();
+            if (location is null)
+            {
+                return npcs;
+            }
+
+            if (Game1.eventUp && location.currentEvent is not null && location.currentEvent.actors is not null)
+            {
+                npcs = location.currentEvent.actors.ToList();
+            }
+            else if (location.characters is not null)
+            {
+                npcs = location.characters.ToList();
+            }
+
+            return npcs;
         }
     }
 }
