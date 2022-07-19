@@ -26,6 +26,7 @@ namespace DynamicReflections.Framework.Patches.Tools
         internal void Apply(Harmony harmony)
         {
             harmony.Patch(AccessTools.Method(_type, nameof(Tool.doesShowTileLocationMarker), null), postfix: new HarmonyMethod(GetType(), nameof(DoesShowTileLocationMarkerPostfix)));
+            harmony.Patch(AccessTools.Method(_type, nameof(Tool.draw), new[] { typeof(SpriteBatch) }), prefix: new HarmonyMethod(GetType(), nameof(DrawPrefix)));
         }
 
         private static void DoesShowTileLocationMarkerPostfix(Tool __instance, ref bool __result)
@@ -34,6 +35,16 @@ namespace DynamicReflections.Framework.Patches.Tools
             {
                 __result = false;
             }
+        }
+
+        private static bool DrawPrefix(Tool __instance, ref Farmer ___lastUser, ref int __state, SpriteBatch b)
+        {
+            if (DynamicReflections.isFilteringMirror || DynamicReflections.isFilteringWater || DynamicReflections.isFilteringPuddles)
+            {
+                return false;
+            }
+
+            return true;
         }
     }
 }
