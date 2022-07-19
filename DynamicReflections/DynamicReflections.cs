@@ -326,7 +326,6 @@ namespace DynamicReflections
 
             if (modConfig.AreNPCReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
-                Monitor.LogOnce(Game1.currentLocation.Name, LogLevel.Debug);
                 npcToWaterReflectionPosition.Clear();
                 if (Game1.currentLocation is not null && Game1.currentLocation.characters is not null)
                 {
