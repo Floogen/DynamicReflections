@@ -591,6 +591,73 @@ namespace DynamicReflections
                 }
             }
 
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_CometSegmentMin))
+            {
+                if (Int32.TryParse(map.Properties[SkySettings.MapProperty_CometSegmentMin], out var segment))
+                {
+                    currentSkySettings.CometSegmentMin = segment;
+                }
+            }
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_CometSegmentMax))
+            {
+                if (Int32.TryParse(map.Properties[SkySettings.MapProperty_CometSegmentMax], out var segment))
+                {
+                    currentSkySettings.CometSegmentMax = segment;
+                }
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_ShootingStarMinSpeed))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_ShootingStarMinSpeed], out var speed))
+                {
+                    currentSkySettings.ShootingStarMinSpeed = speed;
+                }
+            }
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_ShootingStarMaxSpeed))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_ShootingStarMaxSpeed], out var speed))
+                {
+                    currentSkySettings.ShootingStarMaxSpeed = speed;
+                }
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_CometMinSpeed))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_CometMinSpeed], out var speed))
+                {
+                    currentSkySettings.CometMinSpeed = speed;
+                }
+            }
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_CometMaxSpeed))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_CometMaxSpeed], out var speed))
+                {
+                    currentSkySettings.CometMaxSpeed = speed;
+                }
+            }
+
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_GettingDarkWaterAlpha))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_GettingDarkWaterAlpha], out var darkness))
+                {
+                    currentSkySettings.GettingDarkWaterAlpha = darkness;
+                }
+            }
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_HalfwayDarkWaterAlpha))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_HalfwayDarkWaterAlpha], out var darkness))
+                {
+                    currentSkySettings.HalfwayDarkWaterAlpha = darkness;
+                }
+            }
+            if (map.Properties.ContainsKey(SkySettings.MapProperty_FinishedDarkWaterAlpha))
+            {
+                if (float.TryParse(map.Properties[SkySettings.MapProperty_FinishedDarkWaterAlpha], out var darkness))
+                {
+                    currentSkySettings.FinishedDarkWaterAlpha = darkness;
+                }
+            }
+
             if (map.Properties.ContainsKey(SkySettings.MapProperty_MillisecondsBetweenShootingStarAttemptDuringMeteorShower))
             {
                 if (Int32.TryParse(map.Properties[SkySettings.MapProperty_MillisecondsBetweenShootingStarAttemptDuringMeteorShower], out var milliseconds))
