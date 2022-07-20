@@ -43,6 +43,11 @@
   "config.sky_settings.comet.max": "Comet Speed (Max)",
   "config.sky_settings.comet_segment.min": "Min Comet Segments",
   "config.sky_settings.comet_segment.max": "Max Comet Segments",
+  "config.sky_settings.star_reflections.title": "Star Reflection Settings",
+  "config.sky_settings.water_alpha.getting_dark": "Water Alpha (Starting Dark Out)",
+  "config.sky_settings.water_alpha.halfway_dark": "Water Alpha (Halfway Dark Out)",
+  "config.sky_settings.water_alpha.finished_dark": "Water Alpha (Finished Dark Out)",
+  "config.sky_settings.water_alpha.description": "Determines the transparency of the water's wave effect for each stage of the sun setting.",
 
   "config.water_settings.title": "Water Specific Settings",
   "config.water_settings.link": "Go to Water Settings",

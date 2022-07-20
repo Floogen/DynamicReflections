@@ -48,6 +48,13 @@ namespace DynamicReflections.Framework.Models.Settings
         public const string MapProperty_MillisecondsBetweenShootingStarAttemptDuringMeteorShower = "MillisecondsBetweenShootingStarAttemptDuringMeteorShower";
         public int MillisecondsBetweenShootingStarAttemptDuringMeteorShower { get; set; } = 250;
 
+        public const string MapProperty_GettingDarkWaterAlpha = "StartingDarkWaterAlpha";
+        public float GettingDarkWaterAlpha { get; set; } = 0.35f;
+        public const string MapProperty_HalfwayDarkWaterAlpha = "HalfwayDarkWaterAlpha";
+        public float HalfwayDarkWaterAlpha { get; set; } = 0.075f;
+        public const string MapProperty_FinishedDarkWaterAlpha = "FinishedDarkWaterAlpha";
+        public float FinishedDarkWaterAlpha { get; set; } = 0.005f;
+
 
         public bool OverrideDefaultSettings { get; set; }
 
@@ -68,6 +75,9 @@ namespace DynamicReflections.Framework.Models.Settings
                 CometMinSpeed = 0.04f;
                 CometMaxSpeed = 0.5f;
                 MillisecondsBetweenShootingStarAttemptDuringMeteorShower = 250;
+                GettingDarkWaterAlpha = 0.35f;
+                HalfwayDarkWaterAlpha = 0.075f;
+                FinishedDarkWaterAlpha = 0.005f;
                 OverrideDefaultSettings = false;
             }
             else
@@ -84,6 +94,9 @@ namespace DynamicReflections.Framework.Models.Settings
                 ShootingStarMaxSpeed = Math.Min(referencedSettings.ShootingStarMaxSpeed, 1f);
                 CometMinSpeed = Math.Max(referencedSettings.CometMinSpeed, 0.01f);
                 CometMaxSpeed = Math.Min(referencedSettings.CometMaxSpeed, 1f);
+                GettingDarkWaterAlpha = referencedSettings.GettingDarkWaterAlpha;
+                HalfwayDarkWaterAlpha = referencedSettings.HalfwayDarkWaterAlpha;
+                FinishedDarkWaterAlpha = referencedSettings.FinishedDarkWaterAlpha;
                 MillisecondsBetweenShootingStarAttemptDuringMeteorShower = referencedSettings.MillisecondsBetweenShootingStarAttemptDuringMeteorShower;
             }
         }

@@ -258,18 +258,18 @@ namespace DynamicReflections
                 DynamicReflections.shouldDrawNightSky = true;
                 if (Game1.timeOfDay < targetDarkTime + 100) // Less then 10 PM
                 {
-                    DynamicReflections.waterAlpha = 0.35f;
+                    DynamicReflections.waterAlpha = currentSkySettings.GettingDarkWaterAlpha;
 
                     DynamicReflections.skyAlpha = 1f - ((targetDarkTime + 100) - Game1.timeOfDay) * 0.005f;
                 }
                 else if (Game1.timeOfDay < targetDarkTime + 200) // Less then 11 PM
                 {
-                    DynamicReflections.waterAlpha = 0.075f;
+                    DynamicReflections.waterAlpha = currentSkySettings.HalfwayDarkWaterAlpha;
                     DynamicReflections.skyAlpha = Math.Min(0.95f, 1f - ((targetDarkTime + 125) - Game1.timeOfDay) * 0.005f);
                 }
                 else
                 {
-                    DynamicReflections.waterAlpha = 0.05f;
+                    DynamicReflections.waterAlpha = currentSkySettings.FinishedDarkWaterAlpha;
                     DynamicReflections.skyAlpha = 1f;
                 }
 
