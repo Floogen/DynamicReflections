@@ -139,8 +139,23 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     DynamicReflections.shouldSkipWaterOverlay = false;
                 }
 
-                // Draw the water reflection
-                if (DynamicReflections.isFilteringWater is true)
+                // Draw the sky reflection
+                if (DynamicReflections.shouldDrawNightSky is true)
+                {
+                    SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
+
+                    SpriteBatchToolkit.DrawNightSky();
+
+                    if (DynamicReflections.isFilteringWater is true)
+                    {
+                        DynamicReflections.isFilteringWater = false;
+                        DynamicReflections.isDrawingWaterReflection = true;
+                    }
+
+                    // Resume previous SpriteBatch
+                    SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
+                }
+                else if (DynamicReflections.isFilteringWater is true) // Draw the water reflection, if sky reflections aren't currently active
                 {
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
@@ -152,18 +167,6 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     // Resume previous SpriteBatch
                     SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
                 }
-
-                // Draw the sky reflection
-                if (DynamicReflections.shouldDrawNightSky is true)
-                {
-                    SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
-
-                    SpriteBatchToolkit.DrawNightSky();
-
-                    // Resume previous SpriteBatch
-                    SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
-                }
-
             }
             else if (__instance.Id.Equals("Buildings", StringComparison.OrdinalIgnoreCase) is true)
             {

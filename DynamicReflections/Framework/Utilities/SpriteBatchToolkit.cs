@@ -321,6 +321,11 @@ namespace DynamicReflections.Framework.Utilities
 
                     Game1.spriteBatch.End();
 
+                    if (DynamicReflections.isFilteringWater is true)
+                    {
+                        SpriteBatchToolkit.DrawRenderedCharacters(isWavy: DynamicReflections.currentWaterSettings.IsReflectionWavy);
+                    }
+
                     Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
 
                     DynamicReflections.isFilteringStar = true;
