@@ -1,4 +1,5 @@
-﻿using Microsoft.Xna.Framework;
+﻿using DynamicReflections.Framework.Utilities.Extensions;
+using Microsoft.Xna.Framework;
 using StardewValley;
 using System;
 using System.Collections.Generic;
@@ -145,7 +146,7 @@ namespace DynamicReflections.Framework.Managers
         {
             var shootingStar = new TemporaryAnimatedSprite(DynamicReflections.assetManager.SkyEffectsTileSheetTexturePath, new Microsoft.Xna.Framework.Rectangle(0, 0, 32, 32), Game1.random.Next(150, 300), 3, 12, new Vector2(point.X, point.Y) * 64f, flicker: false, flipped: false, 0f, 0f, Color.White, (float)(Game1.random.Next(1, 4) + Game1.random.NextDouble()), 0f, 0f, 0f);
 
-            var speed = (float)(Game1.random.NextDouble() + 0.01f);
+            var speed = (float)(Game1.random.NextDouble(DynamicReflections.currentSkySettings.ShootingStarMinSpeed, DynamicReflections.currentSkySettings.ShootingStarMaxSpeed));
             shootingStar.acceleration = new Vector2(speed, speed);
 
             return shootingStar;
@@ -155,7 +156,7 @@ namespace DynamicReflections.Framework.Managers
         {
             var easterEgg = new TemporaryAnimatedSprite("LooseSprites\\Cursors", new Microsoft.Xna.Framework.Rectangle(640, 784, 16, 16), Game1.random.Next(150, 300), 4, 12, new Vector2(point.X, point.Y) * 64f, flicker: false, flipped: false, 0f, 0f, Color.Gray, 3f, 0f, 0f, 0f);
 
-            float speed = (float)Math.Min(Game1.random.NextDouble() + 0.01f, 0.1f);
+            var speed = (float)(Game1.random.NextDouble(DynamicReflections.currentSkySettings.ShootingStarMinSpeed, DynamicReflections.currentSkySettings.ShootingStarMaxSpeed));
             easterEgg.acceleration = new Vector2(speed, speed);
 
             return easterEgg;
@@ -163,14 +164,19 @@ namespace DynamicReflections.Framework.Managers
 
         private List<TemporaryAnimatedSprite> GenerateComet(Point point)
         {
-            float speed = (float)Math.Min(Game1.random.NextDouble() + 0.02f, 0.5f);
+            float speed = (float)(Game1.random.NextDouble(DynamicReflections.currentSkySettings.CometMinSpeed, DynamicReflections.currentSkySettings.CometMaxSpeed));
             float scale = (float)(Game1.random.Next(1, 3) + Game1.random.NextDouble());
 
             var segments = new List<TemporaryAnimatedSprite>();
-            for (int i = 0; i < Game1.random.Next(5, 20); i++)
+            int minSegments = DynamicReflections.currentSkySettings.CometSegmentMin;
+            int maxSegments = DynamicReflections.currentSkySettings.CometSegmentMax < minSegments ? minSegments + 1 : DynamicReflections.currentSkySettings.CometSegmentMax;
+            int totalSegments = Game1.random.Next(minSegments, minSegments + 1);
+            for (int i = 0; i < totalSegments; i++)
             {
                 var offset = 0.1f * i;
-                var cometSegment = new TemporaryAnimatedSprite(DynamicReflections.assetManager.SkyEffectsTileSheetTexturePath, new Microsoft.Xna.Framework.Rectangle(0, 0, 32, 32), Game1.random.Next(30, 150), offset == 0 ? 1 : 3, 36, new Vector2(point.X - offset, point.Y - offset) * 64f, flicker: false, flipped: false, 0f, 0f, Color.White, scale - offset * 2, 0f, 0f, 0f);
+                int numberOfLoops = i == 0 ? totalSegments * 36 : 72;
+
+                var cometSegment = new TemporaryAnimatedSprite(DynamicReflections.assetManager.SkyEffectsTileSheetTexturePath, new Microsoft.Xna.Framework.Rectangle(0, 0, 32, 32), Game1.random.Next(30, 150), i == 0 ? 1 : 3, numberOfLoops, new Vector2(point.X - offset, point.Y - offset) * 64f, flicker: false, flipped: false, 0f, 0f, Color.White, scale - offset * 2, 0f, 0f, 0f);
 
                 cometSegment.acceleration = new Vector2(speed, speed);
                 segments.Add(cometSegment);

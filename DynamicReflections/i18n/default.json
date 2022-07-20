@@ -37,6 +37,12 @@
   "config.sky_settings.milliseconds_between_stars": "Shooting Stars Cooldown",
   "config.sky_settings.milliseconds_between_stars.description": "The milliseconds between shooting stars.",
   "config.sky_settings.milliseconds_between_stars_during_meteor_shower": "Shooting Stars Cooldown (Meteor Shower)",
+  "config.sky_settings.shooting_star_speed.min": "Shooting Stars Speed (Min)",
+  "config.sky_settings.shooting_star_speed.max": "Shooting Stars Speed (Max)",
+  "config.sky_settings.comet.min": "Comet Speed (Min)",
+  "config.sky_settings.comet.max": "Comet Speed (Max)",
+  "config.sky_settings.comet_segment.min": "Min Comet Segments",
+  "config.sky_settings.comet_segment.max": "Max Comet Segments",
 
   "config.water_settings.title": "Water Specific Settings",
   "config.water_settings.link": "Go to Water Settings",
