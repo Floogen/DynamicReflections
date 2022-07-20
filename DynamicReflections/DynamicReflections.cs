@@ -936,17 +936,19 @@ namespace DynamicReflections
 
         internal void LoadRenderers()
         {
-            // Handle the render targets
-            RegenerateRenderer(ref nightSkyRenderTarget);
-            RegenerateRenderer(ref cloudRenderTarget);
-            RegenerateRenderer(ref playerWaterReflectionRender);
-            RegenerateRenderer(ref playerPuddleReflectionRender);
-            RegenerateRenderer(ref npcWaterReflectionRender);
-            RegenerateRenderer(ref npcPuddleReflectionRender);
-            RegenerateRenderer(ref puddlesRenderTarget);
+            bool shouldUseScreenDimensions = Game1.options.zoomLevel != 1f;
 
-            RegenerateRenderer(ref mirrorsLayerRenderTarget);
-            RegenerateRenderer(ref mirrorsFurnitureRenderTarget);
+            // Handle the render targets
+            RegenerateRenderer(ref nightSkyRenderTarget, shouldUseScreenDimensions);
+            RegenerateRenderer(ref cloudRenderTarget, shouldUseScreenDimensions);
+            RegenerateRenderer(ref playerWaterReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref playerPuddleReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref npcWaterReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref npcPuddleReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref puddlesRenderTarget, shouldUseScreenDimensions);
+
+            RegenerateRenderer(ref mirrorsLayerRenderTarget, shouldUseScreenDimensions);
+            RegenerateRenderer(ref mirrorsFurnitureRenderTarget, shouldUseScreenDimensions);
 
             if (maskedPlayerMirrorReflectionRenders is null)
             {
@@ -954,7 +956,7 @@ namespace DynamicReflections
             }
             for (int i = 0; i < 3; i++)
             {
-                RegenerateRenderer(ref maskedPlayerMirrorReflectionRenders[i]);
+                RegenerateRenderer(ref maskedPlayerMirrorReflectionRenders[i], shouldUseScreenDimensions);
             }
 
             if (composedPlayerMirrorReflectionRenders is null)
@@ -963,10 +965,10 @@ namespace DynamicReflections
             }
             for (int i = 0; i < 3; i++)
             {
-                RegenerateRenderer(ref composedPlayerMirrorReflectionRenders[i]);
+                RegenerateRenderer(ref composedPlayerMirrorReflectionRenders[i], shouldUseScreenDimensions);
             }
 
-            RegenerateRenderer(ref inBetweenRenderTarget);
+            RegenerateRenderer(ref inBetweenRenderTarget, shouldUseScreenDimensions);
 
             // Handle the rasterizer
             if (rasterizer is not null)
@@ -978,7 +980,7 @@ namespace DynamicReflections
             rasterizer.CullMode = CullMode.CullClockwiseFace;
         }
 
-        private void RegenerateRenderer(ref RenderTarget2D renderTarget2D)
+        private void RegenerateRenderer(ref RenderTarget2D renderTarget2D, bool shouldUseScreenDimensions = false)
         {
             if (renderTarget2D is not null)
             {
@@ -987,7 +989,7 @@ namespace DynamicReflections
 
             var height = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferHeight;
             var width = Game1.graphics.GraphicsDevice.PresentationParameters.BackBufferWidth;
-            if (Game1.game1 is not null && Game1.game1.screen is not null)
+            if (shouldUseScreenDimensions is true && Game1.game1 is not null && Game1.game1.screen is not null)
             {
                 height = Game1.game1.screen.Height;
                 width = Game1.game1.screen.Width;
