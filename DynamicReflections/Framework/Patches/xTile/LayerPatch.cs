@@ -131,13 +131,10 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 }
 
                 // Handle Visible Fish Compatability
-                if (DynamicReflections.modHelper.ModRegistry.IsLoaded("shekurika.WaterFish"))
-                {
-                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
-                    DynamicReflections.shouldSkipWaterOverlay = true;
-                    Game1.currentLocation.drawWater(Game1.spriteBatch);
-                    DynamicReflections.shouldSkipWaterOverlay = false;
-                }
+                LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+                DynamicReflections.shouldSkipWaterOverlay = true;
+                Game1.currentLocation.drawWater(Game1.spriteBatch);
+                DynamicReflections.shouldSkipWaterOverlay = false;
 
                 // Draw the sky reflection
                 if (DynamicReflections.shouldDrawNightSky is true)
