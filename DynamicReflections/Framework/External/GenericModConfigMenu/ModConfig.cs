@@ -15,10 +15,16 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public bool AreMirrorReflectionsEnabled { get; set; } = true;
         public bool ArePuddleReflectionsEnabled { get; set; } = true;
         public bool AreNPCReflectionsEnabled { get; set; } = true;
+        public bool AreSkyReflectionsEnabled { get; set; } = true;
+
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();
         public PuddleSettings PuddleReflectionSettings { get; set; } = new PuddleSettings();
+        public SkySettings SkyReflectionSettings { get; set; } = new SkySettings();
+        public int MeteorShowerNightChance { get; set; } = 10;
+
         public Dictionary<string, WaterSettings> LocalWaterReflectionSettings { get; set; } = new Dictionary<string, WaterSettings>();
         public Dictionary<string, PuddleSettings> LocalPuddleReflectionSettings { get; set; } = new Dictionary<string, PuddleSettings>();
+        public Dictionary<string, SkySettings> LocalSkyReflectionSettings { get; set; } = new Dictionary<string, SkySettings>();
         public SButton QuickMenuKey { get; set; } = SButton.R;
 
         public WaterSettings GetCurrentWaterSettings(GameLocation location)
@@ -39,6 +45,16 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             }
 
             return LocalPuddleReflectionSettings[location.NameOrUniqueName];
+        }
+
+        public SkySettings GetCurrentSkySettings(GameLocation location)
+        {
+            if (location is null || LocalSkyReflectionSettings is null || LocalSkyReflectionSettings.ContainsKey(location.NameOrUniqueName) is false || LocalSkyReflectionSettings[location.NameOrUniqueName] is null || LocalSkyReflectionSettings[location.NameOrUniqueName].OverrideDefaultSettings is false)
+            {
+                return SkyReflectionSettings;
+            }
+
+            return LocalSkyReflectionSettings[location.NameOrUniqueName];
         }
     }
 }

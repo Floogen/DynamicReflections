@@ -1,4 +1,5 @@
 ﻿using DynamicReflections.Framework.Managers;
+using DynamicReflections.Framework.Utilities;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -29,7 +30,41 @@ namespace DynamicReflections.Framework.Patches.Tools
 
         internal void Apply(Harmony harmony)
         {
+            harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), prefix: new HarmonyMethod(GetType(), nameof(DrawWaterPrefix)));
+            harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), prefix: new HarmonyMethod(GetType(), nameof(VisibleFishDrawPrefix)));
+            harmony.CreateReversePatcher(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), new HarmonyMethod(GetType(), nameof(DrawWaterReversePatch))).Patch();
+
             harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.UpdateWhenCurrentLocation), new[] { typeof(GameTime) }), postfix: new HarmonyMethod(GetType(), nameof(UpdateWhenCurrentLocationPostfix)));
+        }
+
+        [HarmonyBefore(new string[] { "shekurika.WaterFish" })]
+        private static bool VisibleFishDrawPrefix(GameLocation __instance, SpriteBatch b)
+        {
+            // Draw the sky reflection
+            if (DynamicReflections.isDrawingWaterReflection is true)
+            {
+                DrawWaterReversePatch(__instance, b);
+                return false;
+            }
+
+            return true;
+        }
+
+        [HarmonyAfter(new string[] { "shekurika.WaterFish" })]
+        private static bool DrawWaterPrefix(GameLocation __instance, SpriteBatch b)
+        {
+            // Draw the sky reflection
+            if (DynamicReflections.shouldSkipWaterOverlay is true)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        internal static void DrawWaterReversePatch(GameLocation __instance, SpriteBatch b)
+        {
+            new NotImplementedException("It's a stub!");
         }
 
         private static void UpdateWhenCurrentLocationPostfix(GameLocation __instance, GameTime time)
@@ -39,6 +74,14 @@ namespace DynamicReflections.Framework.Patches.Tools
                 if (rippleSprite.update(time))
                 {
                     DynamicReflections.puddleManager.puddleRippleSprites.Remove(rippleSprite);
+                }
+            }
+
+            foreach (var skySprite in DynamicReflections.skyManager.skyEffectSprites.ToList())
+            {
+                if (skySprite.update(time))
+                {
+                    DynamicReflections.skyManager.skyEffectSprites.Remove(skySprite);
                 }
             }
 
