@@ -71,10 +71,10 @@ namespace DynamicReflections.Framework.Managers
                             }
                             else
                             {
-                                string stepType = Game1.currentLocation.doesTileHaveProperty(x, y, "Type", "Buildings");
+                                string stepType = location.doesTileHaveProperty(x, y, "Type", "Buildings");
                                 if (stepType == null || stepType.Length < 1)
                                 {
-                                    stepType = Game1.currentLocation.doesTileHaveProperty(x, y, "Type", "Back");
+                                    stepType = location.doesTileHaveProperty(x, y, "Type", "Back");
                                 }
 
                                 if (stepType == "Dirt" || stepType == "Stone")
