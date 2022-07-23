@@ -38,7 +38,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 {
                     if (Type.GetType("PyTK.Types.PyDisplayDevice, PyTK") is Type PyTK && PyTK != null)
                     {
-                        harmony.Patch(AccessTools.Method(PyTK, "DrawTile", new[] { typeof(Tile), typeof(Location), typeof(float) }), prefix: new HarmonyMethod(GetType(), nameof(DrawTilePrefix)));
+                        harmony.Patch(AccessTools.Method(PyTK, "DrawTile", new[] { typeof(Tile), typeof(Location), typeof(float) }), prefix: new HarmonyMethod(GetType(), nameof(PyTKDrawTilePrefix)));
                     }
                 }
                 catch (Exception ex)
@@ -49,9 +49,29 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             }
         }
 
-        private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Color ___m_modulationColour, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
+        private static bool PyTKDrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
         {
-            if (tile is null || ___m_tileSheetTextures is null || tile.TileSheet is null || ___m_tileSheetTextures.ContainsKey(tile.TileSheet) is false || DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
+            if (tile is null)
+            {
+                return true;
+            }
+
+            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ref ___m_tilePosition);
+        }
+
+        private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
+        {
+            if (tile is null || ___m_tileSheetTextures is null || tile.TileSheet is null || ___m_tileSheetTextures.ContainsKey(tile.TileSheet) is false)
+            {
+                return true;
+            }
+
+            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ref ___m_tilePosition);
+        }
+
+        private static bool ActualDrawTilePrefix(Tile? tile, Location location, float layerDepth, SpriteBatch ___m_spriteBatchAlpha, ref Vector2 ___m_tilePosition)
+        {
+            if (DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
             {
                 return true;
             }
