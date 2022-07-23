@@ -1,3 +1,4 @@
+{
   // Config
   "config.general_settings.title": "通用设置",
   "config.general_settings.water_reflections": "启用水中倒影",
@@ -82,3 +83,5 @@
   "config.puddle_settings.ripple_color.g": "Ripple Color (G)",
   "config.puddle_settings.ripple_color.b": "Ripple Color (B)",
   "config.puddle_settings.ripple_color.a": "Ripple Color (A)"
+
+}
