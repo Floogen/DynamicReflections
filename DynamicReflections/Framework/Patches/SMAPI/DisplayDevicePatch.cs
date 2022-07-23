@@ -49,9 +49,9 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             }
         }
 
-        private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Color ___m_modulationColour, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
+        private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Color ___m_modulationColour, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
         {
-            if (tile is null || DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
+            if (tile is null || ___m_tileSheetTextures is null || tile.TileSheet is null || ___m_tileSheetTextures.ContainsKey(tile.TileSheet) is false || DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
             {
                 return true;
             }
