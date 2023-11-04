@@ -219,7 +219,7 @@ namespace DynamicReflections
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
                 // TODO: Revise the below line for SDV v1.6, as the Desert exception should no longer be needed
-                bool canRainHere = e.NewLocation.GetLocationContext() != GameLocation.LocationContext.MAX && e.NewLocation.Name.Equals("Desert") is false;
+                bool canRainHere = e.NewLocation.GetLocationContext().WeatherConditions.Any(w => w.Weather == "Rain" || w.Weather == "Storm") && e.NewLocation.Name.Equals("Desert") is false;
                 if (canRainHere is true)
                 {
                     int puddlesPercentage = 0;
@@ -365,7 +365,7 @@ namespace DynamicReflections
             if (DynamicReflections.modConfig.AreMirrorReflectionsEnabled)
             {
                 var playerWorldPosition = Game1.player.Position;
-                var playerTilePosition = Game1.player.getTileLocationPoint();
+                var playerTilePosition = Game1.player.TilePoint;
 
                 DynamicReflections.activeMirrorPositions.Clear();
                 foreach (var mirror in DynamicReflections.mirrors.Values.OrderByDescending(m => m.TilePosition.Y))
