@@ -259,7 +259,7 @@ namespace DynamicReflections
             }
 
             // Handle the sky reflections
-            var targetDarkTime = Game1.getTrulyDarkTime() + 100;
+            var targetDarkTime = Game1.getTrulyDarkTime(Game1.currentLocation) + 100;
             DynamicReflections.shouldDrawNightSky = false;
             if (modConfig.AreSkyReflectionsEnabled is not false && currentSkySettings is not null && currentSkySettings.AreReflectionsEnabled && Game1.currentLocation.IsOutdoors && Game1.IsRainingHere(Game1.currentLocation) is false && Game1.timeOfDay >= targetDarkTime)
             {
