@@ -214,11 +214,6 @@ namespace DynamicReflections.Framework.Patches.Tiles
             {
                 if (DynamicReflections.isDrawingPuddles is true)
                 {
-                    // Draw the puddles ontop of the "Back" layer
-                    DynamicReflections.isFilteringPuddles = true;
-                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
-                    DynamicReflections.isFilteringPuddles = false;
-
                     SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
                     // Draw puddle reflection
@@ -226,6 +221,12 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
                     // Resume previous SpriteBatch
                     SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
+
+                    // Draw the puddles ontop of the "Back" layer
+                    DynamicReflections.isFilteringPuddles = true;
+                    LayerPatch.DrawReversePatch(__instance, displayDevice, mapViewport, displayOffset, wrapAround, pixelZoom);
+                    DynamicReflections.isFilteringPuddles = false;
+
                 }
             }
         }
