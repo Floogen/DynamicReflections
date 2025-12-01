@@ -1,4 +1,4 @@
-﻿using DynamicReflections.Framework.Interfaces;
+using DynamicReflections.Framework.Interfaces;
 using DynamicReflections.Framework.Models.Settings;
 using Microsoft.Xna.Framework;
 using StardewValley;
@@ -36,6 +36,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreWaterReflectionsEnabled, value => DynamicReflections.modConfig.AreWaterReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.water_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.ArePuddleReflectionsEnabled, value => DynamicReflections.modConfig.ArePuddleReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.puddle_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreNPCReflectionsEnabled, value => DynamicReflections.modConfig.AreNPCReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.npc_reflections"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreCompanionReflectionsEnabled, value => DynamicReflections.modConfig.AreCompanionReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.companion_reflections"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.AreSkyReflectionsEnabled, value => DynamicReflections.modConfig.AreSkyReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.sky_reflections"));
             configApi.AddKeybind(ModManifest, () => DynamicReflections.modConfig.QuickMenuKey, value => DynamicReflections.modConfig.QuickMenuKey = value, () => Helper.Translation.Get("config.general_settings.shortcut_key"), () => Helper.Translation.Get("config.general_settings.shortcut_key.description"));
 
@@ -45,7 +46,18 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
                 configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.location_specific.title"), () => Helper.Translation.Get("config.location_specific.description"));
                 configApi.AddTextOption(ModManifest, () => _currentLocation, value => _currentLocation = value, () => Helper.Translation.Get("config.location_specific.selector"), tooltip: () => Helper.Translation.Get("config.location_specific.description"), DynamicReflections.activeLocationNames, fieldId: LOCATION_SELECTOR_ID);
                 configApi.OnFieldChanged(ModManifest, (key, value) => HandleFieldChange(key, value));
-                configApi.AddParagraph(ModManifest, () => $"Default Water Settings Overriden by Current Location: {IsLocationOverridingWaterDefault}\n\nDefault Puddle Settings Overriden by Current Location: {IsLocationOverridingPuddleDefault}\n\nDefault Sky Settings Overriden by Current Location: {IsLocationOverridingSkyDefault}");
+                configApi.AddParagraph(
+                    ModManifest,
+                    () => Helper.Translation.Get(
+                        "config.location_specific.override_summary",
+                        new
+                        {
+                            water = IsLocationOverridingWaterDefault ? "true" : "false",
+                            puddle = IsLocationOverridingPuddleDefault ? "true" : "false",
+                            sky = IsLocationOverridingSkyDefault ? "true" : "false"
+                        }
+                    )
+                );
             }
             configApi.AddParagraph(ModManifest, () => String.Empty);
 
@@ -66,6 +78,25 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].NPCReflectionOffset.X, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].NPCReflectionOffset = new Vector2(value, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].NPCReflectionOffset.Y), () => Helper.Translation.Get("config.water_settings.offset.x"), interval: 0.1f);
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].NPCReflectionOffset.Y, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].NPCReflectionOffset = new Vector2(DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].NPCReflectionOffset.X, value), () => Helper.Translation.Get("config.water_settings.offset.y"), interval: 0.1f);
 
+            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.animals_offsets"));
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].CompanionReflectionOffset.X,
+                value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].CompanionReflectionOffset =
+                    new Vector2(value, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].CompanionReflectionOffset.Y),
+                () => Helper.Translation.Get("config.water_settings.offset.x"),
+                interval: 0.1f
+            );
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].CompanionReflectionOffset.Y,
+                value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].CompanionReflectionOffset =
+                    new Vector2(DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].CompanionReflectionOffset.X, value),
+                () => Helper.Translation.Get("config.water_settings.offset.y"),
+                interval: 0.1f
+            );
+
+
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.effects"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].IsReflectionWavy, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].IsReflectionWavy = value, () => Helper.Translation.Get("config.water_settings.is_wavy"));
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].WaveSpeed, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].WaveSpeed = value, () => Helper.Translation.Get("config.water_settings.wave_speed"));
@@ -78,27 +109,106 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.B, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay = new Color(DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.R, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.G, value, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.A), () => Helper.Translation.Get("config.water_settings.color.b"), min: 0, max: 255, interval: 1);
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.A, value => DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay = new Color(DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.R, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.G, DynamicReflections.modConfig.LocalWaterReflectionSettings[_currentLocation].ReflectionOverlay.B, value), () => Helper.Translation.Get("config.water_settings.color.a"), min: 0, max: 255, interval: 1);
             configApi.AddPageLink(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.link.return_main"));
+            // Advanced / Performance settings
+            configApi.AddSectionTitle(
+                ModManifest,
+                () => Helper.Translation.Get("config.performance_settings.title")
+            );
 
-            configApi.AddPage(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.title"));
-            configApi.AddPageLink(ModManifest, "puddle_settings", () => Helper.Translation.Get("config.puddle_settings.link"));
+            configApi.AddBoolOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.EnableSafeCaching,
+                value => DynamicReflections.modConfig.Performance.EnableSafeCaching = value,
+                () => Helper.Translation.Get("config.performance_settings.enable_safe_caching"),
+                () => Helper.Translation.Get("config.performance_settings.enable_safe_caching.description")
+            );
 
-            configApi.AddPage(ModManifest, "puddle_settings", () => Helper.Translation.Get("config.puddle_settings.title"));
-            configApi.AddSectionTitle(ModManifest, () => _currentLocation);
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].OverrideDefaultSettings, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].OverrideDefaultSettings = value, () => Helper.Translation.Get("config.general_settings.override_default_settings"), () => Helper.Translation.Get("config.general_settings.override_default_settings.description"));
+            configApi.AddBoolOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.EnableNpcThrottling,
+                value => DynamicReflections.modConfig.Performance.EnableNpcThrottling = value,
+                () => Helper.Translation.Get("config.performance_settings.enable_npc_throttling"),
+                () => Helper.Translation.Get("config.performance_settings.enable_npc_throttling.description")
+            );
 
-            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.title"));
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].AreReflectionsEnabled, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].AreReflectionsEnabled = value, () => Helper.Translation.Get("config.general_settings.puddle_reflections"));
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldGeneratePuddles, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldGeneratePuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_generate_puddles"));
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldPlaySplashSound, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldPlaySplashSound = value, () => Helper.Translation.Get("config.puddle_settings.should_play_splash_sound"));
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldRainSplashPuddles, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ShouldRainSplashPuddles = value, () => Helper.Translation.Get("config.puddle_settings.should_rain_splash_puddles"));
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.NpcUpdateIntervalTicks,
+                value => DynamicReflections.modConfig.Performance.NpcUpdateIntervalTicks = Math.Max(1, value),
+                () => Helper.Translation.Get("config.performance_settings.npc_update_interval"),
+                () => Helper.Translation.Get("config.performance_settings.npc_update_interval.description"),
+                min: 1,
+                max: 10,
+                interval: 1
+            );
 
-            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.reflection_offets"));
-            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.player_offsets"));
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ReflectionOffset.X, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ReflectionOffset = new Vector2(value, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ReflectionOffset.Y), () => Helper.Translation.Get("config.water_settings.offset.x"), interval: 0.1f);
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ReflectionOffset.Y, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ReflectionOffset = new Vector2(DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].ReflectionOffset.X, value), () => Helper.Translation.Get("config.water_settings.offset.y"), interval: 0.1f);
-            configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.npc_offsets"));
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].NPCReflectionOffset.X, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].NPCReflectionOffset = new Vector2(value, DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].NPCReflectionOffset.Y), () => Helper.Translation.Get("config.water_settings.offset.x"), interval: 0.1f);
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].NPCReflectionOffset.Y, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].NPCReflectionOffset = new Vector2(DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].NPCReflectionOffset.X, value), () => Helper.Translation.Get("config.water_settings.offset.y"), interval: 0.1f);
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.MaxNpcReflections,
+                value => DynamicReflections.modConfig.Performance.MaxNpcReflections = Math.Max(1, value),
+                () => Helper.Translation.Get("config.performance_settings.max_npc_reflections"),
+                () => Helper.Translation.Get("config.performance_settings.max_npc_reflections.description"),
+                min: 1,
+                max: 999,
+                interval: 1
+            );
+
+            configApi.AddBoolOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.EnableMirrorThrottling,
+                value => DynamicReflections.modConfig.Performance.EnableMirrorThrottling = value,
+                () => Helper.Translation.Get("config.performance_settings.enable_mirror_throttling"),
+                () => Helper.Translation.Get("config.performance_settings.enable_mirror_throttling.description")
+            );
+
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.MirrorUpdateIntervalTicks,
+                value => DynamicReflections.modConfig.Performance.MirrorUpdateIntervalTicks = Math.Max(1, value),
+                () => Helper.Translation.Get("config.performance_settings.mirror_update_interval"),
+                () => Helper.Translation.Get("config.performance_settings.mirror_update_interval.description"),
+                min: 1,
+                max: 10,
+                interval: 1
+            );
+
+
+            // Wild animals & companions (Custom Companions / SH's Wild Animals)
+            configApi.AddSectionTitle(
+                ModManifest,
+                () => Helper.Translation.Get("config.companion_settings.title")
+            );
+
+            configApi.AddBoolOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.EnableCompanionThrottling,
+                value => DynamicReflections.modConfig.Performance.EnableCompanionThrottling = value,
+                () => Helper.Translation.Get("config.companion_settings.enable_companion_throttling"),
+                () => Helper.Translation.Get("config.companion_settings.enable_companion_throttling.description")
+            );
+
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.CompanionUpdateIntervalTicks,
+                value => DynamicReflections.modConfig.Performance.CompanionUpdateIntervalTicks = Math.Max(1, value),
+                () => Helper.Translation.Get("config.companion_settings.companion_update_interval"),
+                () => Helper.Translation.Get("config.companion_settings.companion_update_interval.description"),
+                min: 1,
+                max: 10,
+                interval: 1
+            );
+
+            configApi.AddNumberOption(
+                ModManifest,
+                () => DynamicReflections.modConfig.Performance.MaxCompanionReflections,
+                value => DynamicReflections.modConfig.Performance.MaxCompanionReflections = Math.Max(1, value),
+                () => Helper.Translation.Get("config.companion_settings.max_companion_reflections"),
+                () => Helper.Translation.Get("config.companion_settings.max_companion_reflections.description"),
+                min: 1,
+                max: 999,
+                interval: 1
+            );
+
 
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.general_settings.effects"));
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].PuddlePercentageWhileRaining, value => DynamicReflections.modConfig.LocalPuddleReflectionSettings[_currentLocation].PuddlePercentageWhileRaining = value, () => Helper.Translation.Get("config.puddle_settings.puddle_percentage_while_raining"), min: 0, max: 100, interval: 1);
