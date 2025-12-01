@@ -49,11 +49,11 @@ namespace DynamicReflections.Framework.Models.Settings
         public int MillisecondsBetweenShootingStarAttemptDuringMeteorShower { get; set; } = 250;
 
         public const string MapProperty_GettingDarkWaterAlpha = "StartingDarkWaterAlpha";
-        public float GettingDarkWaterAlpha { get; set; } = 0.35f;
+        public float GettingDarkWaterAlpha { get; set; } = 0.38f;
         public const string MapProperty_HalfwayDarkWaterAlpha = "HalfwayDarkWaterAlpha";
-        public float HalfwayDarkWaterAlpha { get; set; } = 0.075f;
+        public float HalfwayDarkWaterAlpha { get; set; } = 0.17f;
         public const string MapProperty_FinishedDarkWaterAlpha = "FinishedDarkWaterAlpha";
-        public float FinishedDarkWaterAlpha { get; set; } = 0.005f;
+        public float FinishedDarkWaterAlpha { get; set; } = 0.04f;
 
 
         public bool OverrideDefaultSettings { get; set; }
@@ -75,9 +75,9 @@ namespace DynamicReflections.Framework.Models.Settings
                 CometMinSpeed = 0.04f;
                 CometMaxSpeed = 0.5f;
                 MillisecondsBetweenShootingStarAttemptDuringMeteorShower = 250;
-                GettingDarkWaterAlpha = 0.35f;
-                HalfwayDarkWaterAlpha = 0.075f;
-                FinishedDarkWaterAlpha = 0.005f;
+                GettingDarkWaterAlpha = 0.38f;
+                HalfwayDarkWaterAlpha = 0.17f;
+                FinishedDarkWaterAlpha = 0.04f;
                 OverrideDefaultSettings = false;
             }
             else
