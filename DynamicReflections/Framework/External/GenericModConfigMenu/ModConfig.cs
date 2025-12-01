@@ -1,4 +1,4 @@
-﻿using DynamicReflections.Framework.Models.Settings;
+using DynamicReflections.Framework.Models.Settings;
 using StardewModdingAPI;
 using StardewValley;
 using System;
@@ -15,6 +15,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public bool AreMirrorReflectionsEnabled { get; set; } = true;
         public bool ArePuddleReflectionsEnabled { get; set; } = true;
         public bool AreNPCReflectionsEnabled { get; set; } = true;
+        public bool AreCompanionReflectionsEnabled { get; set; } = true;
         public bool AreSkyReflectionsEnabled { get; set; } = true;
 
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();
@@ -26,6 +27,8 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public Dictionary<string, PuddleSettings> LocalPuddleReflectionSettings { get; set; } = new Dictionary<string, PuddleSettings>();
         public Dictionary<string, SkySettings> LocalSkyReflectionSettings { get; set; } = new Dictionary<string, SkySettings>();
         public SButton QuickMenuKey { get; set; } = SButton.R;
+
+        public PerformanceSettings Performance { get; set; } = new PerformanceSettings();
 
         public WaterSettings GetCurrentWaterSettings(GameLocation location)
         {
