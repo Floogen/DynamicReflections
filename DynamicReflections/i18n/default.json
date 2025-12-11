@@ -1,4 +1,4 @@
-{
+﻿{
     // Config
     "config.general_settings.title": "General Settings",
     "config.general_settings.water_reflections": "Enable Water Reflections",
@@ -15,7 +15,7 @@
     "config.general_settings.shortcut_key.description": "When pressing the given key, this menu will appear for quick configurations.",
     "config.general_settings.effects": "Effects",
 
-    "config.general_settings.reflection_offets": "Reflection Settings",
+    "config.general_settings.reflection_offsets": "Reflection Settings",
     "config.general_settings.player_offsets": "Player Reflection Offsets",
     "config.general_settings.npc_offsets": "NPC Reflection Offsets",
     "config.general_settings.animals_offsets": "Companion Reflection Offsets",
@@ -25,7 +25,6 @@
     "config.location_specific.title": "Location Specific Settings",
     "config.location_specific.selector": "Target Location",
     "config.location_specific.description": "Use `Default` to modify the default settings for all location.",
-    "config.location_specific.override_summary": "Default water settings overridden by current location: {{water}}\n\nDefault puddle settings overridden by current location: {{puddle}}\n\nDefault sky settings overridden by current location: {{sky}}",
 
     "config.sky_settings.title": "Sky Specific Settings",
     "config.sky_settings.link": "Go to Sky Settings",
@@ -87,34 +86,16 @@
     "config.puddle_settings.ripple_color.b": "Ripple Color (B)",
     "config.puddle_settings.ripple_color.a": "Ripple Color (A)",
 
-    "config.performance_settings.title": "Advanced / Performance",
+    "config.performance_settings.title": "Performance Settings",
+    "config.performance_settings.link": "Performance & Throttling",
+    "config.performance_settings.enable_safe_caching": "Enable Safe Caching",
+    "config.performance_settings.enable_npc_throttling": "Enable NPC Throttling",
+    "config.performance_settings.npc_update_interval_ticks": "NPC Update Interval (ticks)",
+    "config.performance_settings.max_npc_reflections": "Max NPC Reflections per Location",
+    "config.performance_settings.enable_mirror_throttling": "Enable Mirror Throttling",
+    "config.performance_settings.mirror_update_interval_ticks": "Mirror Update Interval (ticks)",
+    "config.performance_settings.enable_companion_throttling": "Enable Companion Throttling",
+    "config.performance_settings.companion_update_interval_ticks": "Companion Update Interval (ticks)",
+    "config.performance_settings.max_companion_reflections": "Max Companion Reflections per Location"
 
-    "config.performance_settings.enable_safe_caching": "Enable safe caching",
-    "config.performance_settings.enable_safe_caching.description": "Cache some internal calculations (like water, puddle, and mirror checks) to reduce CPU usage.",
-
-    "config.performance_settings.enable_npc_throttling": "Enable NPC throttling",
-    "config.performance_settings.enable_npc_throttling.description": "If enabled, NPC reflections can update less often and be capped to reduce CPU usage in NPC-heavy locations.",
-
-    "config.performance_settings.npc_update_interval": "NPC update interval (ticks)",
-    "config.performance_settings.npc_update_interval.description": "How often to update NPC reflections. 1 = every tick, 2 = every other tick, etc.",
-
-    "config.performance_settings.max_npc_reflections": "Max NPC reflections per location",
-    "config.performance_settings.max_npc_reflections.description": "Maximum number of NPC reflections processed per location. On-screen NPCs are typically prioritized.",
-
-    "config.performance_settings.enable_mirror_throttling": "Enable mirror throttling",
-    "config.performance_settings.enable_mirror_throttling.description": "If enabled, checks for which mirrors are active can run less often.",
-
-    "config.performance_settings.mirror_update_interval": "Mirror update interval (ticks)",
-    "config.performance_settings.mirror_update_interval.description": "How often to re-evaluate which mirrors are active. 1 = every tick, 2 = every other tick, etc.",
-
-    "config.companion_settings.title": "Wild animals & companions",
-
-    "config.companion_settings.enable_companion_throttling": "Enable companion / wild animal throttling",
-    "config.companion_settings.enable_companion_throttling.description": "If enabled, reflections for companions and wild animals can update less often and be capped separately from NPCs.",
-
-    "config.companion_settings.companion_update_interval": "Companion update interval (ticks)",
-    "config.companion_settings.companion_update_interval.description": "How often to update reflections for companions / wild animals. 1 = every tick, 2 = every other tick, etc.",
-
-    "config.companion_settings.max_companion_reflections": "Max companion reflections per location",
-    "config.companion_settings.max_companion_reflections.description": "Maximum number of reflections for companions / wild animals processed per location."
 }
