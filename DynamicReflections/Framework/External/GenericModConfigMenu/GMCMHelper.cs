@@ -135,7 +135,6 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 
             configApi.AddPage(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.title"));
             configApi.AddPageLink(ModManifest, "sky_settings", () => Helper.Translation.Get("config.sky_settings.link"));
-            configApi.AddParagraph(ModManifest, () => $"{Environment.NewLine}");
 
             configApi.AddPage(ModManifest, "sky_settings", () => Helper.Translation.Get("config.sky_settings.title"));
             configApi.AddSectionTitle(ModManifest, () => _currentLocation);
@@ -169,6 +168,8 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             // Performance settings page
             configApi.AddPage(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.title"));
             configApi.AddPageLink(ModManifest, "performance_settings", () => Helper.Translation.Get("config.performance_settings.link"));
+            configApi.AddParagraph(ModManifest, () => $"{Environment.NewLine}");
+
             configApi.AddPage(ModManifest, "performance_settings", () => Helper.Translation.Get("config.performance_settings.title"));
 
             // Performance: caching
