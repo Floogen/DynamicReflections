@@ -304,46 +304,45 @@ namespace DynamicReflections
             DynamicReflections.shouldDrawWaterReflection = false;
             if (modConfig.AreWaterReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
-    // Calculate the player's reflection position based on offset and direction
-    var playerOffset = currentWaterSettings.PlayerReflectionOffset;
+                // Calculate the player's reflection position based on offset and direction
+                var playerOffset = currentWaterSettings.PlayerReflectionOffset;
 
-    var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && playerOffset.Y > 0
-        ? -1
-        : 1;
+                var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && playerOffset.Y > 0
+                    ? -1
+                    : 1;
 
-    var playerPosition = Game1.player.Position;
-    playerPosition += playerOffset * 64f * positionInverter;
+                var playerPosition = Game1.player.Position;
+                playerPosition += playerOffset * 64f * positionInverter;
 
-    DynamicReflections.waterReflectionPosition = playerPosition;
-    DynamicReflections.waterReflectionTilePosition = playerPosition / 64f;
+                DynamicReflections.waterReflectionPosition = playerPosition;
+                DynamicReflections.waterReflectionTilePosition = playerPosition / 64f;
 
-    // Hide the reflection if it will show up out of bounds on the map or not drawn on a water tile
-    var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
-    for (int yOffset = -1; yOffset <= Math.Ceiling(playerOffset.Y); yOffset++)
-    {
-        var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
+                // Hide the reflection if it will show up out of bounds on the map or not drawn on a water tile
+                var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
+                for (int yOffset = -1; yOffset <= Math.Ceiling(playerOffset.Y); yOffset++)
+                {
+                    var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
 
-        if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
-            || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
-            || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
-        {
-            DynamicReflections.shouldDrawWaterReflection = true;
-            break;
-        }
-    }
+                    if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
+                        || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
+                        || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                    {
+                        DynamicReflections.shouldDrawWaterReflection = true;
+                        break;
+                    }
+                }
 
-    // Handle the wavy effect if enabled
-    if (currentWaterSettings.IsReflectionWavy && DynamicReflections.waterReflectionEffect is not null)
-    {
-        var phase = waterReflectionEffect.Parameters["Phase"].GetValueSingle();
-        phase += (float)Game1.currentGameTime.ElapsedGameTime.TotalSeconds * currentWaterSettings.WaveSpeed;
+                // Handle the wavy effect if enabled
+                if (currentWaterSettings.IsReflectionWavy && DynamicReflections.waterReflectionEffect is not null)
+                {
+                    var phase = waterReflectionEffect.Parameters["Phase"].GetValueSingle();
+                    phase += (float)Game1.currentGameTime.ElapsedGameTime.TotalSeconds * currentWaterSettings.WaveSpeed;
 
-        waterReflectionEffect.Parameters["Phase"].SetValue(phase);
-        waterReflectionEffect.Parameters["Frequency"].SetValue(currentWaterSettings.WaveFrequency);
-        waterReflectionEffect.Parameters["Amplitude"].SetValue(currentWaterSettings.WaveAmplitude);
-    }
-
-}
+                    waterReflectionEffect.Parameters["Phase"].SetValue(phase);
+                    waterReflectionEffect.Parameters["Frequency"].SetValue(currentWaterSettings.WaveFrequency);
+                    waterReflectionEffect.Parameters["Amplitude"].SetValue(currentWaterSettings.WaveAmplitude);
+                }
+            }
 
             if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled
                 && (modConfig.AreNPCReflectionsEnabled is not false || modConfig.AreCompanionReflectionsEnabled))

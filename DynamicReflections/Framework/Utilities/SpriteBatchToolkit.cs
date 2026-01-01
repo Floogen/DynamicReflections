@@ -545,7 +545,6 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-
         internal static void DrawPuddleReflection(Texture2D mask)
         {
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
@@ -707,7 +706,6 @@ namespace DynamicReflections.Framework.Utilities
 
             Game1.spriteBatch.End();
         }
-
 
         internal static void DrawRenderedCharacters(bool isWavy = false)
         {
