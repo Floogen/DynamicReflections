@@ -644,6 +644,28 @@ namespace DynamicReflections
             waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "wavy.mgfx")));
             waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["WavyWorldPosition"];
 
+            // Check the last installed version
+            bool isFreshInstall = string.IsNullOrEmpty(modConfig.LastInstalledVersion);
+
+            var lastInstalledVersion = SemanticVersion.TryParse(modConfig.LastInstalledVersion, out var parsedVersion) ? parsedVersion : null;
+            bool isNewerVersion = lastInstalledVersion is not null && ModManifest.Version.IsNewerThan(lastInstalledVersion);
+
+            if (isFreshInstall || isNewerVersion)
+            {
+                // Handle new version behavior
+                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.0")))
+                {
+                    // Reset the WaterReflectionSettings
+                    modConfig.WaterReflectionSettings.Reset();
+                }
+
+                // Log the latest installed version
+                modConfig.LastInstalledVersion = ModManifest.Version.ToString();
+
+                // Save any changes
+                Helper.WriteConfig(modConfig);
+            }
+
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
             LoadRenderers();
         }
