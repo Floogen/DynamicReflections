@@ -18,6 +18,7 @@ namespace DynamicReflections.Framework.Managers
 
         internal List<TemporaryAnimatedSprite> puddleRippleSprites = new List<TemporaryAnimatedSprite>();
         private Dictionary<GameLocation, bool[,]> _locationToPuddleTiles;
+        private List<Point> _puddlePoints = new List<Point>();
 
         public void Reset()
         {
@@ -253,10 +254,11 @@ namespace DynamicReflections.Framework.Managers
 
         public List<Point> GetPuddleTiles(GameLocation location, bool limitToView = false)
         {
-            var puddles = new List<Point>();
+            _puddlePoints.Clear();
+
             if (_locationToPuddleTiles.ContainsKey(location) is false)
             {
-                return puddles;
+                return _puddlePoints;
             }
 
             int tileWidth = Game1.pixelZoom * 16;
@@ -276,21 +278,34 @@ namespace DynamicReflections.Framework.Managers
             int tileXMax = tileXMin + tileColumns;
             int tileYMax = tileYMin + tileRows;
 
-            for (int x = 0; x < _locationToPuddleTiles[location].GetLength(0); x++)
+            if (limitToView)
             {
-                for (int y = 0; y < _locationToPuddleTiles[location].GetLength(1); y++)
+                for (int x = tileXMin; x < _locationToPuddleTiles[location].GetLength(0) && x < tileXMax; x++)
                 {
-                    if (_locationToPuddleTiles[location][x, y] is true)
+                    for (int y = tileYMin; y < _locationToPuddleTiles[location].GetLength(1) && y < tileYMax; y++)
                     {
-                        if (limitToView is false || (limitToView is true && x >= tileXMin && x < tileXMax && y >= tileYMin && y < tileYMax))
+                        if (_locationToPuddleTiles[location][x, y] is true)
                         {
-                            puddles.Add(new Point(x, y));
+                            _puddlePoints.Add(new Point(x, y));
+                        }
+                    }
+                }
+            }
+            else
+            {
+                for (int x = 0; x < _locationToPuddleTiles[location].GetLength(0); x++)
+                {
+                    for (int y = 0; y < _locationToPuddleTiles[location].GetLength(1); y++)
+                    {
+                        if (_locationToPuddleTiles[location][x, y] is true)
+                        {
+                            _puddlePoints.Add(new Point(x, y));
                         }
                     }
                 }
             }
 
-            return puddles;
+            return _puddlePoints;
         }
     }
 }
