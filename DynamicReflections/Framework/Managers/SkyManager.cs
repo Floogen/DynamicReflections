@@ -98,7 +98,7 @@ namespace DynamicReflections.Framework.Managers
                 {
                     return;
                 }
-                var randomWaterTilePoint = GetRandomTile(Game1.random, GetSkyTiles(location, true));
+                var randomWaterTilePoint = GetRandomTile(Game1.random, skyTiles);
                 double cometChance = DynamicReflections.currentSkySettings.CometChance / 100f;
 
                 var leftTile = backLayer.PickTile(new Location((randomWaterTilePoint.X - 1) * 64, randomWaterTilePoint.Y * 64), Game1.viewport.Size);
