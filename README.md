@@ -12,4 +12,5 @@ Dynamic Reflections has been generously translated into several languages by the
 * **Korean** - GlHhwa
 * **Portuguese** - yckosa
 * **Russian** - DxTea
+* **Spanish** - Hayato2236
 * **Thai** - ellipszist
