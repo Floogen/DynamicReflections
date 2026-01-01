@@ -442,9 +442,13 @@ namespace DynamicReflections
                                     npcToWaterReflectionPosition[npc] = npcPosition;
 
                                     if (isCompanion)
+                                    {
                                         companionCount++;
+                                    }
                                     else
+                                    {
                                         npcCount++;
+                                    }
 
                                     break;
                                 }

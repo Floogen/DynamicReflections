@@ -276,7 +276,9 @@ namespace DynamicReflections.Framework.Utilities
                     foreach (var furniture in Game1.currentLocation.furniture)
                     {
                         if (mirror.FurnitureLink != furniture)
+                        {
                             continue;
+                        }
 
                         DynamicReflections.isFilteringMirror = true;
                         furniture.draw(Game1.spriteBatch, (int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
@@ -324,7 +326,6 @@ namespace DynamicReflections.Framework.Utilities
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
-
 
         internal static void RenderWaterReflectionNightSky()
         {
@@ -478,20 +479,28 @@ namespace DynamicReflections.Framework.Utilities
                 if (isCompanion)
                 {
                     if (!companionReflectionsEnabled)
+                    {
                         continue;
+                    }
 
                     int maxCompanions = config?.Performance?.MaxCompanionReflections ?? int.MaxValue;
                     if (companionCount >= maxCompanions)
+                    {
                         continue;
+                    }
                 }
                 else
                 {
                     if (!npcReflectionsEnabled)
+                    {
                         continue;
+                    }
 
                     int maxNpcs = config?.Performance?.MaxNpcReflections ?? int.MaxValue;
                     if (npcCount >= maxNpcs)
+                    {
                         continue;
+                    }
                 }
 
                 var offset = isCompanion
@@ -520,11 +529,14 @@ namespace DynamicReflections.Framework.Utilities
                 npc.draw(Game1.spriteBatch);
                 Game1.spriteBatch.End();
 
-
                 if (isCompanion)
+                {
                     companionCount++;
+                }
                 else
+                {
                     npcCount++;
+                }
             }
 
             // Drop the render target
