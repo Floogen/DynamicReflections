@@ -73,6 +73,7 @@
 	</ItemGroup>
 
 	<PropertyGroup>
+		<PreBuildEvent>mgfxc "$(SolutionDir)\Framework\Assets\Shaders\wavy.fx" "$(SolutionDir)\Framework\Assets\Shaders\wavy.mgfx"</PreBuildEvent>
 		<PostBuildEventDependsOn>
 			$(PostBuildEventDependsOn);
 			PostBuildMacros;
