@@ -80,7 +80,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
             DynamicReflections.isDrawingWaterReflection = false;
             DynamicReflections.isDrawingMirrorReflection = false;
 
-            if (__instance.Id.Equals("Back", StringComparison.OrdinalIgnoreCase) is true)
+            if (__instance.Equals(LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation)) is true)
             {
                 SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
@@ -135,11 +135,13 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     DynamicReflections.isFilteringPuddles = false;
                 }
 
+                // Draw the filtered layer, if needed
+                Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+                SpriteBatchToolkit.HandleBackgroundDraw();
+                Game1.spriteBatch.End();
+
                 // Resume previous SpriteBatch
                 SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
-
-                // Draw the filtered layer, if needed
-                SpriteBatchToolkit.HandleBackgroundDraw();
                 if (DynamicReflections.isFilteringWater is false && DynamicReflections.isFilteringSky is false)
                 {
                     return true;
@@ -210,7 +212,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 return;
             }
 
-            if (__instance.Id.Equals("Back", StringComparison.OrdinalIgnoreCase) is true)
+            if (__instance.Equals(LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation)) is true)
             {
                 if (DynamicReflections.isDrawingPuddles is true)
                 {

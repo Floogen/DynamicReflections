@@ -337,7 +337,7 @@ namespace DynamicReflections.Framework.Utilities
 
             if (Game1.currentLocation is not null && Game1.currentLocation.Map is not null)
             {
-                if (Game1.currentLocation.Map.GetLayer("Back") is var backLayer && backLayer is not null)
+                if (LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation) is var backLayer && backLayer is not null)
                 {
                     Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
 
@@ -572,7 +572,7 @@ namespace DynamicReflections.Framework.Utilities
 
             if (Game1.currentLocation is not null && Game1.currentLocation.Map is not null)
             {
-                if (Game1.currentLocation.Map.GetLayer("Back") is var backLayer && backLayer is not null)
+                if (LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation) is var backLayer && backLayer is not null)
                 {
                     Game1.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp);
 
@@ -731,7 +731,8 @@ namespace DynamicReflections.Framework.Utilities
             {
                 Game1.background.draw(Game1.spriteBatch);
             }
-            else if (Game1.currentLocation is not null)
+
+            if (Game1.currentLocation is not null)
             {
                 Game1.currentLocation.drawBackground(Game1.spriteBatch);
             }
