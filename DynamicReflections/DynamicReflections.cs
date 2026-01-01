@@ -338,6 +338,9 @@ namespace DynamicReflections
                     var phase = waterReflectionEffect.Parameters["Phase"].GetValueSingle();
                     phase += (float)Game1.currentGameTime.ElapsedGameTime.TotalSeconds * currentWaterSettings.WaveSpeed;
 
+                    waterReflectionEffect.Parameters["RenderDimensions"].SetValue(new Vector2(Game1.viewport.Width, Game1.viewport.Height));
+                    waterReflectionEffect.Parameters["ViewportCoordinates"].SetValue(new Vector2(Game1.viewport.X, Game1.viewport.Y));
+
                     waterReflectionEffect.Parameters["Phase"].SetValue(phase);
                     waterReflectionEffect.Parameters["Frequency"].SetValue(currentWaterSettings.WaveFrequency);
                     waterReflectionEffect.Parameters["Amplitude"].SetValue(currentWaterSettings.WaveAmplitude);
@@ -639,7 +642,7 @@ namespace DynamicReflections
             mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "mask.mgfx")));
 
             waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "wavy.mgfx")));
-            waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["Wavy"];
+            waterReflectionEffect.CurrentTechnique = waterReflectionEffect.Techniques["WavyWorldPosition"];
 
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
             LoadRenderers();
