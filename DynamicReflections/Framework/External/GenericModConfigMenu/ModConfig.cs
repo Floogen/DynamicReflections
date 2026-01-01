@@ -29,6 +29,8 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public Dictionary<string, SkySettings> LocalSkyReflectionSettings { get; set; } = new Dictionary<string, SkySettings>();
         public SButton QuickMenuKey { get; set; } = SButton.None;
 
+        public string LastInstalledVersion { get; set; }
+
         public WaterSettings GetCurrentWaterSettings(GameLocation location)
         {
             if (location is null || LocalWaterReflectionSettings is null || LocalWaterReflectionSettings.ContainsKey(location.NameOrUniqueName) is false || LocalWaterReflectionSettings[location.NameOrUniqueName] is null || LocalWaterReflectionSettings[location.NameOrUniqueName].OverrideDefaultSettings is false)
