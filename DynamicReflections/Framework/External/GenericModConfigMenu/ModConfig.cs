@@ -15,17 +15,19 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public bool AreMirrorReflectionsEnabled { get; set; } = true;
         public bool ArePuddleReflectionsEnabled { get; set; } = true;
         public bool AreNPCReflectionsEnabled { get; set; } = true;
+        public bool AreCompanionReflectionsEnabled { get; set; } = true;
         public bool AreSkyReflectionsEnabled { get; set; } = true;
 
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();
         public PuddleSettings PuddleReflectionSettings { get; set; } = new PuddleSettings();
-        public SkySettings SkyReflectionSettings { get; set; } = new SkySettings();
+        public SkySettings SkyReflectionSettings { get; set; } = new SkySettings(); 
+        public PerformanceSettings Performance { get; set; } = new PerformanceSettings();
         public int MeteorShowerNightChance { get; set; } = 10;
 
         public Dictionary<string, WaterSettings> LocalWaterReflectionSettings { get; set; } = new Dictionary<string, WaterSettings>();
         public Dictionary<string, PuddleSettings> LocalPuddleReflectionSettings { get; set; } = new Dictionary<string, PuddleSettings>();
         public Dictionary<string, SkySettings> LocalSkyReflectionSettings { get; set; } = new Dictionary<string, SkySettings>();
-        public SButton QuickMenuKey { get; set; } = SButton.R;
+        public SButton QuickMenuKey { get; set; } = SButton.None;
 
         public WaterSettings GetCurrentWaterSettings(GameLocation location)
         {

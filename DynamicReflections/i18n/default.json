@@ -5,6 +5,7 @@
   "config.general_settings.mirror_reflections": "Enable Mirror Reflections",
   "config.general_settings.puddle_reflections": "Enable Puddle Reflections",
   "config.general_settings.npc_reflections": "Enable NPC Reflections",
+  "config.general_settings.companion_reflections": "Enable Companion Reflections",
   "config.general_settings.sky_reflections": "Enable Sky Reflections",
   "config.general_settings.link.click_here": "Click Here",
   "config.general_settings.link.return_main": "Return to the Main Page",
@@ -14,9 +15,10 @@
   "config.general_settings.shortcut_key.description": "When pressing the given key, this menu will appear for quick configurations.",
   "config.general_settings.effects": "Effects",
 
-  "config.general_settings.reflection_offets": "Reflection Settings",
+  "config.general_settings.reflection_offsets": "Reflection Settings",
   "config.general_settings.player_offsets": "Player Reflection Offsets",
   "config.general_settings.npc_offsets": "NPC Reflection Offsets",
+  "config.general_settings.animals_offsets": "Companion Reflection Offsets",
   "config.water_settings.offset.x": "X Offset",
   "config.water_settings.offset.y": "Y Offset",
 
@@ -82,5 +84,17 @@
   "config.puddle_settings.ripple_color.r": "Ripple Color (R)",
   "config.puddle_settings.ripple_color.g": "Ripple Color (G)",
   "config.puddle_settings.ripple_color.b": "Ripple Color (B)",
-  "config.puddle_settings.ripple_color.a": "Ripple Color (A)"
+  "config.puddle_settings.ripple_color.a": "Ripple Color (A)",
+
+  "config.performance_settings.title": "Performance Settings",
+  "config.performance_settings.link": "Performance & Throttling",
+  "config.performance_settings.enable_safe_caching": "Enable Safe Caching",
+  "config.performance_settings.enable_npc_throttling": "Enable NPC Throttling",
+  "config.performance_settings.npc_update_interval_ticks": "NPC Update Interval (ticks)",
+  "config.performance_settings.max_npc_reflections": "Max NPC Reflections per Location",
+  "config.performance_settings.enable_mirror_throttling": "Enable Mirror Throttling",
+  "config.performance_settings.mirror_update_interval_ticks": "Mirror Update Interval (ticks)",
+  "config.performance_settings.enable_companion_throttling": "Enable Companion Throttling",
+  "config.performance_settings.companion_update_interval_ticks": "Companion Update Interval (ticks)",
+  "config.performance_settings.max_companion_reflections": "Max Companion Reflections per Location"
 }

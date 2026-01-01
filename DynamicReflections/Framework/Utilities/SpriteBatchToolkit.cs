@@ -1,4 +1,4 @@
-﻿using DynamicReflections.Framework.Patches.Tiles;
+using DynamicReflections.Framework.Patches.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -167,14 +167,12 @@ namespace DynamicReflections.Framework.Utilities
             var oldDirection = Game1.player.FacingDirection;
             var oldSprite = Game1.player.FarmerSprite;
 
+            // Cache modData for Fashion Sense
             Dictionary<string, string> modDataCache = new Dictionary<string, string>();
             foreach (var dataKey in Game1.player.modData.Keys)
             {
                 modDataCache[dataKey] = Game1.player.modData[dataKey];
             }
-
-            // Note: Current solution is to utilize RenderTarget2Ds as the player sprite is composed of many other sprites layered on top of each other
-            // This makes modifying it via shader difficult and even more so difficult with Fashion Sense (as the size of appearances are not bounded)
 
             // Draw the raw and flattened player sprites
             int index = 0;
@@ -188,13 +186,25 @@ namespace DynamicReflections.Framework.Utilities
                 // Draw the scene
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-
                 var mirror = DynamicReflections.mirrors[mirrorPosition];
                 var offsetPosition = mirror.PlayerReflectionPosition;
                 offsetPosition += mirror.Settings.ReflectionOffset * 16;
 
-                Game1.player.Position = offsetPosition;
+                // Compute translation to draw the player as if their Position were offsetPosition
+                var playerScreen = Game1.GlobalToLocal(Game1.viewport, Game1.player.Position);
+                var targetScreen = Game1.GlobalToLocal(Game1.viewport, offsetPosition);
+                var delta = targetScreen - playerScreen;
+
+                Game1.spriteBatch.Begin(
+                    SpriteSortMode.FrontToBack,
+                    BlendState.AlphaBlend,
+                    SamplerState.PointClamp,
+                    depthStencilState: null,
+                    rasterizerState: null,
+                    effect: null,
+                    transformMatrix: Matrix.CreateTranslation(delta.X, delta.Y, 0f)
+                );
+
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
                 Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
                 Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
@@ -218,17 +228,32 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
 
-                // Determine if we should flip the sprite on the X-axis (if facing front or back)
-                var flipEffect = Game1.player.FacingDirection is (0 or 2) ? SpriteEffects.FlipHorizontally : SpriteEffects.None;
+                // Should flip the sprite on the X-axis (if facing front or back)
+                var flipEffect = Game1.player.FacingDirection is (0 or 2)
+                    ? SpriteEffects.FlipHorizontally
+                    : SpriteEffects.None;
 
-                // This variable (flipOffset) is required to re-adjust the flipped screen (as the player sprite may not be in the center)
-                var flipOffset = Game1.player.FacingDirection is (0 or 2) ? (Game1.viewport.Width * Game1.options.zoomLevel - Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).X * 2) - 64 : 0f;
+                // Use the mirror's reflection position as the flip center (like before, but without changing Position)
+                float reflectCenterX = Game1.GlobalToLocal(Game1.viewport, offsetPosition).X;
+                var flipOffset = Game1.player.FacingDirection is (0 or 2)
+                    ? (Game1.viewport.Width * Game1.options.zoomLevel - reflectCenterX * 2f) - 64f
+                    : 0f;
 
                 // TODO: Implement these for Mirror.ReflectionScale
                 var scale = new Vector2(1f, 1f);
                 var scaleOffset = Vector2.Zero;
 
-                Game1.spriteBatch.Draw(rawReflectionRender, new Vector2(-flipOffset, 0f), rawReflectionRender.Bounds, mirror.Settings.ReflectionOverlay, 0f, scaleOffset, scale, flipEffect, 1f);
+                Game1.spriteBatch.Draw(
+                    rawReflectionRender,
+                    new Vector2(-flipOffset, 0f),
+                    rawReflectionRender.Bounds,
+                    mirror.Settings.ReflectionOverlay,
+                    0f,
+                    scaleOffset,
+                    scale,
+                    flipEffect,
+                    1f
+                );
 
                 Game1.spriteBatch.End();
 
@@ -288,6 +313,7 @@ namespace DynamicReflections.Framework.Utilities
                 index++;
             }
 
+            // Restore player state
             Game1.player.Position = oldPosition;
             Game1.player.FacingDirection = oldDirection;
             Game1.player.FarmerSprite = oldSprite;
@@ -420,22 +446,97 @@ namespace DynamicReflections.Framework.Utilities
                 return;
             }
 
+            // If puddle reflections aren't configured / active, don't waste work.
+            if (DynamicReflections.currentPuddleSettings is null)
+            {
+                return;
+            }
+
+            var config = DynamicReflections.modConfig;
+
+            // If both NPC and companion reflections are disabled, skip entirely.
+            bool npcReflectionsEnabled = config?.AreNPCReflectionsEnabled ?? true;
+            bool companionReflectionsEnabled = config?.AreCompanionReflectionsEnabled ?? true;
+            if (!npcReflectionsEnabled && !companionReflectionsEnabled)
+            {
+                return;
+            }
+
             // Set the render target
             SpriteBatchToolkit.StartRendering(DynamicReflections.npcPuddleReflectionRender);
 
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            foreach (var npc in Game1.currentLocation.characters)
-            {
-                var scale = Matrix.CreateScale(1, -1, 1);
-                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, npc.Position + DynamicReflections.currentPuddleSettings.NPCReflectionOffset * 64).Y * 2, 0);
+            int npcCount = 0;
+            int companionCount = 0;
 
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+            foreach (var npc in DynamicReflections.GetActiveNPCs(Game1.currentLocation))
+            {
+                bool isCompanion = DynamicReflections.IsCustomCompanion(npc);
+
+                // Respect global toggles and performance caps
+                if (isCompanion)
+                {
+                    if (!companionReflectionsEnabled)
+                    {
+                        continue;
+                    }
+
+                    int maxCompanions = config?.Performance?.MaxCompanionReflections ?? int.MaxValue;
+                    if (companionCount >= maxCompanions)
+                    {
+                        continue;
+                    }
+                }
+                else
+                {
+                    if (!npcReflectionsEnabled)
+                    {
+                        continue;
+                    }
+
+                    int maxNpcs = config?.Performance?.MaxNpcReflections ?? int.MaxValue;
+                    if (npcCount >= maxNpcs)
+                    {
+                        continue;
+                    }
+                }
+
+                var offset = isCompanion
+                    ? DynamicReflections.currentPuddleSettings.CompanionReflectionOffset
+                    : DynamicReflections.currentPuddleSettings.NPCReflectionOffset;
+
+                // Get the NPC's on-screen position
+                var npcScreenPos = Game1.GlobalToLocal(Game1.viewport, npc.Position);
+
+                // Mirror pivot: NPC's Y on screen + puddle offset
+                float pivotY = npcScreenPos.Y + (offset.Y * 64f);
+
+                // Flip vertically around that pivot
+                var scale = Matrix.CreateScale(1, -1, 1);
+                var position = Matrix.CreateTranslation(0, pivotY * 2f, 0);
+
+                Game1.spriteBatch.Begin(
+                    SpriteSortMode.FrontToBack,
+                    BlendState.AlphaBlend,
+                    SamplerState.PointClamp,
+                    DepthStencilState.None,
+                    DynamicReflections.rasterizer,
+                    transformMatrix: scale * position
+                );
 
                 npc.draw(Game1.spriteBatch);
-
                 Game1.spriteBatch.End();
+
+                if (isCompanion)
+                {
+                    companionCount++;
+                }
+                else
+                {
+                    npcCount++;
+                }
             }
 
             // Drop the render target
@@ -496,68 +597,110 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            var oldPosition = Game1.player.Position;
             var oldDirection = Game1.player.FacingDirection;
             var oldSprite = Game1.player.FarmerSprite;
 
-            var scale = Matrix.CreateScale(1, -1, 1);
-            var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, oldPosition).Y * 2, 0);
+            // Original world position
+            var oldPosition = Game1.player.Position;
 
-            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+            // Where the reflection was previously drawn (world space)
+            var worldOffset = DynamicReflections.currentPuddleSettings.ReflectionOffset * 64f;
+            var targetWorld = oldPosition - worldOffset;
 
-            var targetPosition = Game1.player.Position;
-            targetPosition -= DynamicReflections.currentPuddleSettings.ReflectionOffset * 64f;
-            Game1.player.Position = targetPosition;
+            // Convert both positions to screen space to build an equivalent translation
+            var playerScreen = Game1.GlobalToLocal(Game1.viewport, oldPosition);
+            var targetScreen = Game1.GlobalToLocal(Game1.viewport, targetWorld);
+            var delta = targetScreen - playerScreen;
 
+            // Same vertical flip & pivot as before (across the player's original local Y)
+            var scale = Matrix.CreateScale(1f, -1f, 1f);
+            var pivot = Matrix.CreateTranslation(0f, playerScreen.Y * 2f, 0f);
+
+            // Apply the offset as a pre-translation, then the original reflection matrix
+            var preTranslation = Matrix.CreateTranslation(delta.X, delta.Y, 0f);
+            var transform = preTranslation * scale * pivot;
+
+            Game1.spriteBatch.Begin(
+                SpriteSortMode.FrontToBack,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                depthStencilState: null,
+                rasterizerState: DynamicReflections.rasterizer,
+                effect: null,
+                transformMatrix: transform
+            );
+
+            // Draw the player at their real position; transform handles reflection+offset
             Game1.player.draw(Game1.spriteBatch);
 
-            Game1.player.Position = oldPosition;
             Game1.player.FacingDirection = oldDirection;
             Game1.player.FarmerSprite = oldSprite;
 
             Game1.spriteBatch.End();
 
+            // Draw puddle ripples on top, unchanged
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-
             foreach (var rippleSprite in DynamicReflections.puddleManager.puddleRippleSprites.ToList())
             {
                 rippleSprite.draw(Game1.spriteBatch);
             }
-
             Game1.spriteBatch.End();
 
             // Drop the render target
             SpriteBatchToolkit.StopRendering();
-
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
+
         internal static void DrawReflectionViaMatrix()
         {
-            var oldPosition = Game1.player.Position;
+            // Cache what we’re going to touch so we can restore it
             var oldDirection = Game1.player.FacingDirection;
             var oldSprite = Game1.player.FarmerSprite;
 
-            if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
-            {
-                var scale = Matrix.CreateScale(1, -1, 1);
-                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y * 2, 0);
+            var currentWaterSettings = DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation);
 
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+            // Always draw the *real* player, just flip the screen with a matrix.
+            if (currentWaterSettings.ReflectionDirection == Models.Settings.Direction.South)
+            {
+                // Flip vertically around the water line in screen space.
+                var scale = Matrix.CreateScale(1f, -1f, 1f);
+
+                // Pivot at the water reflection line (already computed in world space, convert to screen).
+                float pivotY = Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y;
+                var position = Matrix.CreateTranslation(0f, pivotY * 2f, 0f);
+
+                Game1.spriteBatch.Begin(
+                    SpriteSortMode.FrontToBack,
+                    BlendState.AlphaBlend,
+                    SamplerState.PointClamp,
+                    DepthStencilState.None,
+                    DynamicReflections.rasterizer,
+                    transformMatrix: scale * position
+                );
             }
             else
             {
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                // Non-south directions keep using the original mirror-style logic.
+                Game1.spriteBatch.Begin(
+                    SpriteSortMode.FrontToBack,
+                    BlendState.AlphaBlend,
+                    SamplerState.PointClamp
+                );
 
                 Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
-                Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
-                Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
-            }
-            Game1.player.Position = DynamicReflections.waterReflectionPosition.Value;
+                Game1.player.FarmerSprite = oldDirection == 0
+                    ? DynamicReflections.mirrorReflectionSprite
+                    : oldSprite;
 
+                Game1.player.modData["FashionSense.Animation.FacingDirection"] =
+                    Game1.player.FacingDirection.ToString();
+            }
+
+            // IMPORTANT: No longer touch Game1.player.Position here.
             Game1.player.draw(Game1.spriteBatch);
 
-            Game1.player.Position = oldPosition;
+            // Restore what changed
             Game1.player.FacingDirection = oldDirection;
             Game1.player.FarmerSprite = oldSprite;
 

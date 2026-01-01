@@ -1,4 +1,4 @@
-﻿using HarmonyLib;
+using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -47,7 +47,7 @@ namespace DynamicReflections
 
         // Water reflection variables
         internal static Dictionary<NPC, Vector2> npcToWaterReflectionPosition = new Dictionary<NPC, Vector2>();
-        internal static Vector2? waterReflectionPosition;
+        internal static readonly Dictionary<GameLocation, bool[,]> waterTileCache = new(); internal static Vector2? waterReflectionPosition;
         internal static Vector2? waterReflectionTilePosition;
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
@@ -304,18 +304,28 @@ namespace DynamicReflections
             DynamicReflections.shouldDrawWaterReflection = false;
             if (modConfig.AreWaterReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
             {
-                var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.PlayerReflectionOffset.Y > 0 ? -1 : 1;
+                // Calculate the player's reflection position based on offset and direction
+                var playerOffset = currentWaterSettings.PlayerReflectionOffset;
+
+                var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && playerOffset.Y > 0
+                    ? -1
+                    : 1;
+
                 var playerPosition = Game1.player.Position;
-                playerPosition += currentWaterSettings.PlayerReflectionOffset * 64 * positionInverter;
+                playerPosition += playerOffset * 32f * positionInverter;
+
                 DynamicReflections.waterReflectionPosition = playerPosition;
                 DynamicReflections.waterReflectionTilePosition = playerPosition / 64f;
 
-                // Hide the reflection if it will show up out of bounds on the map or not drawn on water tile
+                // Hide the reflection if it will show up out of bounds on the map or not drawn on a water tile
                 var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
-                for (int yOffset = -1; yOffset <= Math.Ceiling(currentWaterSettings.PlayerReflectionOffset.Y); yOffset++)
+                for (int yOffset = -1; yOffset <= Math.Ceiling(playerOffset.Y); yOffset++)
                 {
                     var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
-                    if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+
+                    if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
+                        || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
+                        || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
                     {
                         DynamicReflections.shouldDrawWaterReflection = true;
                         break;
@@ -334,109 +344,248 @@ namespace DynamicReflections
                 }
             }
 
-            if (modConfig.AreNPCReflectionsEnabled is not false && currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled)
+            if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled
+                && (modConfig.AreNPCReflectionsEnabled is not false || modConfig.AreCompanionReflectionsEnabled))
             {
-                npcToWaterReflectionPosition.Clear();
-                if (Game1.currentLocation is not null && Game1.currentLocation.characters is not null)
-                {
-                    foreach (var npc in GetActiveNPCs(Game1.currentLocation))
-                    {
-                        var positionInverter = currentWaterSettings.ReflectionDirection == Direction.North && currentWaterSettings.NPCReflectionOffset.Y > 0 ? -1 : 1;
-                        var npcPosition = npc.Position;
-                        npcPosition += currentWaterSettings.NPCReflectionOffset * 64 * positionInverter;
+                bool npcThrottlingEnabled = DynamicReflections.modConfig.Performance?.EnableNpcThrottling ?? false;
+                int npcInterval = Math.Max(1, DynamicReflections.modConfig.Performance?.NpcUpdateIntervalTicks ?? 1);
 
-                        // Hide the reflection if it will show up out of bounds on the map or not drawn on water tile
-                        var waterReflectionPosition = npcPosition / 64f;
-                        for (int yOffset = -1; yOffset <= Math.Ceiling(currentWaterSettings.NPCReflectionOffset.Y); yOffset++)
+                bool companionThrottlingEnabled = DynamicReflections.modConfig.Performance?.EnableCompanionThrottling ?? false;
+                int companionInterval = Math.Max(1, DynamicReflections.modConfig.Performance?.CompanionUpdateIntervalTicks ?? 1);
+
+                bool shouldUpdateNpcs = modConfig.AreNPCReflectionsEnabled && (!npcThrottlingEnabled || e.IsMultipleOf((uint)npcInterval));
+                bool shouldUpdateCompanions = modConfig.AreCompanionReflectionsEnabled && (!companionThrottlingEnabled || e.IsMultipleOf((uint)companionInterval));
+
+                if (shouldUpdateNpcs || shouldUpdateCompanions)
+                {
+                    var location = Game1.currentLocation;
+                    var characters = location?.characters;
+
+                    if (location is not null && characters is not null)
+                    {
+                        // Clear outdated entries in npcToWaterReflectionPosition
+                        if (npcToWaterReflectionPosition.Count > 0)
                         {
-                            var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
-                            if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                            if (shouldUpdateNpcs && shouldUpdateCompanions)
                             {
-                                npcToWaterReflectionPosition[npc] = npcPosition;
-                                break;
+                                npcToWaterReflectionPosition.Clear();
+                            }
+                            else
+                            {
+                                var keys = npcToWaterReflectionPosition.Keys.ToList();
+                                foreach (var key in keys)
+                                {
+                                    bool keyIsCompanion = IsCustomCompanion(key);
+
+                                    // Remove NPC entries when updating NPCs,
+                                    // remove companion entries when updating companions.
+                                    if ((shouldUpdateNpcs && !keyIsCompanion) ||
+                                        (shouldUpdateCompanions && keyIsCompanion))
+                                    {
+                                        npcToWaterReflectionPosition.Remove(key);
+                                    }
+                                }
+                            }
+                        }
+
+                        int npcCount = 0;
+                        int companionCount = 0;
+
+                        var performance = DynamicReflections.modConfig.Performance;
+                        int maxNpcReflections = performance?.MaxNpcReflections ?? int.MaxValue;
+                        int maxCompanionReflections = performance?.MaxCompanionReflections ?? int.MaxValue;
+
+                        // Rebuild NPC / companion reflection entries
+                        foreach (var npc in GetActiveNPCs(location))
+                        {
+                            bool isCompanion = IsCustomCompanion(npc);
+
+                            if (isCompanion)
+                            {
+                                if (!modConfig.AreCompanionReflectionsEnabled || !shouldUpdateCompanions)
+                                {
+                                    continue;
+                                }
+                                if (companionCount >= maxCompanionReflections)
+                                {
+                                    continue;
+                                }
+                            }
+                            else
+                            {
+                                if (!modConfig.AreNPCReflectionsEnabled || !shouldUpdateNpcs)
+                                {
+                                    continue;
+                                }
+                                if (npcCount >= maxNpcReflections)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            var npcOffset = isCompanion
+                                ? currentWaterSettings.CompanionReflectionOffset
+                                : currentWaterSettings.NPCReflectionOffset;
+
+                            var positionInverter =
+                                currentWaterSettings.ReflectionDirection == Direction.North &&
+                                npcOffset.Y > 0
+                                    ? -1
+                                    : 1;
+
+                            var npcPosition = npc.Position;
+                            npcPosition += npcOffset * 64 * positionInverter;
+
+                            // Hide the reflection if it will show up out of bounds on the map
+                            // or not drawn on water tiles
+                            var waterReflectionPosition = npcPosition / 64f;
+                            for (int yOffset = -1; yOffset <= Math.Ceiling(npcOffset.Y); yOffset++)
+                            {
+                                var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
+
+                                if (IsWaterReflectiveTile(location, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
+                                    || IsWaterReflectiveTile(location, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                                {
+                                    npcToWaterReflectionPosition[npc] = npcPosition;
+
+                                    if (isCompanion)
+                                    {
+                                        companionCount++;
+                                    }
+                                    else
+                                    {
+                                        npcCount++;
+                                    }
+
+                                    break;
+                                }
                             }
                         }
                     }
                 }
             }
 
-            // Handle the mirror reflections
+            // MIRROR REFLECTIONS (Optimized / Supports Performance Throttling)
             DynamicReflections.shouldDrawMirrorReflection = false;
+
             if (DynamicReflections.modConfig.AreMirrorReflectionsEnabled)
             {
-                var playerWorldPosition = Game1.player.Position;
-                var playerTilePosition = Game1.player.TilePoint;
-
-                DynamicReflections.activeMirrorPositions.Clear();
-                foreach (var mirror in DynamicReflections.mirrors.Values.OrderByDescending(m => m.TilePosition.Y))
+                // If no mirrors exist in this location, fast exit
+                if (DynamicReflections.mirrors.Count == 0)
                 {
-                    mirror.IsEnabled = false;
+                    DynamicReflections.activeMirrorPositions.Clear();
+                }
+                else
+                {
+                    var performance = DynamicReflections.modConfig.Performance;
+                    bool mirrorThrottlingEnabled = performance?.EnableMirrorThrottling ?? false;
+                    int mirrorInterval = Math.Max(1, performance?.MirrorUpdateIntervalTicks ?? 1);
 
-                    // Limit the amount of active Mirrors to the amount of available reflection renders
-                    if (activeMirrorPositions.Count >= DynamicReflections.maskedPlayerMirrorReflectionRenders.Length)
-                    {
-                        break;
-                    }
+                    bool shouldRecalculateMirrors =
+                        !mirrorThrottlingEnabled
+                        || e.IsMultipleOf((uint)mirrorInterval);
 
-                    var mirrorWidth = mirror.TilePosition.X + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Width / 16f) : mirror.Settings.Dimensions.Width);
-                    if (mirror.TilePosition.X - 1 <= playerTilePosition.X && playerTilePosition.X <= mirrorWidth)
+                    if (shouldRecalculateMirrors)
                     {
-                        var mirrorRange = mirror.TilePosition.Y + (mirror.FurnitureLink is not null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) : mirror.Settings.Dimensions.Height);
-                        if (mirror.TilePosition.Y < playerTilePosition.Y && playerTilePosition.Y <= mirrorRange)
+                        var playerWorldPosition = Game1.player.Position;
+                        var playerTilePosition = Game1.player.TilePoint;
+
+                        DynamicReflections.activeMirrorPositions.Clear();
+
+                        foreach (var mirror in DynamicReflections.mirrors.Values.OrderByDescending(m => m.TilePosition.Y))
                         {
-                            // Skip any mirrors that are within range of an already active mirror
-                            if (IsTileWithinActiveMirror(mirrorRange))
+                            mirror.IsEnabled = false;
+
+                            if (DynamicReflections.maskedPlayerMirrorReflectionRenders == null ||
+                                DynamicReflections.maskedPlayerMirrorReflectionRenders.Length == 0)
                             {
-                                continue;
+                                break;
                             }
 
-                            mirror.IsEnabled = true;
-                            mirror.ActiveIndex = DynamicReflections.activeMirrorPositions.Count;
+                            if (DynamicReflections.activeMirrorPositions.Count >= DynamicReflections.maskedPlayerMirrorReflectionRenders.Length)
+                            {
+                                break;
+                            }
 
-                            var playerDistanceFromBase = mirror.WorldPosition.Y - playerWorldPosition.Y;
-                            var adjustedPosition = new Vector2(playerWorldPosition.X, mirror.WorldPosition.Y + playerDistanceFromBase + 64f);
-                            mirror.PlayerReflectionPosition = adjustedPosition;
+                            var mirrorWidth = mirror.TilePosition.X +
+                                (mirror.FurnitureLink != null
+                                    ? (int)Math.Ceiling(mirror.Settings.Dimensions.Width / 16f)
+                                    : mirror.Settings.Dimensions.Width);
 
-                            DynamicReflections.shouldDrawMirrorReflection = true;
-                            DynamicReflections.activeMirrorPositions.Add(mirror.TilePosition);
+                            if (mirror.TilePosition.X - 1 <= playerTilePosition.X &&
+                                playerTilePosition.X <= mirrorWidth)
+                            {
+                                var mirrorRange = mirror.TilePosition.Y +
+                                    (mirror.FurnitureLink != null
+                                        ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f)
+                                        : mirror.Settings.Dimensions.Height);
+
+                                if (mirror.TilePosition.Y < playerTilePosition.Y &&
+                                    playerTilePosition.Y <= mirrorRange)
+                                {
+                                    if (IsTileWithinActiveMirror(mirrorRange))
+                                    {
+                                        continue;
+                                    }
+
+                                    mirror.IsEnabled = true;
+                                    mirror.ActiveIndex = DynamicReflections.activeMirrorPositions.Count;
+
+                                    var playerDistanceFromBase = mirror.WorldPosition.Y - playerWorldPosition.Y;
+                                    var adjustedPosition = new Vector2(
+                                        playerWorldPosition.X,
+                                        mirror.WorldPosition.Y + playerDistanceFromBase + 64f);
+
+                                    mirror.PlayerReflectionPosition = adjustedPosition;
+
+                                    DynamicReflections.activeMirrorPositions.Add(mirror.TilePosition);
+                                }
+                            }
                         }
                     }
-                }
 
-                if (DynamicReflections.mirrorReflectionSprite is null)
-                {
-                    DynamicReflections.mirrorReflectionSprite = new FarmerSprite(Game1.player.FarmerSprite.textureName.Value);
-                }
+                    DynamicReflections.shouldDrawMirrorReflection = DynamicReflections.activeMirrorPositions.Count > 0;
+                    if (DynamicReflections.shouldDrawMirrorReflection)
+                    {
+                        if (DynamicReflections.mirrorReflectionSprite == null)
+                        {
+                            DynamicReflections.mirrorReflectionSprite = new FarmerSprite(Game1.player.FarmerSprite.textureName.Value);
+                        }
 
-                if (Game1.player.FacingDirection == 0 && DynamicReflections.mirrorReflectionSprite.PauseForSingleAnimation is false && Game1.player.UsingTool is false)
-                {
-                    bool isCarrying = Game1.player.IsCarrying();
-                    if (Game1.player.isMoving())
-                    {
-                        if (Game1.player.running && !isCarrying)
+                        if (Game1.player.FacingDirection == 0 &&
+                            DynamicReflections.mirrorReflectionSprite.PauseForSingleAnimation == false &&
+                            Game1.player.UsingTool == false)
                         {
-                            DynamicReflections.mirrorReflectionSprite.animate(32, Game1.currentGameTime);
+                            bool isCarrying = Game1.player.IsCarrying();
+
+                            if (Game1.player.isMoving())
+                            {
+                                if (Game1.player.running && !isCarrying)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(32, Game1.currentGameTime);
+                                }
+                                else if (Game1.player.running)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(128, Game1.currentGameTime);
+                                }
+                                else if (isCarrying)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(96, Game1.currentGameTime);
+                                }
+                                else
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(0, Game1.currentGameTime);
+                                }
+                            }
+                            else if (isCarrying)
+                            {
+                                DynamicReflections.mirrorReflectionSprite.setCurrentFrame(128);
+                            }
+                            else
+                            {
+                                DynamicReflections.mirrorReflectionSprite.setCurrentFrame(32);
+                            }
                         }
-                        else if (Game1.player.running)
-                        {
-                            DynamicReflections.mirrorReflectionSprite.animate(128, Game1.currentGameTime);
-                        }
-                        else if (isCarrying)
-                        {
-                            DynamicReflections.mirrorReflectionSprite.animate(96, Game1.currentGameTime);
-                        }
-                        else
-                        {
-                            DynamicReflections.mirrorReflectionSprite.animate(0, Game1.currentGameTime);
-                        }
-                    }
-                    else if (Game1.player.IsCarrying())
-                    {
-                        DynamicReflections.mirrorReflectionSprite.setCurrentFrame(128);
-                    }
-                    else
-                    {
-                        DynamicReflections.mirrorReflectionSprite.setCurrentFrame(32);
                     }
                 }
             }
@@ -444,6 +593,10 @@ namespace DynamicReflections
 
         private void OnDayStarted(object sender, StardewModdingAPI.Events.DayStartedEventArgs e)
         {
+
+            // Clear cached water tiles for the new day (maps may change / reload)
+            DynamicReflections.waterTileCache.Clear();
+
             // Populate the location-based settings
             GMCMHelper.RefreshLocationListing();
 
@@ -483,9 +636,6 @@ namespace DynamicReflections
                 GMCMHelper.Register(apiManager.GetGenericModConfigMenuApi(), this);
             }
 
-            // Load in our shaders
-            // Compile via the command: mgfxc wavy.fx wavy.mgfx
-            // Unused: opacityEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "opacity.mgfx")));
             mirrorReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "mask.mgfx")));
 
             waterReflectionEffect = new Effect(Game1.graphics.GraphicsDevice, File.ReadAllBytes(Path.Combine(modHelper.DirectoryPath, "Framework", "Assets", "Shaders", "wavy.mgfx")));
@@ -499,6 +649,10 @@ namespace DynamicReflections
         {
             // Clear the existing cache of custom buildings
             mirrorsManager.Reset();
+
+            // Clear water cache when content packs reload (maps may change)
+            DynamicReflections.waterTileCache.Clear();
+
 
             // Load owned content packs
             foreach (IContentPack contentPack in Helper.ContentPacks.GetOwned())
@@ -747,6 +901,22 @@ namespace DynamicReflections
                 }
             }
 
+            if (map.Properties.ContainsKey(PuddleSettings.MapProperty_CompanionReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[PuddleSettings.MapProperty_CompanionReflectionOffset]) is Vector2 offset)
+                    {
+                        currentPuddleSettings.CompanionReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_CompanionReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get PuddleSettings.MapProperty_CompanionReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
             if (map.Properties.ContainsKey(PuddleSettings.MapProperty_PuddlePercentageWhileRaining))
             {
                 if (Int32.TryParse(map.Properties[PuddleSettings.MapProperty_PuddlePercentageWhileRaining], out var percentage))
@@ -907,6 +1077,22 @@ namespace DynamicReflections
                 {
                     Monitor.Log($"Failed to get WaterSettings.MapProperty_NPCReflectionOffset from the map {map.Id}!", LogLevel.Warn);
                     Monitor.Log($"Failed to get WaterSettings.MapProperty_NPCReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
+                }
+            }
+
+            if (map.Properties.ContainsKey(WaterSettings.MapProperty_CompanionReflectionOffset))
+            {
+                try
+                {
+                    if (JsonSerializer.Deserialize<Vector2>(map.Properties[WaterSettings.MapProperty_CompanionReflectionOffset]) is Vector2 offset)
+                    {
+                        currentWaterSettings.CompanionReflectionOffset = offset;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_CompanionReflectionOffset from the map {map.Id}!", LogLevel.Warn);
+                    Monitor.Log($"Failed to get WaterSettings.MapProperty_CompanionReflectionOffset from the map {map.Id}: {ex}", LogLevel.Trace);
                 }
             }
 
@@ -1206,7 +1392,59 @@ namespace DynamicReflections
                 return false;
             }
 
-            return location.isWaterTile(x, y);
+            // Quick reject for nonsense coordinates
+            if (x < 0 || y < 0)
+            {
+                return false;
+            }
+
+            var performance = DynamicReflections.modConfig?.Performance;
+            bool useCache = performance?.EnableSafeCaching == true;
+
+            // If Safe Caching is off, behave exactly as before.
+            if (!useCache)
+            {
+                return location.isWaterTile(x, y);
+            }
+
+            var map = location.Map;
+            if (map is null || map.Layers is null || map.Layers.Count == 0)
+            {
+                return location.isWaterTile(x, y);
+            }
+
+            // Prefer the Back layer; fall back to first layer if needed just in case.
+            var backLayer = map.GetLayer("Back") ?? map.Layers[0];
+            int width = backLayer.LayerWidth;
+            int height = backLayer.LayerHeight;
+
+            // Look up or build the cache for this *location*.
+            if (!waterTileCache.TryGetValue(location, out bool[,] cache)
+                || cache is null
+                || cache.GetLength(0) != width
+                || cache.GetLength(1) != height)
+            {
+                cache = new bool[width, height];
+
+                // Build using the game's own isWaterTile logic, once per tile.
+                for (int tileX = 0; tileX < width; tileX++)
+                {
+                    for (int tileY = 0; tileY < height; tileY++)
+                    {
+                        cache[tileX, tileY] = location.isWaterTile(tileX, tileY);
+                    }
+                }
+
+                waterTileCache[location] = cache;
+            }
+
+            // Out of bounds relative to this map
+            if (x >= cache.GetLength(0) || y >= cache.GetLength(1))
+            {
+                return false;
+            }
+
+            return cache[x, y];
         }
 
         internal static int GetReflectedDirection(int initialDirection, bool isMirror = false)
@@ -1221,6 +1459,35 @@ namespace DynamicReflections
             }
 
             return initialDirection;
+        }
+
+        internal static bool IsCustomCompanion(NPC npc)
+        {
+            if (npc is null)
+            {
+                return false;
+            }
+
+            var type = npc.GetType();
+            if (type is null)
+            {
+                return false;
+            }
+
+            string fullName = type.FullName ?? string.Empty;
+
+            // Detect companions created by the Custom Companions framework (used by SH's Wild Animals and others).
+            if (fullName.StartsWith("CustomCompanions.", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            if (fullName.Contains(".Framework.Companions.", StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+
+            return false;
         }
 
         internal static List<NPC> GetActiveNPCs(GameLocation location)
