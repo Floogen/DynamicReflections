@@ -658,10 +658,10 @@ namespace DynamicReflections
                     // Reset the WaterReflectionSettings
                     modConfig.WaterReflectionSettings.Reset();
                 }
-                else if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.1")))
+                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.1")))
                 {
-                    // Reset the WaterReflectionSettings
-                    modConfig.PerformanceSettings.Reset();
+                    // Reset the PerformanceSettings
+                    modConfig.PerformanceSettings = new PerformanceSettings();
                 }
 
                 // Log the latest installed version
