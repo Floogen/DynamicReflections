@@ -1515,24 +1515,23 @@ namespace DynamicReflections
             return false;
         }
 
-        internal static List<NPC> GetActiveNPCs(GameLocation location)
+        internal static IEnumerable<NPC> GetActiveNPCs(GameLocation location)
         {
-            var npcs = new List<NPC>();
             if (location is null)
             {
-                return npcs;
+                return Array.Empty<NPC>();
             }
 
             if (Game1.eventUp && location.currentEvent is not null && location.currentEvent.actors is not null)
             {
-                npcs = location.currentEvent.actors.ToList();
+                return location.currentEvent.actors;
             }
             else if (location.characters is not null)
             {
-                npcs = location.characters.ToList();
+                return location.characters;
             }
 
-            return npcs;
+            return Array.Empty<NPC>();
         }
     }
 }
