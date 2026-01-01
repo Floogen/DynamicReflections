@@ -719,7 +719,7 @@ namespace DynamicReflections.Framework.Utilities
 
             if (DynamicReflections.modConfig.AreNPCReflectionsEnabled is true)
             {
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
                 Game1.spriteBatch.Draw(DynamicReflections.npcWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
                 Game1.spriteBatch.End();
             }
