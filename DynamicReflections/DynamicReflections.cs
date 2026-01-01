@@ -403,16 +403,24 @@ namespace DynamicReflections
                             if (isCompanion)
                             {
                                 if (!modConfig.AreCompanionReflectionsEnabled || !shouldUpdateCompanions)
+                                {
                                     continue;
+                                }
                                 if (companionCount >= maxCompanionReflections)
+                                {
                                     continue;
+                                }
                             }
                             else
                             {
                                 if (!modConfig.AreNPCReflectionsEnabled || !shouldUpdateNpcs)
+                                {
                                     continue;
+                                }
                                 if (npcCount >= maxNpcReflections)
+                                {
                                     continue;
+                                }
                             }
 
                             var npcOffset = isCompanion
@@ -516,7 +524,9 @@ namespace DynamicReflections
                                     playerTilePosition.Y <= mirrorRange)
                                 {
                                     if (IsTileWithinActiveMirror(mirrorRange))
+                                    {
                                         continue;
+                                    }
 
                                     mirror.IsEnabled = true;
                                     mirror.ActiveIndex = DynamicReflections.activeMirrorPositions.Count;
@@ -534,15 +544,12 @@ namespace DynamicReflections
                         }
                     }
 
-                    DynamicReflections.shouldDrawMirrorReflection =
-                        DynamicReflections.activeMirrorPositions.Count > 0;
-
+                    DynamicReflections.shouldDrawMirrorReflection = DynamicReflections.activeMirrorPositions.Count > 0;
                     if (DynamicReflections.shouldDrawMirrorReflection)
                     {
                         if (DynamicReflections.mirrorReflectionSprite == null)
                         {
-                            DynamicReflections.mirrorReflectionSprite =
-                                new FarmerSprite(Game1.player.FarmerSprite.textureName.Value);
+                            DynamicReflections.mirrorReflectionSprite = new FarmerSprite(Game1.player.FarmerSprite.textureName.Value);
                         }
 
                         if (Game1.player.FacingDirection == 0 &&
@@ -554,13 +561,21 @@ namespace DynamicReflections
                             if (Game1.player.isMoving())
                             {
                                 if (Game1.player.running && !isCarrying)
+                                {
                                     DynamicReflections.mirrorReflectionSprite.animate(32, Game1.currentGameTime);
+                                }
                                 else if (Game1.player.running)
+                                {
                                     DynamicReflections.mirrorReflectionSprite.animate(128, Game1.currentGameTime);
+                                }
                                 else if (isCarrying)
+                                {
                                     DynamicReflections.mirrorReflectionSprite.animate(96, Game1.currentGameTime);
+                                }
                                 else
+                                {
                                     DynamicReflections.mirrorReflectionSprite.animate(0, Game1.currentGameTime);
+                                }
                             }
                             else if (isCarrying)
                             {
@@ -1373,11 +1388,15 @@ namespace DynamicReflections
         private bool IsWaterReflectiveTile(GameLocation location, int x, int y)
         {
             if (location is null)
+            {
                 return false;
+            }
 
             // Quick reject for nonsense coordinates
             if (x < 0 || y < 0)
+            {
                 return false;
+            }
 
             var performance = DynamicReflections.modConfig?.Performance;
             bool useCache = performance?.EnableSafeCaching == true;
@@ -1421,14 +1440,12 @@ namespace DynamicReflections
 
             // Out of bounds relative to this map
             if (x >= cache.GetLength(0) || y >= cache.GetLength(1))
+            {
                 return false;
+            }
 
             return cache[x, y];
         }
-
-
-
-
 
         internal static int GetReflectedDirection(int initialDirection, bool isMirror = false)
         {
