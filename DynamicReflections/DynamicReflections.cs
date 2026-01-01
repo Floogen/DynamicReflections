@@ -350,11 +350,11 @@ namespace DynamicReflections
             if (currentWaterSettings is not null && currentWaterSettings.AreReflectionsEnabled
                 && (modConfig.AreNPCReflectionsEnabled is not false || modConfig.AreCompanionReflectionsEnabled))
             {
-                bool npcThrottlingEnabled = DynamicReflections.modConfig.Performance?.EnableNpcThrottling ?? false;
-                int npcInterval = Math.Max(1, DynamicReflections.modConfig.Performance?.NpcUpdateIntervalTicks ?? 1);
+                bool npcThrottlingEnabled = DynamicReflections.modConfig.PerformanceSettings?.EnableNpcThrottling ?? false;
+                int npcInterval = Math.Max(1, DynamicReflections.modConfig.PerformanceSettings?.NpcUpdateIntervalTicks ?? 1);
 
-                bool companionThrottlingEnabled = DynamicReflections.modConfig.Performance?.EnableCompanionThrottling ?? false;
-                int companionInterval = Math.Max(1, DynamicReflections.modConfig.Performance?.CompanionUpdateIntervalTicks ?? 1);
+                bool companionThrottlingEnabled = DynamicReflections.modConfig.PerformanceSettings?.EnableCompanionThrottling ?? false;
+                int companionInterval = Math.Max(1, DynamicReflections.modConfig.PerformanceSettings?.CompanionUpdateIntervalTicks ?? 1);
 
                 bool shouldUpdateNpcs = modConfig.AreNPCReflectionsEnabled && (!npcThrottlingEnabled || e.IsMultipleOf((uint)npcInterval));
                 bool shouldUpdateCompanions = modConfig.AreCompanionReflectionsEnabled && (!companionThrottlingEnabled || e.IsMultipleOf((uint)companionInterval));
@@ -394,7 +394,7 @@ namespace DynamicReflections
                         int npcCount = 0;
                         int companionCount = 0;
 
-                        var performance = DynamicReflections.modConfig.Performance;
+                        var performance = DynamicReflections.modConfig.PerformanceSettings;
                         int maxNpcReflections = performance?.MaxNpcReflections ?? int.MaxValue;
                         int maxCompanionReflections = performance?.MaxCompanionReflections ?? int.MaxValue;
 
@@ -468,7 +468,7 @@ namespace DynamicReflections
                 }
             }
 
-            // MIRROR REFLECTIONS (Optimized / Supports Performance Throttling)
+            // MIRROR REFLECTIONS (Optimized / Supports PerformanceSettings Throttling)
             DynamicReflections.shouldDrawMirrorReflection = false;
 
             if (DynamicReflections.modConfig.AreMirrorReflectionsEnabled)
@@ -480,7 +480,7 @@ namespace DynamicReflections
                 }
                 else
                 {
-                    var performance = DynamicReflections.modConfig.Performance;
+                    var performance = DynamicReflections.modConfig.PerformanceSettings;
                     bool mirrorThrottlingEnabled = performance?.EnableMirrorThrottling ?? false;
                     int mirrorInterval = Math.Max(1, performance?.MirrorUpdateIntervalTicks ?? 1);
 
@@ -657,6 +657,11 @@ namespace DynamicReflections
                 {
                     // Reset the WaterReflectionSettings
                     modConfig.WaterReflectionSettings.Reset();
+                }
+                else if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.1")))
+                {
+                    // Reset the WaterReflectionSettings
+                    modConfig.PerformanceSettings.Reset();
                 }
 
                 // Log the latest installed version
@@ -1423,7 +1428,7 @@ namespace DynamicReflections
                 return false;
             }
 
-            var performance = DynamicReflections.modConfig?.Performance;
+            var performance = DynamicReflections.modConfig?.PerformanceSettings;
             bool useCache = performance?.EnableSafeCaching == true;
 
             // If Safe Caching is off, behave exactly as before.

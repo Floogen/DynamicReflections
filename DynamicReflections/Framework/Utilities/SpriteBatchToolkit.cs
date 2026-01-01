@@ -483,7 +483,7 @@ namespace DynamicReflections.Framework.Utilities
                         continue;
                     }
 
-                    int maxCompanions = config?.Performance?.MaxCompanionReflections ?? int.MaxValue;
+                    int maxCompanions = config?.PerformanceSettings?.MaxCompanionReflections ?? int.MaxValue;
                     if (companionCount >= maxCompanions)
                     {
                         continue;
@@ -496,7 +496,7 @@ namespace DynamicReflections.Framework.Utilities
                         continue;
                     }
 
-                    int maxNpcs = config?.Performance?.MaxNpcReflections ?? int.MaxValue;
+                    int maxNpcs = config?.PerformanceSettings?.MaxNpcReflections ?? int.MaxValue;
                     if (npcCount >= maxNpcs)
                     {
                         continue;

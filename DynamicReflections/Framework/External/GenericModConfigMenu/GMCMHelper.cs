@@ -165,30 +165,30 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].HalfwayDarkWaterAlpha, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].HalfwayDarkWaterAlpha = value, () => Helper.Translation.Get("config.sky_settings.water_alpha.halfway_dark"), tooltip: () => Helper.Translation.Get("config.sky_settings.water_alpha.description"), min: 0.01f, max: 1f, interval: 0.01f);
             configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].FinishedDarkWaterAlpha, value => DynamicReflections.modConfig.LocalSkyReflectionSettings[_currentLocation].FinishedDarkWaterAlpha = value, () => Helper.Translation.Get("config.sky_settings.water_alpha.finished_dark"), tooltip: () => Helper.Translation.Get("config.sky_settings.water_alpha.description"), min: 0.01f, max: 1f, interval: 0.01f);
 
-            // Performance settings page
+            // PerformanceSettings settings page
             configApi.AddPage(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.title"));
             configApi.AddPageLink(ModManifest, "performance_settings", () => Helper.Translation.Get("config.performance_settings.link"));
             configApi.AddParagraph(ModManifest, () => $"{Environment.NewLine}");
 
             configApi.AddPage(ModManifest, "performance_settings", () => Helper.Translation.Get("config.performance_settings.title"));
 
-            // Performance: caching
+            // PerformanceSettings: caching
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.performance_settings.title"));
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.Performance.EnableSafeCaching, value => DynamicReflections.modConfig.Performance.EnableSafeCaching = value, () => Helper.Translation.Get("config.performance_settings.enable_safe_caching"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableSafeCaching, value => DynamicReflections.modConfig.PerformanceSettings.EnableSafeCaching = value, () => Helper.Translation.Get("config.performance_settings.enable_safe_caching"));
 
-            // Performance: NPC reflections
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.Performance.EnableNpcThrottling, value => DynamicReflections.modConfig.Performance.EnableNpcThrottling = value, () => Helper.Translation.Get("config.performance_settings.enable_npc_throttling"));
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.Performance.NpcUpdateIntervalTicks, value => DynamicReflections.modConfig.Performance.NpcUpdateIntervalTicks = value, () => Helper.Translation.Get("config.performance_settings.npc_update_interval_ticks"), min: 1, max: 60, interval: 1);
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.Performance.MaxNpcReflections, value => DynamicReflections.modConfig.Performance.MaxNpcReflections = value, () => Helper.Translation.Get("config.performance_settings.max_npc_reflections"), min: 1, max: 500, interval: 1);
+            // PerformanceSettings: NPC reflections
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableNpcThrottling, value => DynamicReflections.modConfig.PerformanceSettings.EnableNpcThrottling = value, () => Helper.Translation.Get("config.performance_settings.enable_npc_throttling"));
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.NpcUpdateIntervalTicks, value => DynamicReflections.modConfig.PerformanceSettings.NpcUpdateIntervalTicks = value, () => Helper.Translation.Get("config.performance_settings.npc_update_interval_ticks"), min: 1, max: 60, interval: 1);
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.MaxNpcReflections, value => DynamicReflections.modConfig.PerformanceSettings.MaxNpcReflections = value, () => Helper.Translation.Get("config.performance_settings.max_npc_reflections"), min: 1, max: 500, interval: 1);
 
-            // Performance: mirrors
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.Performance.EnableMirrorThrottling, value => DynamicReflections.modConfig.Performance.EnableMirrorThrottling = value, () => Helper.Translation.Get("config.performance_settings.enable_mirror_throttling"));
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.Performance.MirrorUpdateIntervalTicks, value => DynamicReflections.modConfig.Performance.MirrorUpdateIntervalTicks = value, () => Helper.Translation.Get("config.performance_settings.mirror_update_interval_ticks"), min: 1, max: 60, interval: 1);
+            // PerformanceSettings: mirrors
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableMirrorThrottling, value => DynamicReflections.modConfig.PerformanceSettings.EnableMirrorThrottling = value, () => Helper.Translation.Get("config.performance_settings.enable_mirror_throttling"));
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.MirrorUpdateIntervalTicks, value => DynamicReflections.modConfig.PerformanceSettings.MirrorUpdateIntervalTicks = value, () => Helper.Translation.Get("config.performance_settings.mirror_update_interval_ticks"), min: 1, max: 60, interval: 1);
 
-            // Performance: companions / wild animals
-            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.Performance.EnableCompanionThrottling, value => DynamicReflections.modConfig.Performance.EnableCompanionThrottling = value, () => Helper.Translation.Get("config.performance_settings.enable_companion_throttling"));
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.Performance.CompanionUpdateIntervalTicks, value => DynamicReflections.modConfig.Performance.CompanionUpdateIntervalTicks = value, () => Helper.Translation.Get("config.performance_settings.companion_update_interval_ticks"), min: 1, max: 60, interval: 1);
-            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.Performance.MaxCompanionReflections, value => DynamicReflections.modConfig.Performance.MaxCompanionReflections = value, () => Helper.Translation.Get("config.performance_settings.max_companion_reflections"), min: 1, max: 500, interval: 1);
+            // PerformanceSettings: companions / wild animals
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableCompanionThrottling, value => DynamicReflections.modConfig.PerformanceSettings.EnableCompanionThrottling = value, () => Helper.Translation.Get("config.performance_settings.enable_companion_throttling"));
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.CompanionUpdateIntervalTicks, value => DynamicReflections.modConfig.PerformanceSettings.CompanionUpdateIntervalTicks = value, () => Helper.Translation.Get("config.performance_settings.companion_update_interval_ticks"), min: 1, max: 60, interval: 1);
+            configApi.AddNumberOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.MaxCompanionReflections, value => DynamicReflections.modConfig.PerformanceSettings.MaxCompanionReflections = value, () => Helper.Translation.Get("config.performance_settings.max_companion_reflections"), min: 1, max: 500, interval: 1);
 
             configApi.AddPageLink(ModManifest, String.Empty, () => Helper.Translation.Get("config.general_settings.link.return_main"));
         }

@@ -21,7 +21,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();
         public PuddleSettings PuddleReflectionSettings { get; set; } = new PuddleSettings();
         public SkySettings SkyReflectionSettings { get; set; } = new SkySettings(); 
-        public PerformanceSettings Performance { get; set; } = new PerformanceSettings();
+        public PerformanceSettings PerformanceSettings { get; set; } = new PerformanceSettings();
         public int MeteorShowerNightChance { get; set; } = 10;
 
         public Dictionary<string, WaterSettings> LocalWaterReflectionSettings { get; set; } = new Dictionary<string, WaterSettings>();
