@@ -29,7 +29,7 @@ namespace DynamicReflections.Framework.Models.Settings
         public Color ReflectionOverlay { get; set; } = Color.White;
 
         public const string MapProperty_ReflectionOffset = "WaterReflectionOffset";
-        public Vector2 PlayerReflectionOffset { get; set; } = new Vector2(0f, 0.5f);
+        public Vector2 PlayerReflectionOffset { get; set; } = new Vector2(0f, 1.5f);
         public const string MapProperty_NPCReflectionOffset = "WaterNPCReflectionOffset";
         public Vector2 NPCReflectionOffset { get; set; } = new Vector2(0f, 0.7f);
         public const string MapProperty_CompanionReflectionOffset = "WaterCompanionReflectionOffset";

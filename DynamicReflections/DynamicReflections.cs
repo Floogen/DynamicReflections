@@ -312,7 +312,7 @@ namespace DynamicReflections
                     : 1;
 
                 var playerPosition = Game1.player.Position;
-                playerPosition += playerOffset * 64f * positionInverter;
+                playerPosition += playerOffset * 32f * positionInverter;
 
                 DynamicReflections.waterReflectionPosition = playerPosition;
                 DynamicReflections.waterReflectionTilePosition = playerPosition / 64f;
