@@ -866,7 +866,7 @@ namespace DynamicReflections.Framework.Utilities
             // Draw buildings before player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
-                RenderWaterReflectionPlayerBuildings(1326, afterPlayer: false);
+                RenderWaterReflectionPlayerBuildings(32, afterPlayer: false);
             }
 
             // Draw player reflection
@@ -997,12 +997,6 @@ namespace DynamicReflections.Framework.Utilities
             {
                 DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
-
-                if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
-                {
-                    // Draw player buildings
-                    //Game1.spriteBatch.Draw(DynamicReflections.buildingWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
-                }
 
                 if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled)
                 {
