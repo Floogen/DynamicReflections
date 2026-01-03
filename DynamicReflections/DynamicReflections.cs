@@ -50,7 +50,8 @@ namespace DynamicReflections
         internal static Dictionary<NPC, Vector2> npcToWaterReflectionPosition = new Dictionary<NPC, Vector2>();
         internal static readonly Dictionary<GameLocation, bool[,]> waterTileCache = new Dictionary<GameLocation, bool[,]>();
         internal static Vector2? waterReflectionPosition;
-        internal static readonly Dictionary<GameLocation, List<TerrainFeature>> locationToTerrainFeatures = new Dictionary<GameLocation, List<TerrainFeature>>();
+        internal static Vector2? waterReflectionTilePosition;
+        internal static readonly Dictionary<GameLocation, HashSet<TerrainFeature>> locationToReflectableTerrainFeatures = new Dictionary<GameLocation, HashSet<TerrainFeature>>();
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
@@ -666,22 +667,44 @@ namespace DynamicReflections
 
         private void OnTerrainFeatureListChanged(object sender, StardewModdingAPI.Events.TerrainFeatureListChangedEventArgs e)
         {
-            if (e.Location is null)
+            if (e.Location is null || locationToReflectableTerrainFeatures.ContainsKey(e.Location) is false)
             {
                 return;
             }
 
-            ResetLocationTerrainCache(e.Location);
+            foreach (var addedTerrainFeature in e.Added)
+            {
+                if (IsTileReflective(addedTerrainFeature.Value.Tile, 3))
+                {
+                    locationToReflectableTerrainFeatures[e.Location].Add(addedTerrainFeature.Value);
+                }
+            }
+
+            foreach (var removedTerrainFeature in e.Removed)
+            {
+                locationToReflectableTerrainFeatures[e.Location].Remove(removedTerrainFeature.Value);
+            }
         }
 
         private void OnLargeTerrainFeatureChanged(object sender, StardewModdingAPI.Events.LargeTerrainFeatureListChangedEventArgs e)
         {
-            if (e.Location is null)
+            if (e.Location is null || locationToReflectableTerrainFeatures.ContainsKey(e.Location) is false)
             {
                 return;
             }
 
-            ResetLocationTerrainCache(e.Location);
+            foreach (var addedTerrainFeature in e.Added)
+            {
+                if (IsTileReflective(addedTerrainFeature.Tile, 3))
+                {
+                    locationToReflectableTerrainFeatures[e.Location].Add(addedTerrainFeature);
+                }
+            }
+
+            foreach (var removedTerrainFeature in e.Removed)
+            {
+                locationToReflectableTerrainFeatures[e.Location].Remove(removedTerrainFeature);
+            }
         }
 
         private void LoadContentPacks(bool silent = false)
@@ -1550,30 +1573,41 @@ namespace DynamicReflections
             return Array.Empty<NPC>();
         }
 
-        internal static IEnumerable<TerrainFeature> GetTerrainFeatures(GameLocation location)
+        internal static IEnumerable<TerrainFeature> GetReflectableTerrainFeatures(GameLocation location)
         {
             if (location is null)
             {
                 return Array.Empty<TerrainFeature>();
             }
 
-            if (locationToTerrainFeatures.ContainsKey(location) is false)
+            if (locationToReflectableTerrainFeatures.ContainsKey(location) is false)
             {
                 ResetLocationTerrainCache(location);
             }
 
-            return locationToTerrainFeatures[location];
+            return locationToReflectableTerrainFeatures[location];
         }
 
         private static void ResetLocationTerrainCache(GameLocation location)
         {
-            locationToTerrainFeatures[location] = location.terrainFeatures.Values.ToList();
+            locationToReflectableTerrainFeatures[location] = new HashSet<TerrainFeature>();
+            foreach (var terrainFeature in location.terrainFeatures.Values)
+            {
+                if (IsTileReflective(terrainFeature.Tile, 3))
+                {
+                    locationToReflectableTerrainFeatures[location].Add(terrainFeature);
+                }
+            }
 
             foreach (var largeTerrainFeature in location.largeTerrainFeatures)
             {
-                locationToTerrainFeatures[location].Add(largeTerrainFeature);
+                if (IsTileReflective(largeTerrainFeature.Tile, 3))
+                {
+                    locationToReflectableTerrainFeatures[location].Add(largeTerrainFeature);
+                }
             }
         }
+
         private static bool IsTileReflective(Vector2 startPosition, int yTileOffset)
         {
             for (int yOffset = -1; yOffset <= yTileOffset; yOffset++)

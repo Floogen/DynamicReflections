@@ -558,17 +558,23 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            foreach (TerrainFeature terrainFeature in DynamicReflections.GetTerrainFeatures(Game1.currentLocation))
+            foreach (TerrainFeature terrainFeature in DynamicReflections.GetReflectableTerrainFeatures(Game1.currentLocation))
             {
-                if (terrainFeature is not Tree)
+                if (terrainFeature is not Tree && terrainFeature is not Bush)
                 {
                     continue;
+                }
+
+                int yOffset = 48;
+                if (terrainFeature is Tree)
+                {
+                    yOffset = 72;
                 }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
                     var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + 72) * 2, 0);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + yOffset) * 2, 0);
 
                     Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
                 }
@@ -601,7 +607,7 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            foreach (var terrainFeature in Game1.currentLocation.terrainFeatures.Values)
+            foreach (var terrainFeature in DynamicReflections.GetReflectableTerrainFeatures(Game1.currentLocation))
             {
                 if (terrainFeature is not Grass)
                 {
