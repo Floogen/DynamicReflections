@@ -398,7 +398,7 @@ namespace DynamicReflections.Framework.Utilities
             // Draw player reflection (if near water tile)
             if (DynamicReflections.shouldDrawWaterReflection)
             {
-                DrawReflectionViaMatrix();
+                DrawPlayerWaterReflection();
             }
 
             // Draw buildings after player
@@ -891,7 +891,7 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-        internal static void DrawReflectionViaMatrix()
+        internal static void DrawPlayerWaterReflection()
         {
             // Cache what we’re going to touch so we can restore it
             var oldDirection = Game1.player.FacingDirection;
@@ -945,7 +945,6 @@ namespace DynamicReflections.Framework.Utilities
 
             Game1.spriteBatch.End();
         }
-
 
         internal static void DrawPlayerPuddleReflection()
         {
