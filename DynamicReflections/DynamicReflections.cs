@@ -20,6 +20,7 @@ using DynamicReflections.Framework.External.GenericModConfigMenu;
 using StardewValley.Locations;
 using StardewValley.Menus;
 using DynamicReflections.Framework.Interfaces.Internal;
+using StardewValley.TerrainFeatures;
 
 namespace DynamicReflections
 {
@@ -47,8 +48,9 @@ namespace DynamicReflections
 
         // Water reflection variables
         internal static Dictionary<NPC, Vector2> npcToWaterReflectionPosition = new Dictionary<NPC, Vector2>();
-        internal static readonly Dictionary<GameLocation, bool[,]> waterTileCache = new(); internal static Vector2? waterReflectionPosition;
-        internal static Vector2? waterReflectionTilePosition;
+        internal static readonly Dictionary<GameLocation, bool[,]> waterTileCache = new Dictionary<GameLocation, bool[,]>();
+        internal static Vector2? waterReflectionPosition;
+        internal static readonly Dictionary<GameLocation, List<TerrainFeature>> locationToTerrainFeatures = new Dictionary<GameLocation, List<TerrainFeature>>();
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
@@ -86,6 +88,8 @@ namespace DynamicReflections
         internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D npcWaterReflectionRender;
         internal static RenderTarget2D npcPuddleReflectionRender;
+        internal static RenderTarget2D terrainWaterReflectionRender;
+        internal static RenderTarget2D grassWaterReflectionRender;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
@@ -138,6 +142,8 @@ namespace DynamicReflections
             helper.Events.GameLoop.DayStarted += OnDayStarted;
             helper.Events.GameLoop.DayEnding += OnDayEnding;
             helper.Events.GameLoop.GameLaunched += OnGameLaunched;
+            helper.Events.World.TerrainFeatureListChanged += OnTerrainFeatureListChanged;
+            helper.Events.World.LargeTerrainFeatureListChanged += OnLargeTerrainFeatureChanged;
         }
 
         public override object GetApi()
@@ -673,6 +679,26 @@ namespace DynamicReflections
 
             // Create the RenderTarget2D and RasterizerState for use by the water reflection
             LoadRenderers();
+        }
+
+        private void OnTerrainFeatureListChanged(object sender, StardewModdingAPI.Events.TerrainFeatureListChangedEventArgs e)
+        {
+            if (e.Location is null)
+            {
+                return;
+            }
+
+            ResetLocationTerrainCache(e.Location);
+        }
+
+        private void OnLargeTerrainFeatureChanged(object sender, StardewModdingAPI.Events.LargeTerrainFeatureListChangedEventArgs e)
+        {
+            if (e.Location is null)
+            {
+                return;
+            }
+
+            ResetLocationTerrainCache(e.Location);
         }
 
         private void LoadContentPacks(bool silent = false)
@@ -1236,6 +1262,8 @@ namespace DynamicReflections
             RegenerateRenderer(ref playerPuddleReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref npcWaterReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref npcPuddleReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref terrainWaterReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref grassWaterReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref puddlesRenderTarget, shouldUseScreenDimensions);
 
             RegenerateRenderer(ref mirrorsLayerRenderTarget, shouldUseScreenDimensions);
@@ -1537,6 +1565,31 @@ namespace DynamicReflections
             }
 
             return Array.Empty<NPC>();
+        }
+
+        internal static IEnumerable<TerrainFeature> GetTerrainFeatures(GameLocation location)
+        {
+            if (location is null)
+            {
+                return Array.Empty<TerrainFeature>();
+            }
+
+            if (locationToTerrainFeatures.ContainsKey(location) is false)
+            {
+                ResetLocationTerrainCache(location);
+            }
+
+            return locationToTerrainFeatures[location];
+        }
+
+        private static void ResetLocationTerrainCache(GameLocation location)
+        {
+            locationToTerrainFeatures[location] = location.terrainFeatures.Values.ToList();
+
+            foreach (var largeTerrainFeature in location.largeTerrainFeatures)
+            {
+                locationToTerrainFeatures[location].Add(largeTerrainFeature);
+            }
         }
     }
 }

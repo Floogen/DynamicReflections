@@ -109,6 +109,20 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     SpriteBatchToolkit.RenderPuddleReflectionNPCs();
                 }
 
+                // Handle preliminary grass reflection logic
+                if (DynamicReflections.modConfig.AreGrassReflectionsEnabled is true)
+                {
+                    DynamicReflections.isFilteringWater = true;
+                    SpriteBatchToolkit.RenderWaterReflectionGrass();
+                }
+
+                // Handle preliminary NPC reflection logic
+                if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled is true)
+                {
+                    DynamicReflections.isFilteringWater = true;
+                    SpriteBatchToolkit.RenderWaterReflectionTerrain();
+                }
+
                 _waterColor = Game1.currentLocation.waterColor.Value;
                 if (DynamicReflections.modConfig.AreSkyReflectionsEnabled is true)
                 {

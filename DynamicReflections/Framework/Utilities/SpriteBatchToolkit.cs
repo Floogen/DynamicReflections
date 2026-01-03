@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -438,7 +439,6 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-
         internal static void RenderPuddleReflectionNPCs()
         {
             if (Game1.currentLocation is null || Game1.currentLocation.characters is null)
@@ -537,6 +537,93 @@ namespace DynamicReflections.Framework.Utilities
                 {
                     npcCount++;
                 }
+            }
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        internal static void RenderWaterReflectionTerrain()
+        {
+            if (Game1.currentLocation is null || Game1.currentLocation.largeTerrainFeatures is null)
+            {
+                return;
+            }
+
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.terrainWaterReflectionRender);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            foreach (TerrainFeature terrainFeature in DynamicReflections.GetTerrainFeatures(Game1.currentLocation))
+            {
+                if (terrainFeature is not Tree)
+                {
+                    continue;
+                }
+
+                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
+                {
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + 72) * 2, 0);
+
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                }
+                else
+                {
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                }
+
+                terrainFeature.draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+            }
+
+            // Drop the render target
+            SpriteBatchToolkit.StopRendering();
+
+            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        internal static void RenderWaterReflectionGrass()
+        {
+            if (Game1.currentLocation is null || Game1.currentLocation.terrainFeatures is null)
+            {
+                return;
+            }
+
+            // Set the render target
+            SpriteBatchToolkit.StartRendering(DynamicReflections.grassWaterReflectionRender);
+
+            // Draw the scene
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            foreach (var terrainFeature in Game1.currentLocation.terrainFeatures.Values)
+            {
+                if (terrainFeature is not Grass)
+                {
+                    continue;
+                }
+
+                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
+                {
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + 72) * 2, 0);
+
+                    // Using SpriteSortMode.BackToFront for Grass to properly draw any "flowers" that should be on top
+                    Game1.spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                }
+                else
+                {
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                }
+
+                terrainFeature.draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
             }
 
             // Drop the render target
@@ -709,11 +796,30 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void DrawRenderedCharacters(bool isWavy = false)
         {
-            if (DynamicReflections.shouldDrawWaterReflection is true)
+
+            if (DynamicReflections.shouldDrawWaterReflection is true || DynamicReflections.modConfig.AreTerrainReflectionsEnabled is true || DynamicReflections.modConfig.AreGrassReflectionsEnabled is true)
             {
                 DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
-                Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+
+                if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled)
+                {
+                    // Draw trees
+                    Game1.spriteBatch.Draw(DynamicReflections.terrainWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+                }
+
+                if (DynamicReflections.shouldDrawWaterReflection is true)
+                {
+                    // Draw the player
+                    Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+                }
+
+                if (DynamicReflections.modConfig.AreGrassReflectionsEnabled)
+                {
+                    // Draw terrain features (such as grass, but not trees)
+                    Game1.spriteBatch.Draw(DynamicReflections.grassWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+                }
+
                 Game1.spriteBatch.End();
             }
 
