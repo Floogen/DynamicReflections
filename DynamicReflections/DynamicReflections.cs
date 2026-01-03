@@ -325,17 +325,9 @@ namespace DynamicReflections
 
                 // Hide the reflection if it will show up out of bounds on the map or not drawn on a water tile
                 var waterReflectionPosition = DynamicReflections.waterReflectionTilePosition.Value;
-                for (int yOffset = -1; yOffset <= Math.Ceiling(playerOffset.Y); yOffset++)
+                if (IsTileReflective(waterReflectionPosition, (int)Math.Ceiling(playerOffset.Y)))
                 {
-                    var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
-
-                    if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
-                        || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
-                        || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
-                    {
-                        DynamicReflections.shouldDrawWaterReflection = true;
-                        break;
-                    }
+                    DynamicReflections.shouldDrawWaterReflection = true;
                 }
 
                 // Handle the wavy effect if enabled
@@ -448,25 +440,16 @@ namespace DynamicReflections
                             // Hide the reflection if it will show up out of bounds on the map
                             // or not drawn on water tiles
                             var waterReflectionPosition = npcPosition / 64f;
-                            for (int yOffset = -1; yOffset <= Math.Ceiling(npcOffset.Y); yOffset++)
+                            if (IsTileReflective(waterReflectionPosition, (int)Math.Ceiling(npcOffset.Y)))
                             {
-                                var tilePosition = waterReflectionPosition + new Vector2(0, yOffset);
-
-                                if (IsWaterReflectiveTile(location, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
-                                    || IsWaterReflectiveTile(location, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                                npcToWaterReflectionPosition[npc] = npcPosition;
+                                if (isCompanion)
                                 {
-                                    npcToWaterReflectionPosition[npc] = npcPosition;
-
-                                    if (isCompanion)
-                                    {
-                                        companionCount++;
-                                    }
-                                    else
-                                    {
-                                        npcCount++;
-                                    }
-
-                                    break;
+                                    companionCount++;
+                                }
+                                else
+                                {
+                                    npcCount++;
                                 }
                             }
                         }
@@ -1443,7 +1426,7 @@ namespace DynamicReflections
             return new Vector2(xOffsetValue, yOffsetValue);
         }
 
-        private bool IsWaterReflectiveTile(GameLocation location, int x, int y)
+        private static bool IsWaterReflectiveTile(GameLocation location, int x, int y)
         {
             if (location is null)
             {
@@ -1590,6 +1573,22 @@ namespace DynamicReflections
             {
                 locationToTerrainFeatures[location].Add(largeTerrainFeature);
             }
+        }
+        private static bool IsTileReflective(Vector2 startPosition, int yTileOffset)
+        {
+            for (int yOffset = -1; yOffset <= yTileOffset; yOffset++)
+            {
+                var tilePosition = startPosition + new Vector2(0, yOffset);
+
+                if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
+                    || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
+                    || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
     }
 }
