@@ -810,7 +810,7 @@ namespace DynamicReflections.Framework.Utilities
 
                 if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled)
                 {
-                    // Draw trees
+                    // Draw terrain (tree / bushes)
                     Game1.spriteBatch.Draw(DynamicReflections.terrainWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
                 }
 

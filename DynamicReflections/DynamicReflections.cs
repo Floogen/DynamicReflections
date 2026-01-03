@@ -51,7 +51,7 @@ namespace DynamicReflections
         internal static readonly Dictionary<GameLocation, bool[,]> waterTileCache = new Dictionary<GameLocation, bool[,]>();
         internal static Vector2? waterReflectionPosition;
         internal static Vector2? waterReflectionTilePosition;
-        internal static readonly Dictionary<GameLocation, HashSet<TerrainFeature>> locationToReflectableTerrainFeatures = new Dictionary<GameLocation, HashSet<TerrainFeature>>();
+        internal static readonly Dictionary<GameLocation, List<TerrainFeature>> locationToReflectableTerrainFeatures = new Dictionary<GameLocation, List<TerrainFeature>>();
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
@@ -677,6 +677,7 @@ namespace DynamicReflections
                 if (IsTileReflective(addedTerrainFeature.Value.Tile, 3))
                 {
                     locationToReflectableTerrainFeatures[e.Location].Add(addedTerrainFeature.Value);
+                    locationToReflectableTerrainFeatures[e.Location] = locationToReflectableTerrainFeatures[e.Location].OrderBy(t => t.Tile.Y).ToList();
                 }
             }
 
@@ -1590,7 +1591,7 @@ namespace DynamicReflections
 
         private static void ResetLocationTerrainCache(GameLocation location)
         {
-            locationToReflectableTerrainFeatures[location] = new HashSet<TerrainFeature>();
+            locationToReflectableTerrainFeatures[location] = new List<TerrainFeature>();
             foreach (var terrainFeature in location.terrainFeatures.Values)
             {
                 if (IsTileReflective(terrainFeature.Tile, 3))
@@ -1606,6 +1607,8 @@ namespace DynamicReflections
                     locationToReflectableTerrainFeatures[location].Add(largeTerrainFeature);
                 }
             }
+
+            locationToReflectableTerrainFeatures[location] = locationToReflectableTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
         }
 
         private static bool IsTileReflective(Vector2 startPosition, int yTileOffset)
