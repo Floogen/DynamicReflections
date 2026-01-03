@@ -643,9 +643,9 @@ namespace DynamicReflections
             if (isFreshInstall || isNewerVersion)
             {
                 // Handle new version behavior
-                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.0")))
+                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.2.0")))
                 {
-                    // Reset the WaterReflectionSettings
+                    // Reset the default WaterReflectionSettings
                     modConfig.WaterReflectionSettings.Reset();
                 }
                 if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.1")))

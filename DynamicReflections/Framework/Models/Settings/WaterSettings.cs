@@ -57,7 +57,7 @@ namespace DynamicReflections.Framework.Models.Settings
                 AreReflectionsEnabled = true;
                 ReflectionDirection = Direction.South;
                 ReflectionOverlay = Color.White;
-                PlayerReflectionOffset = new Vector2(0f, 0.5f);
+                PlayerReflectionOffset = new Vector2(0f, 1.5f);
                 NPCReflectionOffset = new Vector2(0f, 0.7f);
                 CompanionReflectionOffset = new Vector2(0f, 0.3f);
                 IsReflectionWavy = true;
