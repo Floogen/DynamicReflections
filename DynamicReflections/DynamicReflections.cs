@@ -51,7 +51,8 @@ namespace DynamicReflections
         internal static readonly Dictionary<GameLocation, bool[,]> waterTileCache = new Dictionary<GameLocation, bool[,]>();
         internal static Vector2? waterReflectionPosition;
         internal static Vector2? waterReflectionTilePosition;
-        internal static readonly Dictionary<GameLocation, List<TerrainFeature>> locationToReflectableTerrainFeatures = new Dictionary<GameLocation, List<TerrainFeature>>();
+        internal static readonly Dictionary<GameLocation, List<TerrainFeature>> locationToWaterReflectionTerrainFeatures = new Dictionary<GameLocation, List<TerrainFeature>>();
+        internal static readonly Dictionary<GameLocation, List<TerrainFeature>> locationToPuddleReflectionTerrainFeatures = new Dictionary<GameLocation, List<TerrainFeature>>();
         internal static bool shouldDrawWaterReflection;
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
@@ -90,7 +91,9 @@ namespace DynamicReflections
         internal static RenderTarget2D npcWaterReflectionRender;
         internal static RenderTarget2D npcPuddleReflectionRender;
         internal static RenderTarget2D terrainWaterReflectionRender;
+        internal static RenderTarget2D terrainPuddleReflectionRender;
         internal static RenderTarget2D grassWaterReflectionRender;
+        internal static RenderTarget2D grassPuddleReflectionRender;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
@@ -667,45 +670,59 @@ namespace DynamicReflections
 
         private void OnTerrainFeatureListChanged(object sender, StardewModdingAPI.Events.TerrainFeatureListChangedEventArgs e)
         {
-            if (e.Location is null || locationToReflectableTerrainFeatures.ContainsKey(e.Location) is false)
-            {
-                return;
-            }
-
             foreach (var addedTerrainFeature in e.Added)
             {
-                if (IsTileReflective(addedTerrainFeature.Value.Tile, 3))
-                {
-                    locationToReflectableTerrainFeatures[e.Location].Add(addedTerrainFeature.Value);
-                    locationToReflectableTerrainFeatures[e.Location] = locationToReflectableTerrainFeatures[e.Location].OrderBy(t => t.Tile.Y).ToList();
-                }
+                HandleTerrainFeatureAddition(e.Location, addedTerrainFeature.Value);
             }
 
             foreach (var removedTerrainFeature in e.Removed)
             {
-                locationToReflectableTerrainFeatures[e.Location].Remove(removedTerrainFeature.Value);
+                HandleTerrainFeatureRemoval(e.Location, removedTerrainFeature.Value);
             }
         }
 
         private void OnLargeTerrainFeatureChanged(object sender, StardewModdingAPI.Events.LargeTerrainFeatureListChangedEventArgs e)
         {
-            if (e.Location is null || locationToReflectableTerrainFeatures.ContainsKey(e.Location) is false)
-            {
-                return;
-            }
-
             foreach (var addedTerrainFeature in e.Added)
             {
-                if (IsTileReflective(addedTerrainFeature.Tile, 3))
-                {
-                    locationToReflectableTerrainFeatures[e.Location].Add(addedTerrainFeature);
-                }
+                HandleTerrainFeatureAddition(e.Location, addedTerrainFeature);
             }
 
             foreach (var removedTerrainFeature in e.Removed)
             {
-                locationToReflectableTerrainFeatures[e.Location].Remove(removedTerrainFeature);
+                HandleTerrainFeatureRemoval(e.Location, removedTerrainFeature);
             }
+        }
+
+        private void HandleTerrainFeatureAddition(GameLocation location, TerrainFeature terrainFeature)
+        {
+            if (location is null || locationToWaterReflectionTerrainFeatures.ContainsKey(location) is false || locationToPuddleReflectionTerrainFeatures.ContainsKey(location) is false)
+            {
+                return;
+            }
+
+            if (IsTileReflective(terrainFeature.Tile, 3))
+            {
+                locationToWaterReflectionTerrainFeatures[location].Add(terrainFeature);
+                locationToWaterReflectionTerrainFeatures[location] = locationToWaterReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
+            }
+
+            if (IsTilePuddle(terrainFeature.Tile, 3))
+            {
+                locationToPuddleReflectionTerrainFeatures[location].Add(terrainFeature);
+                locationToPuddleReflectionTerrainFeatures[location] = locationToPuddleReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
+            }
+        }
+
+        private void HandleTerrainFeatureRemoval(GameLocation location, TerrainFeature terrainFeature)
+        {
+            if (location is null || locationToWaterReflectionTerrainFeatures.ContainsKey(location) is false || locationToPuddleReflectionTerrainFeatures.ContainsKey(location) is false)
+            {
+                return;
+            }
+
+            locationToWaterReflectionTerrainFeatures[location].Remove(terrainFeature);
+            locationToPuddleReflectionTerrainFeatures[location].Remove(terrainFeature);
         }
 
         private void LoadContentPacks(bool silent = false)
@@ -1270,7 +1287,9 @@ namespace DynamicReflections
             RegenerateRenderer(ref npcWaterReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref npcPuddleReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref terrainWaterReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref terrainPuddleReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref grassWaterReflectionRender, shouldUseScreenDimensions);
+            RegenerateRenderer(ref grassPuddleReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref puddlesRenderTarget, shouldUseScreenDimensions);
 
             RegenerateRenderer(ref mirrorsLayerRenderTarget, shouldUseScreenDimensions);
@@ -1574,29 +1593,50 @@ namespace DynamicReflections
             return Array.Empty<NPC>();
         }
 
-        internal static IEnumerable<TerrainFeature> GetReflectableTerrainFeatures(GameLocation location)
+        internal static IEnumerable<TerrainFeature> GetWaterReflectionTerrainFeatures(GameLocation location)
         {
             if (location is null)
             {
                 return Array.Empty<TerrainFeature>();
             }
 
-            if (locationToReflectableTerrainFeatures.ContainsKey(location) is false)
+            if (locationToWaterReflectionTerrainFeatures.ContainsKey(location) is false)
             {
                 ResetLocationTerrainCache(location);
             }
 
-            return locationToReflectableTerrainFeatures[location];
+            return locationToWaterReflectionTerrainFeatures[location];
+        }
+
+        internal static IEnumerable<TerrainFeature> GetPuddleReflectionTerrainFeatures(GameLocation location)
+        {
+            if (location is null)
+            {
+                return Array.Empty<TerrainFeature>();
+            }
+
+            if (locationToPuddleReflectionTerrainFeatures.ContainsKey(location) is false)
+            {
+                ResetLocationTerrainCache(location);
+            }
+
+            return locationToPuddleReflectionTerrainFeatures[location];
         }
 
         private static void ResetLocationTerrainCache(GameLocation location)
         {
-            locationToReflectableTerrainFeatures[location] = new List<TerrainFeature>();
+            locationToWaterReflectionTerrainFeatures[location] = new List<TerrainFeature>();
+            locationToPuddleReflectionTerrainFeatures[location] = new List<TerrainFeature>();
             foreach (var terrainFeature in location.terrainFeatures.Values)
             {
                 if (IsTileReflective(terrainFeature.Tile, 3))
                 {
-                    locationToReflectableTerrainFeatures[location].Add(terrainFeature);
+                    locationToWaterReflectionTerrainFeatures[location].Add(terrainFeature);
+                }
+
+                if (IsTilePuddle(terrainFeature.Tile, 3))
+                {
+                    locationToPuddleReflectionTerrainFeatures[location].Add(terrainFeature);
                 }
             }
 
@@ -1604,11 +1644,17 @@ namespace DynamicReflections
             {
                 if (IsTileReflective(largeTerrainFeature.Tile, 3))
                 {
-                    locationToReflectableTerrainFeatures[location].Add(largeTerrainFeature);
+                    locationToWaterReflectionTerrainFeatures[location].Add(largeTerrainFeature);
+                }
+
+                if (IsTilePuddle(largeTerrainFeature.Tile, 3))
+                {
+                    locationToPuddleReflectionTerrainFeatures[location].Add(largeTerrainFeature);
                 }
             }
 
-            locationToReflectableTerrainFeatures[location] = locationToReflectableTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
+            locationToWaterReflectionTerrainFeatures[location] = locationToWaterReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
+            locationToPuddleReflectionTerrainFeatures[location] = locationToPuddleReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
         }
 
         private static bool IsTileReflective(Vector2 startPosition, int yTileOffset)
@@ -1620,6 +1666,23 @@ namespace DynamicReflections
                 if (IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
                     || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
                     || IsWaterReflectiveTile(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static bool IsTilePuddle(Vector2 startPosition, int yTileOffset, bool checkPuddles = false)
+        {
+            for (int yOffset = -1; yOffset <= yTileOffset; yOffset++)
+            {
+                var tilePosition = startPosition + new Vector2(0, yOffset);
+
+                if (puddleManager.IsTilePuddle(Game1.currentLocation, (int)tilePosition.X, (int)tilePosition.Y) is true
+                    || puddleManager.IsTilePuddle(Game1.currentLocation, (int)tilePosition.X - 1, (int)tilePosition.Y) is true
+                    || puddleManager.IsTilePuddle(Game1.currentLocation, (int)tilePosition.X + 1, (int)tilePosition.Y) is true)
                 {
                     return true;
                 }

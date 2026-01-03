@@ -114,6 +114,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 {
                     DynamicReflections.isFilteringWater = true;
                     SpriteBatchToolkit.RenderWaterReflectionGrass();
+                    SpriteBatchToolkit.RenderPuddleReflectionGrass();
                 }
 
                 // Handle preliminary NPC reflection logic
@@ -121,6 +122,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 {
                     DynamicReflections.isFilteringWater = true;
                     SpriteBatchToolkit.RenderWaterReflectionTerrain();
+                    SpriteBatchToolkit.RenderPuddleReflectionTerrain();
                 }
 
                 _waterColor = Game1.currentLocation.waterColor.Value;
