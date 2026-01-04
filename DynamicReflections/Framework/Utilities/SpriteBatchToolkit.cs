@@ -607,6 +607,10 @@ namespace DynamicReflections.Framework.Utilities
                 {
                     continue;
                 }
+                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
+                {
+                    continue;
+                }
 
                 int yOffset = 48;
                 if (terrainFeature is Tree)
@@ -650,6 +654,10 @@ namespace DynamicReflections.Framework.Utilities
                     continue;
                 }
                 else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
                 {
                     continue;
                 }
@@ -699,6 +707,10 @@ namespace DynamicReflections.Framework.Utilities
                 {
                     continue;
                 }
+                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
+                {
+                    continue;
+                }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
@@ -740,6 +752,10 @@ namespace DynamicReflections.Framework.Utilities
                 {
                     continue;
                 }
+                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
+                {
+                    continue;
+                }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
@@ -778,6 +794,10 @@ namespace DynamicReflections.Framework.Utilities
                     continue;
                 }
                 else if (afterPlayer is false && building.tileY.Value > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (Utility.isOnScreen(new Vector2(building.tileX.Value, building.tileY.Value) * 64, building.tilesWide.Value * 64) is false)
                 {
                     continue;
                 }
