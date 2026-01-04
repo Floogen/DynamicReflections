@@ -117,14 +117,6 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     SpriteBatchToolkit.RenderPuddleReflectionGrass();
                 }
 
-                // Handle preliminary NPC reflection logic
-                if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled is true)
-                {
-                    DynamicReflections.isFilteringWater = true;
-                    SpriteBatchToolkit.RenderWaterReflectionTerrain();
-                    SpriteBatchToolkit.RenderPuddleReflectionTerrain();
-                }
-
                 _waterColor = Game1.currentLocation.waterColor.Value;
                 if (DynamicReflections.modConfig.AreSkyReflectionsEnabled is true)
                 {

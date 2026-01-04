@@ -392,7 +392,13 @@ namespace DynamicReflections.Framework.Utilities
             // Draw buildings before player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
-                RenderWaterReflectionPlayerBuildings(16, afterPlayer: false);
+                RenderWaterReflectionPlayerBuildings(20, afterPlayer: false);
+            }
+
+            // Draw terrain before player
+            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
+            {
+                RenderWaterReflectionTerrain(afterPlayer: false);
             }
 
             // Draw player reflection (if near water tile)
@@ -404,7 +410,13 @@ namespace DynamicReflections.Framework.Utilities
             // Draw buildings after player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
-                RenderWaterReflectionPlayerBuildings(16, beforePlayer: false);
+                RenderWaterReflectionPlayerBuildings(20, beforePlayer: false);
+            }
+
+            // Draw terrain after player
+            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
+            {
+                RenderWaterReflectionTerrain(beforePlayer: false);
             }
 
             // Drop the render target
@@ -562,22 +574,24 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-        internal static void RenderWaterReflectionTerrain()
+        internal static void RenderWaterReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
         {
             if (Game1.currentLocation is null || Game1.currentLocation.largeTerrainFeatures is null)
             {
                 return;
             }
 
-            // Set the render target
-            SpriteBatchToolkit.StartRendering(DynamicReflections.terrainWaterReflectionRender);
-
-            // Draw the scene
-            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
-
             foreach (TerrainFeature terrainFeature in DynamicReflections.GetWaterReflectionTerrainFeatures(Game1.currentLocation))
             {
                 if (terrainFeature is not Tree && terrainFeature is not Bush)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && terrainFeature.Tile.Y < Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
                 {
                     continue;
                 }
@@ -604,29 +618,26 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.spriteBatch.End();
             }
-
-            // Drop the render target
-            SpriteBatchToolkit.StopRendering();
-
-            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-        internal static void RenderPuddleReflectionTerrain()
+        internal static void RenderPuddleReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
         {
             if (Game1.currentLocation is null || Game1.currentLocation.largeTerrainFeatures is null)
             {
                 return;
             }
 
-            // Set the render target
-            SpriteBatchToolkit.StartRendering(DynamicReflections.terrainPuddleReflectionRender);
-
-            // Draw the scene
-            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
-
             foreach (TerrainFeature terrainFeature in DynamicReflections.GetPuddleReflectionTerrainFeatures(Game1.currentLocation))
             {
                 if (terrainFeature is not Tree && terrainFeature is not Bush)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && terrainFeature.Tile.Y < Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
                 {
                     continue;
                 }
@@ -653,11 +664,6 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.spriteBatch.End();
             }
-
-            // Drop the render target
-            SpriteBatchToolkit.StopRendering();
-
-            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
         internal static void RenderWaterReflectionGrass()
@@ -807,12 +813,6 @@ namespace DynamicReflections.Framework.Utilities
 
             if (DynamicReflections.shouldDrawWaterReflection is true || DynamicReflections.modConfig.AreTerrainReflectionsEnabled is true || DynamicReflections.modConfig.AreGrassReflectionsEnabled is true)
             {
-                if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled)
-                {
-                    // Draw terrain (tree / bushes)
-                    Game1.spriteBatch.Draw(DynamicReflections.terrainPuddleReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
-                }
-
                 // Draw the player
                 Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
 
@@ -869,6 +869,12 @@ namespace DynamicReflections.Framework.Utilities
                 RenderWaterReflectionPlayerBuildings(32, afterPlayer: false);
             }
 
+            // Draw terrain before player
+            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
+            {
+                RenderPuddleReflectionTerrain(afterPlayer: false);
+            }
+
             // Draw player reflection
             DrawPlayerPuddleReflection();
 
@@ -876,6 +882,12 @@ namespace DynamicReflections.Framework.Utilities
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
                 RenderWaterReflectionPlayerBuildings(32, beforePlayer: false);
+            }
+
+            // Draw terrain after player
+            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
+            {
+                RenderPuddleReflectionTerrain(beforePlayer: false);
             }
 
             // Draw puddle ripples on top, unchanged
@@ -997,12 +1009,6 @@ namespace DynamicReflections.Framework.Utilities
             {
                 DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
-
-                if (DynamicReflections.modConfig.AreTerrainReflectionsEnabled)
-                {
-                    // Draw terrain (tree / bushes)
-                    Game1.spriteBatch.Draw(DynamicReflections.terrainWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
-                }
 
                 if (DynamicReflections.modConfig.AreWaterReflectionsEnabled)
                 {
