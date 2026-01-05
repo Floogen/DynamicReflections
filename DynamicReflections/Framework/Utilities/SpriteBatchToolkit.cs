@@ -1,3 +1,4 @@
+using DynamicReflections.Framework.Models.Reflections;
 using DynamicReflections.Framework.Patches.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -389,22 +390,10 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            // Draw buildings before player
-            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
-            {
-                RenderWaterReflectionPlayerBuildings(20, afterPlayer: false);
-            }
-
             // Draw terrain before player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
                 RenderWaterReflectionTerrain(afterPlayer: false);
-            }
-
-            // Draw grass before player
-            if (DynamicReflections.modConfig.AreGrassReflectionsEnabled)
-            {
-                RenderWaterReflectionGrass(afterPlayer: false);
             }
 
             // Draw player reflection (if near water tile)
@@ -413,22 +402,10 @@ namespace DynamicReflections.Framework.Utilities
                 DrawPlayerWaterReflection();
             }
 
-            // Draw buildings after player
-            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
-            {
-                RenderWaterReflectionPlayerBuildings(20, beforePlayer: false);
-            }
-
             // Draw terrain after player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
                 RenderWaterReflectionTerrain(beforePlayer: false);
-            }
-
-            // Draw grass after player
-            if (DynamicReflections.modConfig.AreGrassReflectionsEnabled)
-            {
-                RenderWaterReflectionGrass(beforePlayer: false);
             }
 
             // Drop the render target
@@ -588,49 +565,69 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderWaterReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
         {
-            if (Game1.currentLocation is null || Game1.currentLocation.largeTerrainFeatures is null)
+            if (Game1.currentLocation is null)
             {
                 return;
             }
 
-            foreach (TerrainFeature terrainFeature in DynamicReflections.GetWaterReflectionTerrainFeatures(Game1.currentLocation))
+            foreach (ReflectableObject reflectableObject in DynamicReflections.GetWaterReflectionTerrainFeatures(Game1.currentLocation))
             {
-                if (terrainFeature is not Tree && terrainFeature is not Bush)
+                if (beforePlayer is false && reflectableObject.Tile.Y < Game1.player.Tile.Y)
                 {
                     continue;
                 }
-                else if (beforePlayer is false && terrainFeature.Tile.Y < Game1.player.Tile.Y)
+                else if (afterPlayer is false && reflectableObject.Tile.Y > Game1.player.Tile.Y)
                 {
                     continue;
                 }
-                else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
+                else if (reflectableObject.IsOnScreen() is false)
                 {
                     continue;
                 }
 
-                int yOffset = 48;
-                if (terrainFeature is Tree)
+                int yOffset = 0;
+                var spriteSortMode = SpriteSortMode.FrontToBack;
+                if (reflectableObject is ReflectableTerrain reflectableTerrain)
                 {
-                    yOffset = 72;
+                    if (reflectableTerrain.Terrain is not Tree && reflectableTerrain.Terrain is not Bush && reflectableTerrain.Terrain is not Grass)
+                    {
+                        continue;
+                    }
+
+                    yOffset = 48;
+                    if (reflectableTerrain.Terrain is Tree)
+                    {
+                        yOffset = 72;
+                    }
+                    else if (reflectableTerrain.Terrain is Grass)
+                    {
+                        yOffset = 80;
+                        spriteSortMode = SpriteSortMode.BackToFront;
+                    }
+
+                    if (reflectableTerrain.Terrain is Grass)
+                    {
+                        spriteSortMode = SpriteSortMode.BackToFront;
+                    }
+                }
+                else if (reflectableObject is ReflectableBuilding reflectableBuilding)
+                {
+                    yOffset = (reflectableBuilding.Building.tilesHigh.Value * 64) - 20;
                 }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
                     var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + yOffset) * 2, 0);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, reflectableObject.Tile * 64).Y + yOffset) * 2, 0);
 
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
                 }
                 else
                 {
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp);
                 }
 
-                terrainFeature.draw(Game1.spriteBatch);
+                reflectableObject.Draw(Game1.spriteBatch);
 
                 Game1.spriteBatch.End();
             }
@@ -638,190 +635,64 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderPuddleReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
         {
-            if (Game1.currentLocation is null || Game1.currentLocation.largeTerrainFeatures is null)
+            if (Game1.currentLocation is null)
             {
                 return;
             }
 
-            foreach (TerrainFeature terrainFeature in DynamicReflections.GetPuddleReflectionTerrainFeatures(Game1.currentLocation))
+            foreach (ReflectableObject reflectableObject in DynamicReflections.GetPuddleReflectionTerrainFeatures(Game1.currentLocation))
             {
-                if (terrainFeature is not Tree && terrainFeature is not Bush)
+                if (beforePlayer is false && reflectableObject.Tile.Y < Game1.player.Tile.Y)
                 {
                     continue;
                 }
-                else if (beforePlayer is false && terrainFeature.Tile.Y < Game1.player.Tile.Y)
+                else if (afterPlayer is false && reflectableObject.Tile.Y > Game1.player.Tile.Y)
                 {
                     continue;
                 }
-                else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
+                else if (reflectableObject.IsOnScreen() is false)
                 {
                     continue;
                 }
 
-                int yOffset = 16;
-                if (terrainFeature is Tree)
+                int yOffset = 0;
+                var spriteSortMode = SpriteSortMode.FrontToBack;
+                if (reflectableObject is ReflectableTerrain reflectableTerrain)
                 {
-                    yOffset = 8;
+                    if (reflectableTerrain.Terrain is not Tree && reflectableTerrain.Terrain is not Bush && reflectableTerrain.Terrain is not Grass)
+                    {
+                        continue;
+                    }
+
+                    yOffset = 16;
+                    if (reflectableTerrain.Terrain is Tree)
+                    {
+                        yOffset = 8;
+                    }
+                    else if (reflectableTerrain.Terrain is Grass)
+                    {
+                        yOffset = 48;
+                        spriteSortMode = SpriteSortMode.BackToFront;
+                    }
+                }
+                else if (reflectableObject is ReflectableBuilding reflectableBuilding)
+                {
+                    yOffset = (reflectableBuilding.Building.tilesHigh.Value * 64) - 32;
                 }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
                     var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + yOffset) * 2, 0);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, reflectableObject.Tile * 64).Y + yOffset) * 2, 0);
 
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
                 }
                 else
                 {
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp);
                 }
 
-                terrainFeature.draw(Game1.spriteBatch);
-
-                Game1.spriteBatch.End();
-            }
-        }
-
-        internal static void RenderWaterReflectionGrass(bool beforePlayer = true, bool afterPlayer = true)
-        {
-            if (Game1.currentLocation is null || Game1.currentLocation.terrainFeatures is null)
-            {
-                return;
-            }
-
-            foreach (var terrainFeature in DynamicReflections.GetWaterReflectionTerrainFeatures(Game1.currentLocation))
-            {
-                if (terrainFeature is not Grass)
-                {
-                    continue;
-                }
-                else if (beforePlayer is false && terrainFeature.Tile.Y < Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
-                {
-                    continue;
-                }
-
-                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
-                {
-                    var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + 72) * 2, 0);
-
-                    // Using SpriteSortMode.BackToFront for Grass to properly draw any "flowers" that should be on top
-                    Game1.spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
-                }
-                else
-                {
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-                }
-
-                terrainFeature.draw(Game1.spriteBatch);
-
-                Game1.spriteBatch.End();
-            }
-        }
-
-        internal static void RenderPuddleReflectionGrass(bool beforePlayer = true, bool afterPlayer = true)
-        {
-            if (Game1.currentLocation is null || Game1.currentLocation.terrainFeatures is null)
-            {
-                return;
-            }
-
-            foreach (var terrainFeature in DynamicReflections.GetPuddleReflectionTerrainFeatures(Game1.currentLocation))
-            {
-                if (terrainFeature is not Grass)
-                {
-                    continue;
-                }
-                else if (beforePlayer is false && terrainFeature.Tile.Y < Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (afterPlayer is false && terrainFeature.Tile.Y > Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (Utility.isOnScreen(terrainFeature.Tile * 64, 64) is false)
-                {
-                    continue;
-                }
-
-                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
-                {
-                    var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, terrainFeature.Tile * 64).Y + 48) * 2, 0);
-
-                    // Using SpriteSortMode.BackToFront for Grass to properly draw any "flowers" that should be on top
-                    Game1.spriteBatch.Begin(SpriteSortMode.BackToFront, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
-                }
-                else
-                {
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-                }
-
-                terrainFeature.draw(Game1.spriteBatch);
-
-                Game1.spriteBatch.End();
-            }
-        }
-
-        internal static void RenderWaterReflectionPlayerBuildings(int yOffsetBase, bool beforePlayer = true, bool afterPlayer = true)
-        {
-            if (Game1.currentLocation is null || Game1.currentLocation.buildings is null)
-            {
-                return;
-            }
-
-            foreach (var building in Game1.currentLocation.buildings)
-            {
-                if (building is null || building is GreenhouseBuilding)
-                {
-                    continue;
-                }
-                else if (beforePlayer is false && building.tileY.Value < Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (afterPlayer is false && building.tileY.Value > Game1.player.Tile.Y)
-                {
-                    continue;
-                }
-                else if (Utility.isOnScreen(new Vector2(building.tileX.Value, building.tileY.Value) * 64, building.tilesWide.Value * 64) is false)
-                {
-                    continue;
-                }
-
-                int yOffset = (building.tilesHigh.Value * 64) - yOffsetBase;
-                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
-                {
-                    var scale = Matrix.CreateScale(1, -1, 1);
-                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, new Vector2(building.tileX.Value, building.tileY.Value) * 64).Y + yOffset) * 2, 0);
-
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
-                }
-                else
-                {
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-                }
-
-                // Ignore building's transparency when doing reflecitons
-                var cachedBuildingAlpha = building.alpha;
-                building.alpha = 1f;
-
-                building.draw(Game1.spriteBatch);
-
-                building.alpha = cachedBuildingAlpha;
+                reflectableObject.Draw(Game1.spriteBatch);
 
                 Game1.spriteBatch.End();
             }
@@ -883,43 +754,19 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            // Draw buildings before player
-            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
-            {
-                RenderWaterReflectionPlayerBuildings(32, afterPlayer: false);
-            }
-
             // Draw terrain before player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
                 RenderPuddleReflectionTerrain(afterPlayer: false);
             }
 
-            // Draw grass before player
-            if (DynamicReflections.modConfig.AreGrassReflectionsEnabled)
-            {
-                RenderPuddleReflectionGrass(afterPlayer: false);
-            }
-
             // Draw player reflection
             DrawPlayerPuddleReflection();
-
-            // Draw buildings after player
-            if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
-            {
-                RenderWaterReflectionPlayerBuildings(32, beforePlayer: false);
-            }
 
             // Draw terrain after player
             if (DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled)
             {
                 RenderPuddleReflectionTerrain(beforePlayer: false);
-            }
-
-            // Draw grass after player
-            if (DynamicReflections.modConfig.AreGrassReflectionsEnabled)
-            {
-                RenderPuddleReflectionGrass(beforePlayer: false);
             }
 
             // Draw puddle ripples on top, unchanged
