@@ -748,6 +748,9 @@ namespace DynamicReflections
 
             locationToWaterReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableTerrain reflectableTerrain && reflectableTerrain.Terrain == terrainFeature);
             locationToPuddleReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableTerrain reflectableTerrain && reflectableTerrain.Terrain == terrainFeature);
+
+            locationToWaterReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
+            locationToPuddleReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
         }
 
         private void HandleFurnitureRemoval(GameLocation location, Furniture furniture)
@@ -759,6 +762,9 @@ namespace DynamicReflections
 
             locationToWaterReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableFurniture reflectableFurniture && reflectableFurniture.Furniture == furniture);
             locationToPuddleReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableFurniture reflectableFurniture && reflectableFurniture.Furniture == furniture);
+
+            locationToWaterReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
+            locationToPuddleReflectionTerrainFeatures[location].OrderBy(t => t.Tile.Y).ToList();
         }
 
         private void LoadContentPacks(bool silent = false)
