@@ -39,7 +39,7 @@ namespace DynamicReflections.Framework.Patches.Tools
                     return true;
                 }
 
-                if (__instance.fishCaught)
+                if (__instance.fishCaught && ___whichFish is not null)
                 {
                     float yOffset = 4f * (float)Math.Round(Math.Sin(Game1.currentGameTime.TotalGameTime.TotalMilliseconds / 250.0), 2);
                     if (___whichFish.TypeIdentifier == "(O)")
