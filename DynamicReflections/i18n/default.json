@@ -11,6 +11,7 @@
   "config.general_settings.grass_reflections": "Enable Grass Reflections",
   "config.general_settings.terrain_reflections": "Enable Terrain Reflections",
   "config.general_settings.player_buildings_reflections": "Enable Player Building Reflections",
+  "config.general_settings.furniture_reflections": "Enable Furniture Reflections",
   "config.general_settings.sky_reflections": "Enable Sky Reflections",
   "config.general_settings.link.click_here": "Click Here",
   "config.general_settings.link.return_main": "Return to the Main Page",
