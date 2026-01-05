@@ -16,6 +16,10 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public bool ArePuddleReflectionsEnabled { get; set; } = true;
         public bool AreNPCReflectionsEnabled { get; set; } = true;
         public bool AreCompanionReflectionsEnabled { get; set; } = true;
+        public bool AreGrassReflectionsEnabled { get; set; } = true;
+        public bool AreTerrainReflectionsEnabled { get; set; } = true;
+        public bool ArePlayerBuildingReflectionsEnabled { get; set; } = true;
+        public bool AreFurnitureReflectionsEnabled { get; set; } = true;
         public bool AreSkyReflectionsEnabled { get; set; } = true;
 
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();

@@ -95,7 +95,7 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 }
 
                 // Handle preliminary water reflection logic
-                if (DynamicReflections.shouldDrawWaterReflection is true)
+                if (DynamicReflections.modConfig.AreWaterReflectionsEnabled)
                 {
                     DynamicReflections.isFilteringWater = true;
                     SpriteBatchToolkit.RenderWaterReflectionPlayerSprite();

@@ -1,8 +1,11 @@
+using DynamicReflections.Framework.Models.Reflections;
 using DynamicReflections.Framework.Patches.Tiles;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
+using StardewValley.Buildings;
+using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -387,7 +390,17 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            DrawReflectionViaMatrix();
+            // Draw terrain before player
+            RenderWaterReflectionTerrain(afterPlayer: false);
+
+            // Draw player reflection (if near water tile)
+            if (DynamicReflections.shouldDrawWaterReflection)
+            {
+                DrawPlayerWaterReflection();
+            }
+
+            // Draw terrain after player
+            RenderWaterReflectionTerrain(beforePlayer: false);
 
             // Drop the render target
             SpriteBatchToolkit.StopRendering();
@@ -437,7 +450,6 @@ namespace DynamicReflections.Framework.Utilities
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
-
 
         internal static void RenderPuddleReflectionNPCs()
         {
@@ -545,6 +557,152 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
+        internal static void RenderWaterReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
+        {
+            if (Game1.currentLocation is null)
+            {
+                return;
+            }
+
+            foreach (ReflectableObject reflectableObject in DynamicReflections.GetWaterReflectionTerrainFeatures(Game1.currentLocation))
+            {
+                if (reflectableObject.IsEnabled() is false)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && reflectableObject.Tile.Y <= Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && reflectableObject.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (reflectableObject.IsOnScreen() is false)
+                {
+                    continue;
+                }
+
+                int yOffset = 0;
+                var spriteSortMode = SpriteSortMode.FrontToBack;
+                if (reflectableObject is ReflectableTerrain reflectableTerrain)
+                {
+                    if (reflectableTerrain.Terrain is not Tree && reflectableTerrain.Terrain is not Bush && reflectableTerrain.Terrain is not Grass)
+                    {
+                        continue;
+                    }
+
+                    yOffset = 48;
+                    if (reflectableTerrain.Terrain is Tree)
+                    {
+                        yOffset = 72;
+                    }
+                    else if (reflectableTerrain.Terrain is Grass)
+                    {
+                        yOffset = 96;
+                        spriteSortMode = SpriteSortMode.BackToFront;
+                    }
+                }
+                else if (reflectableObject is ReflectableBuilding reflectableBuilding)
+                {
+                    yOffset = (reflectableBuilding.Building.tilesHigh.Value * 64) - 20;
+                }
+                else if (reflectableObject is ReflectableFurniture reflectableFurniture)
+                {
+                    yOffset = reflectableFurniture.Furniture.getTilesHigh() * 64;
+                }
+
+                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
+                {
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, reflectableObject.Tile * 64).Y + yOffset) * 2, 0);
+
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                }
+                else
+                {
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp);
+                }
+
+                reflectableObject.Draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+            }
+        }
+
+        internal static void RenderPuddleReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
+        {
+            if (Game1.currentLocation is null)
+            {
+                return;
+            }
+
+            foreach (ReflectableObject reflectableObject in DynamicReflections.GetPuddleReflectionTerrainFeatures(Game1.currentLocation))
+            {
+                if (reflectableObject.IsEnabled() is false)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && reflectableObject.Tile.Y <= Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && reflectableObject.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (reflectableObject.IsOnScreen() is false)
+                {
+                    continue;
+                }
+
+                int yOffset = 0;
+                var spriteSortMode = SpriteSortMode.FrontToBack;
+                if (reflectableObject is ReflectableTerrain reflectableTerrain)
+                {
+                    if (reflectableTerrain.Terrain is not Tree && reflectableTerrain.Terrain is not Bush && reflectableTerrain.Terrain is not Grass)
+                    {
+                        continue;
+                    }
+
+                    yOffset = 16;
+                    if (reflectableTerrain.Terrain is Tree)
+                    {
+                        yOffset = 8;
+                    }
+                    else if (reflectableTerrain.Terrain is Grass)
+                    {
+                        yOffset = 48;
+                        spriteSortMode = SpriteSortMode.BackToFront;
+                    }
+                }
+                else if (reflectableObject is ReflectableBuilding reflectableBuilding)
+                {
+                    yOffset = (reflectableBuilding.Building.tilesHigh.Value * 64) - 32;
+                }
+                else if (reflectableObject is ReflectableFurniture reflectableFurniture)
+                {
+                    yOffset = reflectableFurniture.Furniture.getTilesHigh() * 16;
+                }
+
+                if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
+                {
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, reflectableObject.Tile * 64).Y + yOffset) * 2, 0);
+
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                }
+                else
+                {
+                    Game1.spriteBatch.Begin(spriteSortMode, BlendState.AlphaBlend, SamplerState.PointClamp);
+                }
+
+                reflectableObject.Draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+            }
+        }
+
         internal static void DrawPuddleReflection(Texture2D mask)
         {
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
@@ -555,7 +713,11 @@ namespace DynamicReflections.Framework.Utilities
                 Game1.spriteBatch.Draw(DynamicReflections.nightSkyRenderTarget, Vector2.Zero, Color.White);
             }
 
-            Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
+            if (DynamicReflections.modConfig.ArePuddleReflectionsEnabled is true)
+            {
+                // Draw the player
+                Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
+            }
 
             Game1.spriteBatch.Draw(DynamicReflections.npcPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
 
@@ -597,46 +759,14 @@ namespace DynamicReflections.Framework.Utilities
             // Draw the scene
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            var oldDirection = Game1.player.FacingDirection;
-            var oldSprite = Game1.player.FarmerSprite;
+            // Draw terrain before player
+            RenderPuddleReflectionTerrain(afterPlayer: false);
 
-            // Original world position
-            var oldPosition = Game1.player.Position;
+            // Draw player reflection
+            DrawPlayerPuddleReflection();
 
-            // Where the reflection was previously drawn (world space)
-            var worldOffset = DynamicReflections.currentPuddleSettings.ReflectionOffset * 64f;
-            var targetWorld = oldPosition - worldOffset;
-
-            // Convert both positions to screen space to build an equivalent translation
-            var playerScreen = Game1.GlobalToLocal(Game1.viewport, oldPosition);
-            var targetScreen = Game1.GlobalToLocal(Game1.viewport, targetWorld);
-            var delta = targetScreen - playerScreen;
-
-            // Same vertical flip & pivot as before (across the player's original local Y)
-            var scale = Matrix.CreateScale(1f, -1f, 1f);
-            var pivot = Matrix.CreateTranslation(0f, playerScreen.Y * 2f, 0f);
-
-            // Apply the offset as a pre-translation, then the original reflection matrix
-            var preTranslation = Matrix.CreateTranslation(delta.X, delta.Y, 0f);
-            var transform = preTranslation * scale * pivot;
-
-            Game1.spriteBatch.Begin(
-                SpriteSortMode.FrontToBack,
-                BlendState.AlphaBlend,
-                SamplerState.PointClamp,
-                depthStencilState: null,
-                rasterizerState: DynamicReflections.rasterizer,
-                effect: null,
-                transformMatrix: transform
-            );
-
-            // Draw the player at their real position; transform handles reflection+offset
-            Game1.player.draw(Game1.spriteBatch);
-
-            Game1.player.FacingDirection = oldDirection;
-            Game1.player.FarmerSprite = oldSprite;
-
-            Game1.spriteBatch.End();
+            // Draw terrain after player
+            RenderPuddleReflectionTerrain(beforePlayer: false);
 
             // Draw puddle ripples on top, unchanged
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
@@ -651,8 +781,7 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-
-        internal static void DrawReflectionViaMatrix()
+        internal static void DrawPlayerWaterReflection()
         {
             // Cache what we’re going to touch so we can restore it
             var oldDirection = Game1.player.FacingDirection;
@@ -667,8 +796,9 @@ namespace DynamicReflections.Framework.Utilities
                 var scale = Matrix.CreateScale(1f, -1f, 1f);
 
                 // Pivot at the water reflection line (already computed in world space, convert to screen).
+                float yOffset = Game1.player.IsSitting() ? 16f : 0f;
                 float pivotY = Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y;
-                var position = Matrix.CreateTranslation(0f, pivotY * 2f, 0f);
+                var position = Matrix.CreateTranslation(0f, (pivotY + yOffset) * 2f, 0f);
 
                 Game1.spriteBatch.Begin(
                     SpriteSortMode.FrontToBack,
@@ -707,13 +837,62 @@ namespace DynamicReflections.Framework.Utilities
             Game1.spriteBatch.End();
         }
 
+        internal static void DrawPlayerPuddleReflection()
+        {
+            var oldDirection = Game1.player.FacingDirection;
+            var oldSprite = Game1.player.FarmerSprite;
+
+            // Original world position
+            var oldPosition = Game1.player.Position;
+
+            // Where the reflection was previously drawn (world space)
+            var worldOffset = DynamicReflections.currentPuddleSettings.ReflectionOffset * 64f;
+            var targetWorld = oldPosition - worldOffset;
+
+            // Convert both positions to screen space to build an equivalent translation
+            var playerScreen = Game1.GlobalToLocal(Game1.viewport, oldPosition);
+            var targetScreen = Game1.GlobalToLocal(Game1.viewport, targetWorld);
+            var delta = targetScreen - playerScreen;
+
+            // Same vertical flip & pivot as before (across the player's original local Y)
+            float yOffset = Game1.player.IsSitting() ? 32f : 0f;
+            var scale = Matrix.CreateScale(1f, -1f, 1f);
+            var pivot = Matrix.CreateTranslation(0f, (playerScreen.Y + yOffset) * 2f, 0f);
+
+            // Apply the offset as a pre-translation, then the original reflection matrix
+            var preTranslation = Matrix.CreateTranslation(delta.X, delta.Y, 0f);
+            var transform = preTranslation * scale * pivot;
+
+            Game1.spriteBatch.Begin(
+                SpriteSortMode.FrontToBack,
+                BlendState.AlphaBlend,
+                SamplerState.PointClamp,
+                depthStencilState: null,
+                rasterizerState: DynamicReflections.rasterizer,
+                effect: null,
+                transformMatrix: transform
+            );
+
+            // Draw the player at their real position; transform handles reflection+offset
+            Game1.player.draw(Game1.spriteBatch);
+
+            Game1.player.FacingDirection = oldDirection;
+            Game1.player.FarmerSprite = oldSprite;
+
+            Game1.spriteBatch.End();
+        }
+
         internal static void DrawRenderedCharacters(bool isWavy = false)
         {
-            if (DynamicReflections.shouldDrawWaterReflection is true)
+
+            if (DynamicReflections.modConfig.AreWaterReflectionsEnabled)
             {
                 DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
+
+                // Draw the player
                 Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+
                 Game1.spriteBatch.End();
             }
 
