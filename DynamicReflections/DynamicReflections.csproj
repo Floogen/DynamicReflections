@@ -75,6 +75,10 @@
 		</None>
 	</ItemGroup>
 
+	<ItemGroup>
+	  <Folder Include="Framework\Models\MapTilePresets\Modded\" />
+	</ItemGroup>
+
 	<PropertyGroup>
 		<PreBuildEvent>mgfxc "$(SolutionDir)\Framework\Assets\Shaders\wavy.fx" "$(SolutionDir)\Framework\Assets\Shaders\wavy.mgfx"</PreBuildEvent>
 		<PostBuildEventDependsOn>
