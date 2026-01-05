@@ -24,5 +24,10 @@ namespace DynamicReflections.Framework.Models.Reflections
         {
             return Utility.isOnScreen(Tile * 64, Building.tilesWide.Value * 64);
         }
+
+        public override bool IsEnabled()
+        {
+            return DynamicReflections.modConfig.ArePlayerBuildingReflectionsEnabled;
+        }
     }
 }

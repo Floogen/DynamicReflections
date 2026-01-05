@@ -9,5 +9,6 @@ namespace DynamicReflections.Framework.Models.Reflections
 
         public abstract void Draw(SpriteBatch spriteBatch);
         public abstract bool IsOnScreen();
+        public abstract bool IsEnabled();
     }
 }

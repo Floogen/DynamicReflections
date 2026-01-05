@@ -35,5 +35,15 @@ namespace DynamicReflections.Framework.Models.Reflections
             // Allow for three tile (3 * 64) spacing for trees and bushes
             return Utility.isOnScreen(Tile * 64, 3 * 64);
         }
+
+        public override bool IsEnabled()
+        {
+            if (Terrain is Grass)
+            {
+                return DynamicReflections.modConfig.AreGrassReflectionsEnabled;
+            }
+
+            return DynamicReflections.modConfig.AreTerrainReflectionsEnabled;
+        }
     }
 }
