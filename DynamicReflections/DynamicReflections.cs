@@ -1703,13 +1703,13 @@ namespace DynamicReflections
             {
                 foreach (var building in location.buildings)
                 {
-                    var buildingTile = new Vector2(building.tileX.Value, building.tileY.Value);
-                    if (IsTileReflective(buildingTile, 3))
+                    var buildingTile = new Vector2(building.tileX.Value, building.tileY.Value + building.tilesHigh.Value);
+                    if (IsTileReflective(buildingTile, 2))
                     {
                         locationToWaterReflectionTerrainFeatures[location].Add(new ReflectableBuilding(building));
                     }
 
-                    if (IsTilePuddle(buildingTile, 3))
+                    if (IsTilePuddle(buildingTile, 2))
                     {
                         locationToPuddleReflectionTerrainFeatures[location].Add(new ReflectableBuilding(building));
                     }
