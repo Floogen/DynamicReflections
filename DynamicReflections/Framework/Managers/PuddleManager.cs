@@ -17,7 +17,7 @@ namespace DynamicReflections.Framework.Managers
         internal const int DEFAULT_PUDDLE_INDEX = -1;
 
         internal List<TemporaryAnimatedSprite> puddleRippleSprites = new List<TemporaryAnimatedSprite>();
-        private Dictionary<GameLocation, bool[,]> _locationToPuddleTiles;
+        private Dictionary<GameLocation, bool[,]> _locationToPuddleTiles = new Dictionary<GameLocation, bool[,]>();
         private List<Point> _puddlePoints = new List<Point>();
 
         public void Reset()
