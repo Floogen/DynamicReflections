@@ -572,7 +572,7 @@ namespace DynamicReflections.Framework.Utilities
 
             foreach (ReflectableObject reflectableObject in DynamicReflections.GetWaterReflectionTerrainFeatures(Game1.currentLocation))
             {
-                if (beforePlayer is false && reflectableObject.Tile.Y < Game1.player.Tile.Y)
+                if (beforePlayer is false && reflectableObject.Tile.Y <= Game1.player.Tile.Y)
                 {
                     continue;
                 }
@@ -614,6 +614,10 @@ namespace DynamicReflections.Framework.Utilities
                 {
                     yOffset = (reflectableBuilding.Building.tilesHigh.Value * 64) - 20;
                 }
+                else if (reflectableObject is ReflectableFurniture reflectableFurniture)
+                {
+                    yOffset = reflectableFurniture.Furniture.getTilesHigh() * 64;
+                }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
                 {
@@ -642,7 +646,7 @@ namespace DynamicReflections.Framework.Utilities
 
             foreach (ReflectableObject reflectableObject in DynamicReflections.GetPuddleReflectionTerrainFeatures(Game1.currentLocation))
             {
-                if (beforePlayer is false && reflectableObject.Tile.Y < Game1.player.Tile.Y)
+                if (beforePlayer is false && reflectableObject.Tile.Y <= Game1.player.Tile.Y)
                 {
                     continue;
                 }
@@ -678,6 +682,10 @@ namespace DynamicReflections.Framework.Utilities
                 else if (reflectableObject is ReflectableBuilding reflectableBuilding)
                 {
                     yOffset = (reflectableBuilding.Building.tilesHigh.Value * 64) - 32;
+                }
+                else if (reflectableObject is ReflectableFurniture reflectableFurniture)
+                {
+                    yOffset = reflectableFurniture.Furniture.getTilesHigh() * 16;
                 }
 
                 if (DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionDirection == Models.Settings.Direction.South)
@@ -797,8 +805,9 @@ namespace DynamicReflections.Framework.Utilities
                 var scale = Matrix.CreateScale(1f, -1f, 1f);
 
                 // Pivot at the water reflection line (already computed in world space, convert to screen).
+                float yOffset = Game1.player.IsSitting() ? 16f : 0f;
                 float pivotY = Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y;
-                var position = Matrix.CreateTranslation(0f, pivotY * 2f, 0f);
+                var position = Matrix.CreateTranslation(0f, (pivotY + yOffset) * 2f, 0f);
 
                 Game1.spriteBatch.Begin(
                     SpriteSortMode.FrontToBack,
@@ -855,8 +864,9 @@ namespace DynamicReflections.Framework.Utilities
             var delta = targetScreen - playerScreen;
 
             // Same vertical flip & pivot as before (across the player's original local Y)
+            float yOffset = Game1.player.IsSitting() ? 32f : 0f;
             var scale = Matrix.CreateScale(1f, -1f, 1f);
-            var pivot = Matrix.CreateTranslation(0f, playerScreen.Y * 2f, 0f);
+            var pivot = Matrix.CreateTranslation(0f, (playerScreen.Y + yOffset) * 2f, 0f);
 
             // Apply the offset as a pre-translation, then the original reflection matrix
             var preTranslation = Matrix.CreateTranslation(delta.X, delta.Y, 0f);

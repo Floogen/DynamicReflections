@@ -1,28 +1,30 @@
+using DynamicReflections.Framework.External.GenericModConfigMenu;
+using DynamicReflections.Framework.Interfaces.Internal;
+using DynamicReflections.Framework.Managers;
+using DynamicReflections.Framework.Models;
+using DynamicReflections.Framework.Models.Reflections;
+using DynamicReflections.Framework.Models.Settings;
+using DynamicReflections.Framework.Patches.Objects;
+using DynamicReflections.Framework.Patches.SMAPI;
+using DynamicReflections.Framework.Patches.Tiles;
+using DynamicReflections.Framework.Patches.Tools;
+using DynamicReflections.Framework.Utilities;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
-using DynamicReflections.Framework.Models;
 using StardewValley;
+using StardewValley.Buildings;
+using StardewValley.Extensions;
+using StardewValley.Locations;
+using StardewValley.Menus;
+using StardewValley.Objects;
+using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using DynamicReflections.Framework.Patches.SMAPI;
-using DynamicReflections.Framework.Patches.Tiles;
-using DynamicReflections.Framework.Patches.Tools;
 using System.Linq;
-using DynamicReflections.Framework.Patches.Objects;
-using DynamicReflections.Framework.Utilities;
-using DynamicReflections.Framework.Managers;
-using DynamicReflections.Framework.Models.Settings;
 using System.Text.Json;
-using DynamicReflections.Framework.External.GenericModConfigMenu;
-using StardewValley.Locations;
-using StardewValley.Menus;
-using DynamicReflections.Framework.Interfaces.Internal;
-using StardewValley.TerrainFeatures;
-using DynamicReflections.Framework.Models.Reflections;
-using StardewValley.Extensions;
 
 namespace DynamicReflections
 {
@@ -216,6 +218,17 @@ namespace DynamicReflections
                         }
                     }
                 }
+            }
+
+            // Handle cached reflections
+            foreach (var addedFurniture in e.Added)
+            {
+                HandleTerrainFeatureAddition(e.Location, new ReflectableFurniture(addedFurniture));
+            }
+
+            foreach (var removedFurniture in e.Removed)
+            {
+                HandleFurnitureRemoval(e.Location, removedFurniture);
             }
         }
 
@@ -735,6 +748,17 @@ namespace DynamicReflections
 
             locationToWaterReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableTerrain reflectableTerrain && reflectableTerrain.Terrain == terrainFeature);
             locationToPuddleReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableTerrain reflectableTerrain && reflectableTerrain.Terrain == terrainFeature);
+        }
+
+        private void HandleFurnitureRemoval(GameLocation location, Furniture furniture)
+        {
+            if (location is null || locationToWaterReflectionTerrainFeatures.ContainsKey(location) is false || locationToPuddleReflectionTerrainFeatures.ContainsKey(location) is false)
+            {
+                return;
+            }
+
+            locationToWaterReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableFurniture reflectableFurniture && reflectableFurniture.Furniture == furniture);
+            locationToPuddleReflectionTerrainFeatures[location].RemoveWhere(t => t is ReflectableFurniture reflectableFurniture && reflectableFurniture.Furniture == furniture);
         }
 
         private void LoadContentPacks(bool silent = false)
@@ -1682,6 +1706,23 @@ namespace DynamicReflections
                     if (IsTilePuddle(buildingTile, 3))
                     {
                         locationToPuddleReflectionTerrainFeatures[location].Add(new ReflectableBuilding(building));
+                    }
+                }
+            }
+
+            // Add furniture
+            if (location.furniture is not null)
+            {
+                foreach (var furniture in location.furniture)
+                {
+                    if (IsTileReflective(furniture.TileLocation, 3))
+                    {
+                        locationToWaterReflectionTerrainFeatures[location].Add(new ReflectableFurniture(furniture));
+                    }
+
+                    if (IsTilePuddle(furniture.TileLocation, 3))
+                    {
+                        locationToPuddleReflectionTerrainFeatures[location].Add(new ReflectableFurniture(furniture));
                     }
                 }
             }

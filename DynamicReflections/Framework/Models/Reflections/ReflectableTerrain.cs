@@ -16,7 +16,18 @@ namespace DynamicReflections.Framework.Models.Reflections
 
         public override void Draw(SpriteBatch spriteBatch)
         {
-            Terrain.draw(spriteBatch);
+            if (Terrain is Tree tree)
+            {
+                float alphaCache = tree.alpha;
+                tree.alpha = 1f;
+
+                Terrain.draw(spriteBatch);
+                tree.alpha = alphaCache;
+            }
+            else
+            {
+                Terrain.draw(spriteBatch);
+            }
         }
 
         public override bool IsOnScreen()
