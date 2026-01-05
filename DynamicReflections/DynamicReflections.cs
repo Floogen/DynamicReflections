@@ -1661,7 +1661,7 @@ namespace DynamicReflections
             return locationToPuddleReflectionTerrainFeatures[location];
         }
 
-        private static void ResetLocationTerrainCache(GameLocation location)
+        internal static void ResetLocationTerrainCache(GameLocation location)
         {
             locationToWaterReflectionTerrainFeatures[location] = new List<ReflectableObject>();
             locationToPuddleReflectionTerrainFeatures[location] = new List<ReflectableObject>();

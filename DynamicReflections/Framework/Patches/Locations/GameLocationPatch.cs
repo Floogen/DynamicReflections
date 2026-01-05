@@ -35,6 +35,7 @@ namespace DynamicReflections.Framework.Patches.Tools
             harmony.CreateReversePatcher(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), new HarmonyMethod(GetType(), nameof(DrawWaterReversePatch))).Patch();
 
             harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.UpdateWhenCurrentLocation), new[] { typeof(GameTime) }), postfix: new HarmonyMethod(GetType(), nameof(UpdateWhenCurrentLocationPostfix)));
+            harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.OnBuildingMoved), new[] { typeof(Building) }), postfix: new HarmonyMethod(GetType(), nameof(OnBuildingMovedPostfix)));
         }
 
         [HarmonyBefore(new string[] { "shekurika.WaterFish" })]
@@ -152,6 +153,11 @@ namespace DynamicReflections.Framework.Patches.Tools
                     }
                 }
             }
+        }
+
+        private static void OnBuildingMovedPostfix(GameLocation __instance, Building building)
+        {
+            DynamicReflections.ResetLocationTerrainCache(__instance);
         }
 
         private static void GenerateRipple(GameLocation location, Point puddleTile, bool playSound = false)
