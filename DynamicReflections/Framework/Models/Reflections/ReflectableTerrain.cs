@@ -33,7 +33,7 @@ namespace DynamicReflections.Framework.Models.Reflections
         public override bool IsOnScreen()
         {
             // Allow for three tile (3 * 64) spacing for trees and bushes
-            return Utility.isOnScreen(Tile * 64, 3 * 64);
+            return Utility.isOnScreen(Tile * 64, 8 * 64);
         }
 
         public override bool IsEnabled()

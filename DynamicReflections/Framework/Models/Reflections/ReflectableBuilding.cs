@@ -22,7 +22,7 @@ namespace DynamicReflections.Framework.Models.Reflections
 
         public override bool IsOnScreen()
         {
-            return Utility.isOnScreen(Tile * 64, Building.tilesWide.Value * 64);
+            return Utility.isOnScreen(Tile * 64, 8 * 64);
         }
 
         public override bool IsEnabled()
