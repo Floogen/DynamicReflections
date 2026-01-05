@@ -601,12 +601,7 @@ namespace DynamicReflections.Framework.Utilities
                     }
                     else if (reflectableTerrain.Terrain is Grass)
                     {
-                        yOffset = 80;
-                        spriteSortMode = SpriteSortMode.BackToFront;
-                    }
-
-                    if (reflectableTerrain.Terrain is Grass)
-                    {
+                        yOffset = 96;
                         spriteSortMode = SpriteSortMode.BackToFront;
                     }
                 }
