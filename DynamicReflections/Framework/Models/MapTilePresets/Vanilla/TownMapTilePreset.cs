@@ -1,4 +1,5 @@
 ﻿using DynamicReflections.Framework.Models.Reflections;
+using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,7 +42,72 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
                 new ReflectableMapTile(layerName: "AlwaysFront", x: 43, y: 96),
                 new ReflectableMapTile(layerName: "AlwaysFront", x: 44, y: 96),
                 new ReflectableMapTile(layerName: "AlwaysFront", x: 45, y: 96)
-            })
+            }),
+            new ReflectableMapObject("Town_EastRiver_Bridge_Under_1", new List<ReflectableMapTile>()
+            {
+                new ReflectableMapTile(layerName: "Back", x: 75, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 76, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 77, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 78, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 79, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 80, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 81, y: 95) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 82, y: 95) { Offset = new Vector2(0f, 2.2f) }
+            }),
+            new ReflectableMapObject("Town_EastRiver_Bridge_Rail_1", new List<ReflectableMapTile>()
+            {
+                /*
+                new ReflectableMapTile(layerName: "Front", x: 75, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 76, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 77, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 78, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 79, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 80, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 81, y: 95) { Offset = new Vector2(0f, 2.9f) },
+                new ReflectableMapTile(layerName: "Front", x: 82, y: 95) { Offset = new Vector2(0f, 2.9f) }
+                */
+                
+                new ReflectableMapTile(layerName: "Buildings", x: 75, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 76, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 77, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 78, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 79, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 80, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 81, y: 96) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 82, y: 96) { Offset = new Vector2(0f, 1.6f) },
+
+            }),
+            new ReflectableMapObject("Town_EastRiver_Bridge_Under_2", new List<ReflectableMapTile>()
+            {
+                new ReflectableMapTile(layerName: "Back", x: 70, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 71, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 72, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 73, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 74, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 75, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 76, y: 54) { Offset = new Vector2(0f, 2.2f) },
+                new ReflectableMapTile(layerName: "Back", x: 77, y: 54) { Offset = new Vector2(0f, 2.2f) }
+            }),
+            new ReflectableMapObject("Town_EastRiver_Bridge_Rail_2", new List<ReflectableMapTile>()
+            {
+                new ReflectableMapTile(layerName: "Buildings", x: 70, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 71, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 72, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 73, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 74, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 75, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 76, y: 55) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 77, y: 55) { Offset = new Vector2(0f, 1.6f) },
+
+            }),
+            new ReflectableMapObject("Town_EastRiver_Wood_Plank", new List<ReflectableMapTile>()
+            {
+                new ReflectableMapTile(layerName: "Buildings", x: 92, y: 13) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 93, y: 13) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 94, y: 13) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 95, y: 13) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 96, y: 13) { Offset = new Vector2(0f, 1.6f) }
+            }),
         };
     }
 }
