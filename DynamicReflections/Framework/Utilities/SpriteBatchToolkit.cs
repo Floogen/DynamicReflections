@@ -396,7 +396,8 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain before player
             RenderWaterReflectionTerrain(afterPlayer: false);
 
-            RenderFrontLayerMapReflections();
+            // Draw map tiles before player
+            RenderLayersMapReflections(afterPlayer: false);
 
             // Draw player reflection (if near water tile)
             if (DynamicReflections.shouldDrawWaterReflection)
@@ -406,6 +407,9 @@ namespace DynamicReflections.Framework.Utilities
 
             // Draw terrain after player
             RenderWaterReflectionTerrain(beforePlayer: false);
+
+            // Draw map tiles before player
+            RenderLayersMapReflections(beforePlayer: false);
 
             // Drop the render target
             SpriteBatchToolkit.StopRendering();
@@ -708,19 +712,24 @@ namespace DynamicReflections.Framework.Utilities
             }
         }
 
-        internal static void RenderFrontLayerMapReflections()
+        internal static void RenderLayersMapReflections(bool beforePlayer = true, bool afterPlayer = true)
         {
             if (Game1.currentLocation is null || Game1.currentLocation.map is null)
             {
                 return;
             }
 
-            RenderMapLayerReflections(Game1.currentLocation.buildingLayers);
-            RenderMapLayerReflections(Game1.currentLocation.frontLayers);
-            RenderMapLayerReflections(Game1.currentLocation.alwaysFrontLayers);
+            RenderMapLayerReflections(Game1.currentLocation.backgroundLayers, beforePlayer, afterPlayer);
+            RenderMapLayerReflections(Game1.currentLocation.buildingLayers, beforePlayer, afterPlayer);
+            RenderMapLayerReflections(Game1.currentLocation.frontLayers, beforePlayer, afterPlayer);
+
+            if (afterPlayer)
+            {
+                RenderMapLayerReflections(Game1.currentLocation.alwaysFrontLayers);
+            }
         }
 
-        internal static void RenderMapLayerReflections(List<KeyValuePair<Layer, int>> layers)
+        internal static void RenderMapLayerReflections(List<KeyValuePair<Layer, int>> layers, bool beforePlayer = true, bool afterPlayer = true)
         {
             foreach (var layerPair in layers)
             {
@@ -733,6 +742,14 @@ namespace DynamicReflections.Framework.Utilities
                 foreach (var reflectableMapObject in DynamicReflections.tileManager.GetReflectableMapObjectsForCurrentLocation())
                 {
                     if (reflectableMapObject.HasTileWithLayer(layer.Id) is false)
+                    {
+                        continue;
+                    }
+                    else if (beforePlayer is false && reflectableMapObject.Tile.Y < Game1.player.Tile.Y)
+                    {
+                        continue;
+                    }
+                    else if (afterPlayer is false && reflectableMapObject.Tile.Y > Game1.player.Tile.Y)
                     {
                         continue;
                     }
