@@ -61,7 +61,6 @@ namespace DynamicReflections.Framework.Managers
         public void AddMapObject(ReflectableMapObject mapObject)
         {
             _refectableMapObjects.Add(mapObject);
-            _refectableMapObjects = _refectableMapObjects.OrderBy(r => r.Tile).ToList();
         }
 
         public Texture2D GetTileSheetTexture(TileSheet tileSheet)

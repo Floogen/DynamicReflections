@@ -45,6 +45,8 @@ namespace DynamicReflections.Framework.Models.Reflections
             }
 
             _mapTiles.Add(mapTile);
+            _mapTiles = _mapTiles.OrderBy(m => m.Tile.Y).ToList();
+
             _layers.Add(mapTile.LayerName.ToLower());
         }
 
