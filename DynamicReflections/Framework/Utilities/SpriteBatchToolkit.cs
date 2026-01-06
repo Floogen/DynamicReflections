@@ -741,7 +741,7 @@ namespace DynamicReflections.Framework.Utilities
 
                 foreach (var reflectableMapObject in DynamicReflections.tileManager.GetReflectableMapObjectsForCurrentLocation())
                 {
-                    if (reflectableMapObject.HasTileWithLayer(layer.Id) is false)
+                    if (reflectableMapObject.HasTileWithLayer(layer.Id) is false || reflectableMapObject.IsEnabled() is false)
                     {
                         continue;
                     }
@@ -750,6 +750,10 @@ namespace DynamicReflections.Framework.Utilities
                         continue;
                     }
                     else if (afterPlayer is false && reflectableMapObject.Tile.Y > Game1.player.Tile.Y)
+                    {
+                        continue;
+                    }
+                    else if (reflectableMapObject.IsOnScreen() is false)
                     {
                         continue;
                     }

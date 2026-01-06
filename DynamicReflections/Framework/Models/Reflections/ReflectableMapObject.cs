@@ -76,13 +76,13 @@ namespace DynamicReflections.Framework.Models.Reflections
             // Allow for three tile (3 * 64) spacing for trees and bushes
             foreach (var mapTile in _mapTiles)
             {
-                if (mapTile.IsOnScreen() is false)
+                if (mapTile.IsOnScreen() is true)
                 {
-                    return false;
+                    return true;
                 }
             }
 
-            return true;
+            return false;
         }
 
         public override bool IsEnabled()
