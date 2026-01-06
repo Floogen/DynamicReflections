@@ -139,6 +139,7 @@ namespace DynamicReflections
 
             // Add in the debug commands
             helper.ConsoleCommands.Add("dr_reload", "Reloads all Dynamic Reflections content packs.\n\nUsage: dr_reload", delegate { this.LoadContentPacks(); this.DetectMirrorsForActiveLocation(); });
+            helper.ConsoleCommands.Add("dr_reset_map_patches", "Reloads all internal Dynamic Reflections map patches.\n\nUsage: dr_reset_map_patches", delegate { tileManager.BuildInternalMapPresets(); tileManager.LoadMapPreset(Game1.currentLocation); });
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;

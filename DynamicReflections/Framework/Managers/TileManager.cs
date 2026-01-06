@@ -19,19 +19,25 @@ namespace DynamicReflections.Framework.Managers
         private List<ReflectableMapObject> _refectableMapObjects;
         private Dictionary<TileSheet, Texture2D> _internalTileSheetTextures;
 
-        private List<MapTilePresetTemplate> _mapTilePresets = new List<MapTilePresetTemplate>()
-        {
-            new TownMapTilePreset()
-        };
+        private List<MapTilePresetTemplate> _mapTilePresets = new List<MapTilePresetTemplate>();
 
         public TileManager()
         {
             Reset();
+            BuildInternalMapPresets();
         }
 
         public void Reset()
         {
             _refectableMapObjects = new List<ReflectableMapObject>();
+        }
+
+        public void BuildInternalMapPresets()
+        {
+            _mapTilePresets = new List<MapTilePresetTemplate>()
+            {
+                new TownMapTilePreset()
+            };
         }
 
         public void LoadMapPreset(GameLocation location, bool resetCache = true)
