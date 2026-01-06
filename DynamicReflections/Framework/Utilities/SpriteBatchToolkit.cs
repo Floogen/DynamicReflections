@@ -12,6 +12,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using xTile.Dimensions;
+using xTile.Display;
+using xTile.Layers;
+using xTile.Tiles;
 
 namespace DynamicReflections.Framework.Utilities
 {
@@ -393,6 +396,8 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain before player
             RenderWaterReflectionTerrain(afterPlayer: false);
 
+            RenderFrontLayerMapReflections();
+
             // Draw player reflection (if near water tile)
             if (DynamicReflections.shouldDrawWaterReflection)
             {
@@ -698,6 +703,49 @@ namespace DynamicReflections.Framework.Utilities
                 }
 
                 reflectableObject.Draw(Game1.spriteBatch);
+
+                Game1.spriteBatch.End();
+            }
+        }
+
+        internal static void RenderFrontLayerMapReflections()
+        {
+            if (Game1.currentLocation is null || Game1.currentLocation.map is null)
+            {
+                return;
+            }
+
+            foreach (var layer in Game1.currentLocation.frontLayers)
+            {
+                if (layer.Key is null)
+                {
+                    continue;
+                }
+
+                var scale = Matrix.CreateScale(1, -1, 1);
+                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).Y * 2f, 0);
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+
+                DynamicReflections.isFilteringMap = true;
+                LayerPatch.DrawNormalReversePatch(layer.Key, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, 4);
+                DynamicReflections.isFilteringMap = false;
+
+                Game1.spriteBatch.End();
+            }
+            foreach (var layer in Game1.currentLocation.alwaysFrontLayers)
+            {
+                if (layer.Key is null)
+                {
+                    continue;
+                }
+
+                var scale = Matrix.CreateScale(1, -1, 1);
+                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).Y * 2f, 0);
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+
+                DynamicReflections.isFilteringMap = true;
+                LayerPatch.DrawNormalReversePatch(layer.Key, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, 4);
+                DynamicReflections.isFilteringMap = false;
 
                 Game1.spriteBatch.End();
             }

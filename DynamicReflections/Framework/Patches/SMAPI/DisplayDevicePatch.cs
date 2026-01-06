@@ -1,12 +1,15 @@
 ﻿using DynamicReflections.Framework.Managers;
+using DynamicReflections.Framework.Utilities;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.Characters;
 using StardewValley.Locations;
 using StardewValley.Menus;
+using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -21,6 +24,8 @@ namespace DynamicReflections.Framework.Patches.SMAPI
 {
     internal class DisplayDevicePatch : PatchTemplate
     {
+        internal static Location tileLocation = new Location();
+
         internal DisplayDevicePatch(IMonitor modMonitor, IModHelper modHelper) : base(modMonitor, modHelper)
         {
 
@@ -70,7 +75,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return true;
             }
 
-            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ref ___m_tilePosition);
+            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, null, ref ___m_tilePosition);
         }
 
         private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
@@ -80,10 +85,10 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return true;
             }
 
-            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ref ___m_tilePosition);
+            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ___m_tileSheetTextures, ref ___m_tilePosition);
         }
 
-        private static bool ActualDrawTilePrefix(Tile? tile, Location location, float layerDepth, SpriteBatch ___m_spriteBatchAlpha, ref Vector2 ___m_tilePosition)
+        private static bool ActualDrawTilePrefix(Tile? tile, Location location, float layerDepth, SpriteBatch ___m_spriteBatchAlpha, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition)
         {
             if (DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
             {
@@ -108,6 +113,12 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return false;
             }
 
+            if (DynamicReflections.isFilteringMap is true)
+            {
+                DrawMapTile(tile, ref ___m_tilePosition, ___m_spriteBatchAlpha, location, layerDepth, ___m_tileSheetTextures);
+                return false;
+            }
+
             if (DynamicReflections.isDrawingWaterReflection is true && tile.TileIndexProperties.TryGetValue("Water", out _) is true)
             {
                 return false;
@@ -118,6 +129,35 @@ namespace DynamicReflections.Framework.Patches.SMAPI
             }
 
             return true;
+        }
+
+        private static void DrawMapTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures)
+        {
+            if (!___m_tileSheetTextures.TryGetValue(tile.TileSheet, out var texture2D))
+            {
+                return;
+            }
+
+            if (!texture2D.IsDisposed)
+            {
+                ___m_tilePosition.X = location.X;
+                ___m_tilePosition.Y = location.Y;
+
+                var scale = Matrix.CreateScale(1, -1, 1);
+                //var position = Matrix.CreateTranslation(0, (___m_tilePosition.Y) * 4, 0);
+                //var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, new Vector2(2695f, 6557f)).Y) * 2, 0);
+                //var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, (___m_tilePosition / 16) * 64).Y) * 2, 0);
+                var position = Matrix.CreateTranslation(0, (Game1.GlobalToLocal(Game1.viewport, new Vector2(tileLocation.X, tileLocation.Y + (tileLocation.Y * 2)) * 64).Y + 200) * 2, 0);
+
+                var sourceRectangle = tile.TileSheet.GetTileImageBounds(tile.TileIndex);
+                var parsedSourceRectangle = new Microsoft.Xna.Framework.Rectangle(sourceRectangle.X, sourceRectangle.Y, sourceRectangle.Width, sourceRectangle.Height);
+
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                //Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
+                Game1.spriteBatch.Draw(texture2D, ___m_tilePosition, parsedSourceRectangle, Color.White, 0f, Vector2.Zero, Layer.zoom, SpriteEffects.None, layerDepth);
+                Game1.spriteBatch.End();
+            }
+
         }
 
         private static void DrawSkyTile(Tile tile, ref Vector2 ___m_tilePosition, SpriteBatch ___m_spriteBatchAlpha, Location location, float layerDepth)

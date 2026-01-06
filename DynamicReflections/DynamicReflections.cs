@@ -82,6 +82,7 @@ namespace DynamicReflections
         internal static bool shouldDrawNightSky;
         internal static bool isFilteringSky;
         internal static bool isFilteringStar;
+        internal static bool isFilteringMap;
 
         // Effects and RenderTarget2Ds
         internal static Effect waterReflectionEffect;
