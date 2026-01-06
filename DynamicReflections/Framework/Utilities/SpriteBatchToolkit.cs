@@ -715,39 +715,38 @@ namespace DynamicReflections.Framework.Utilities
                 return;
             }
 
-            foreach (var layer in Game1.currentLocation.frontLayers)
+            RenderMapLayerReflections(Game1.currentLocation.buildingLayers);
+            RenderMapLayerReflections(Game1.currentLocation.frontLayers);
+            RenderMapLayerReflections(Game1.currentLocation.alwaysFrontLayers);
+        }
+
+        internal static void RenderMapLayerReflections(List<KeyValuePair<Layer, int>> layers)
+        {
+            foreach (var layerPair in layers)
             {
-                if (layer.Key is null)
+                var layer = layerPair.Key;
+                if (layer is null)
                 {
                     continue;
                 }
 
-                var scale = Matrix.CreateScale(1, -1, 1);
-                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).Y * 2f, 0);
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
-
-                DynamicReflections.isFilteringMap = true;
-                LayerPatch.DrawNormalReversePatch(layer.Key, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, 4);
-                DynamicReflections.isFilteringMap = false;
-
-                Game1.spriteBatch.End();
-            }
-            foreach (var layer in Game1.currentLocation.alwaysFrontLayers)
-            {
-                if (layer.Key is null)
+                foreach (var reflectableMapObject in DynamicReflections.tileManager.GetReflectableMapObjectsForCurrentLocation())
                 {
-                    continue;
+                    if (reflectableMapObject.HasTileWithLayer(layer.Id) is false)
+                    {
+                        continue;
+                    }
+
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, reflectableMapObject.Tile * 64).Y * 2f, 0);
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+
+                    DynamicReflections.isFilteringMap = true;
+                    reflectableMapObject.DrawByLayer(Game1.spriteBatch, layer.Id);
+                    DynamicReflections.isFilteringMap = false;
+
+                    Game1.spriteBatch.End();
                 }
-
-                var scale = Matrix.CreateScale(1, -1, 1);
-                var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, Game1.player.Position).Y * 2f, 0);
-                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
-
-                DynamicReflections.isFilteringMap = true;
-                LayerPatch.DrawNormalReversePatch(layer.Key, Game1.mapDisplayDevice, Game1.viewport, Location.Origin, 4);
-                DynamicReflections.isFilteringMap = false;
-
-                Game1.spriteBatch.End();
             }
         }
 

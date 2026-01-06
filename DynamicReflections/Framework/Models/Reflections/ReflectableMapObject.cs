@@ -3,6 +3,7 @@ using Microsoft.Xna.Framework.Graphics;
 using StardewValley;
 using StardewValley.TerrainFeatures;
 using System.Collections.Generic;
+using System.Linq;
 using xTile.Tiles;
 
 namespace DynamicReflections.Framework.Models.Reflections
@@ -10,25 +11,29 @@ namespace DynamicReflections.Framework.Models.Reflections
     public class ReflectableMapObject : ReflectableObject
     {
         public readonly string Id;
-        private List<ReflectableMapTile> _mapTiles;
 
-        public ReflectableMapObject(string id, List<ReflectableMapTile> mapTiles)
+        private List<ReflectableMapTile> _mapTiles = new List<ReflectableMapTile>();
+        private HashSet<string> _layers = new HashSet<string>();
+
+        public ReflectableMapObject(string id)
         {
             Id = id;
+        }
 
+        public ReflectableMapObject(string id, List<ReflectableMapTile> mapTiles) : this(id)
+        {
             _mapTiles = new List<ReflectableMapTile>();
-            foreach (var mapTile in  mapTiles)
+            foreach (var mapTile in mapTiles)
             {
                 AddTile(mapTile);
             }
         }
 
-        public ReflectableMapObject(string id, ReflectableMapTile mapTile)
+        public ReflectableMapObject(string id, ReflectableMapTile mapTile) : this(id)
         {
-            Id = id;
-            _mapTiles = new List<ReflectableMapTile>() { mapTile };
+            _mapTiles = new List<ReflectableMapTile>();
 
-            Tile = mapTile.Tile;
+            AddTile(mapTile);
         }
 
         public void AddTile(ReflectableMapTile mapTile)
@@ -40,6 +45,20 @@ namespace DynamicReflections.Framework.Models.Reflections
             }
 
             _mapTiles.Add(mapTile);
+            _layers.Add(mapTile.LayerName.ToLower());
+        }
+
+        public bool HasTileWithLayer(string layerName)
+        {
+            return _layers.Contains(layerName.ToLower());
+        }
+
+        public void DrawByLayer(SpriteBatch spriteBatch, string layerName)
+        {
+            foreach (var mapTile in _mapTiles.Where(m => m.LayerName.Equals(layerName, System.StringComparison.OrdinalIgnoreCase)))
+            {
+                mapTile.Draw(spriteBatch);
+            }
         }
 
         public override void Draw(SpriteBatch spriteBatch)

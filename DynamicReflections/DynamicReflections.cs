@@ -42,6 +42,7 @@ namespace DynamicReflections
         internal static MirrorsManager mirrorsManager;
         internal static PuddleManager puddleManager;
         internal static SkyManager skyManager;
+        internal static TileManager tileManager;
 
         // Config options
         internal static ModConfig modConfig;
@@ -116,6 +117,7 @@ namespace DynamicReflections
             mirrorsManager = new MirrorsManager();
             puddleManager = new PuddleManager();
             skyManager = new SkyManager();
+            tileManager = new TileManager();
 
             try
             {
@@ -239,6 +241,9 @@ namespace DynamicReflections
             SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
+
+            // Load any preset tiles for reflections
+            tileManager.LoadMapPreset(e.NewLocation);
 
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
