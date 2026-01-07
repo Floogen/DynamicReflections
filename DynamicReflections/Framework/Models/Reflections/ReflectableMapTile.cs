@@ -15,6 +15,7 @@ namespace DynamicReflections.Framework.Models.Reflections
         public Tile MapTile { get; internal set; }
 
         public Vector2 Offset { get; set; } = new Vector2(0f, 1f);
+        public Color ReflectionColor { get; set; } = Color.White;
 
         private int _xTile;
         private int _yTile;
@@ -60,7 +61,7 @@ namespace DynamicReflections.Framework.Models.Reflections
             var sourceRectangle = MapTile.TileSheet.GetTileImageBounds(MapTile.TileIndex);
             var parsedSourceRectangle = new Rectangle(sourceRectangle.X, sourceRectangle.Y, sourceRectangle.Width, sourceRectangle.Height);
 
-            Game1.spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, (Tile - Offset) * 64), parsedSourceRectangle, Color.White, 0f, Vector2.Zero, Layer.zoom, SpriteEffects.None, 0.9f);
+            Game1.spriteBatch.Draw(texture, Game1.GlobalToLocal(Game1.viewport, (Tile - Offset) * 64), parsedSourceRectangle, ReflectionColor, 0f, Vector2.Zero, Layer.zoom, SpriteEffects.None, 0.9f);
         }
 
         public override bool IsOnScreen()
