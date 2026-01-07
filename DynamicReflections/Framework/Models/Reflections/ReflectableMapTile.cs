@@ -11,6 +11,8 @@ namespace DynamicReflections.Framework.Models.Reflections
 {
     public class ReflectableMapTile : ReflectableObject
     {
+        public string ObjectId { get; set; }
+
         public string LayerName { get; }
         public Tile MapTile { get; internal set; }
 
