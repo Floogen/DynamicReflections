@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using xTile.Layers;
 using xTile.Tiles;
 
 namespace DynamicReflections.Framework.Managers
@@ -36,7 +37,13 @@ namespace DynamicReflections.Framework.Managers
         {
             _mapTilePresets = new List<MapTilePresetTemplate>()
             {
-                new TownMapTilePreset()
+                new TownMapTilePreset(),
+                new BeachMapTilePreset(),
+                new BeachNightMarketMapTilePreset(),
+                new MountainMapTilePreset(),
+                new ForestMapTilePreset(),
+                new IslandNorthMapTilePreset(),
+                new IslandWestMapTilePreset()
             };
         }
 
@@ -53,6 +60,7 @@ namespace DynamicReflections.Framework.Managers
 
             if (location is not null)
             {
+                // Load in any presets
                 var firstPresetMatch = _mapTilePresets.FirstOrDefault(p => p.MapName.Equals(location.Name, StringComparison.OrdinalIgnoreCase));
                 if (firstPresetMatch is not null)
                 {
