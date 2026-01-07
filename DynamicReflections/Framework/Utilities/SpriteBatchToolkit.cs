@@ -846,7 +846,10 @@ namespace DynamicReflections.Framework.Utilities
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
             foreach (var rippleSprite in DynamicReflections.puddleManager.puddleRippleSprites.ToList())
             {
-                rippleSprite.draw(Game1.spriteBatch);
+                if (Utility.isOnScreen(rippleSprite.Position, 3 * 64))
+                {
+                    rippleSprite.draw(Game1.spriteBatch);
+                }
             }
             Game1.spriteBatch.End();
 
