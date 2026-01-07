@@ -830,11 +830,17 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain before player
             RenderPuddleReflectionTerrain(afterPlayer: false);
 
+            // Draw map tiles before player
+            RenderLayersMapReflections(afterPlayer: false);
+
             // Draw player reflection
             DrawPlayerPuddleReflection();
 
             // Draw terrain after player
             RenderPuddleReflectionTerrain(beforePlayer: false);
+
+            // Draw map tiles after player
+            RenderLayersMapReflections(beforePlayer: false);
 
             // Draw puddle ripples on top, unchanged
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
