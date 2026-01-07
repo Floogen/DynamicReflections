@@ -87,8 +87,7 @@ namespace DynamicReflections.Framework.Models.Reflections
 
         public override bool IsEnabled()
         {
-            // TODO: Change this
-            return DynamicReflections.modConfig.AreTerrainReflectionsEnabled;
+            return DynamicReflections.modConfig.AreMapReflectionsEnabled;
         }
     }
 }

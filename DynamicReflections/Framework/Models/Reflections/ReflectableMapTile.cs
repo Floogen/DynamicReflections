@@ -73,7 +73,7 @@ namespace DynamicReflections.Framework.Models.Reflections
 
         public override bool IsEnabled()
         {
-            return true;
+            return DynamicReflections.modConfig.AreMapReflectionsEnabled;
         }
     }
 }
