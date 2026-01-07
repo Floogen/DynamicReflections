@@ -760,7 +760,7 @@ namespace DynamicReflections.Framework.Utilities
 
                     var scale = Matrix.CreateScale(1, -1, 1);
                     var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, reflectableMapObject.Tile * 64).Y * 2f, 0);
-                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
 
                     DynamicReflections.isFilteringMap = true;
                     reflectableMapObject.DrawByLayer(Game1.spriteBatch, layer.Id);
