@@ -663,10 +663,11 @@ namespace DynamicReflections
             if (isFreshInstall || isNewerVersion)
             {
                 // Handle new version behavior
-                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.2.0")))
+                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.3.0")))
                 {
                     // Reset the default WaterReflectionSettings
                     modConfig.WaterReflectionSettings.Reset();
+                    DynamicReflections.modConfig.LocalWaterReflectionSettings["Beach"] = GMCMHelper.GetBeachSettings();
                 }
                 if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.1")))
                 {
