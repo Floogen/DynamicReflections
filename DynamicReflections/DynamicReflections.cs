@@ -42,6 +42,7 @@ namespace DynamicReflections
         internal static MirrorsManager mirrorsManager;
         internal static PuddleManager puddleManager;
         internal static SkyManager skyManager;
+        internal static TileManager tileManager;
 
         // Config options
         internal static ModConfig modConfig;
@@ -82,6 +83,7 @@ namespace DynamicReflections
         internal static bool shouldDrawNightSky;
         internal static bool isFilteringSky;
         internal static bool isFilteringStar;
+        internal static bool isFilteringMap;
 
         // Effects and RenderTarget2Ds
         internal static Effect waterReflectionEffect;
@@ -92,8 +94,6 @@ namespace DynamicReflections
         internal static RenderTarget2D playerPuddleReflectionRender;
         internal static RenderTarget2D[] composedPlayerMirrorReflectionRenders;
         internal static RenderTarget2D[] maskedPlayerMirrorReflectionRenders;
-        internal static RenderTarget2D npcWaterReflectionRender;
-        internal static RenderTarget2D npcPuddleReflectionRender;
         internal static RenderTarget2D inBetweenRenderTarget;
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
@@ -115,6 +115,7 @@ namespace DynamicReflections
             mirrorsManager = new MirrorsManager();
             puddleManager = new PuddleManager();
             skyManager = new SkyManager();
+            tileManager = new TileManager();
 
             try
             {
@@ -136,6 +137,7 @@ namespace DynamicReflections
 
             // Add in the debug commands
             helper.ConsoleCommands.Add("dr_reload", "Reloads all Dynamic Reflections content packs.\n\nUsage: dr_reload", delegate { this.LoadContentPacks(); this.DetectMirrorsForActiveLocation(); });
+            helper.ConsoleCommands.Add("dr_reset_map_patches", "Reloads all internal Dynamic Reflections map patches.\n\nUsage: dr_reset_map_patches", delegate { tileManager.BuildInternalMapPresets(); tileManager.LoadMapPreset(Game1.currentLocation); });
 
             // Hook into the required events
             helper.Events.Display.WindowResized += OnWindowResized;
@@ -238,6 +240,9 @@ namespace DynamicReflections
             SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
             DetectMirrorsForActiveLocation();
+
+            // Load any preset tiles for reflections
+            tileManager.LoadMapPreset(e.NewLocation);
 
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
@@ -1326,8 +1331,6 @@ namespace DynamicReflections
             RegenerateRenderer(ref cloudRenderTarget, shouldUseScreenDimensions);
             RegenerateRenderer(ref playerWaterReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref playerPuddleReflectionRender, shouldUseScreenDimensions);
-            RegenerateRenderer(ref npcWaterReflectionRender, shouldUseScreenDimensions);
-            RegenerateRenderer(ref npcPuddleReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref puddlesRenderTarget, shouldUseScreenDimensions);
 
             RegenerateRenderer(ref mirrorsLayerRenderTarget, shouldUseScreenDimensions);

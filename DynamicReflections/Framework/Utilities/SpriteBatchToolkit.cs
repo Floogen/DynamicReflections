@@ -12,6 +12,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using xTile.Dimensions;
+using xTile.Display;
+using xTile.Layers;
+using xTile.Tiles;
 
 namespace DynamicReflections.Framework.Utilities
 {
@@ -393,6 +396,12 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain before player
             RenderWaterReflectionTerrain(afterPlayer: false);
 
+            // Draw map tiles before player
+            RenderLayersMapReflections(afterPlayer: false);
+
+            // Draw npcs before player
+            RenderWaterReflectionNPCs(afterPlayer: false);
+
             // Draw player reflection (if near water tile)
             if (DynamicReflections.shouldDrawWaterReflection)
             {
@@ -402,28 +411,40 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain after player
             RenderWaterReflectionTerrain(beforePlayer: false);
 
+            // Draw map tiles after player
+            RenderLayersMapReflections(beforePlayer: false);
+
+            // Draw npcs after player
+            RenderWaterReflectionNPCs(beforePlayer: false);
+
             // Drop the render target
             SpriteBatchToolkit.StopRendering();
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-        internal static void RenderWaterReflectionNPCs()
+        internal static void RenderWaterReflectionNPCs(bool beforePlayer = true, bool afterPlayer = true)
         {
-            if (Game1.currentLocation is null || Game1.currentLocation.characters is null)
+            if (Game1.currentLocation is null || Game1.currentLocation.characters is null || DynamicReflections.modConfig.AreNPCReflectionsEnabled is false)
             {
                 return;
             }
 
-            // Set the render target
-            SpriteBatchToolkit.StartRendering(DynamicReflections.npcWaterReflectionRender);
-
-            // Draw the scene
-            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
-
             foreach (var npc in DynamicReflections.GetActiveNPCs(Game1.currentLocation))
             {
                 if (DynamicReflections.npcToWaterReflectionPosition.ContainsKey(npc) is false)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && npc.Tile.Y <= Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && npc.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (Utility.isOnScreen(npc.Position, 64 * 3) is false)
                 {
                     continue;
                 }
@@ -444,16 +465,11 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.spriteBatch.End();
             }
-
-            // Drop the render target
-            SpriteBatchToolkit.StopRendering();
-
-            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-        internal static void RenderPuddleReflectionNPCs()
+        internal static void RenderPuddleReflectionNPCs(bool beforePlayer = true, bool afterPlayer = true)
         {
-            if (Game1.currentLocation is null || Game1.currentLocation.characters is null)
+            if (Game1.currentLocation is null || Game1.currentLocation.characters is null || DynamicReflections.modConfig.AreNPCReflectionsEnabled is false)
             {
                 return;
             }
@@ -473,12 +489,6 @@ namespace DynamicReflections.Framework.Utilities
             {
                 return;
             }
-
-            // Set the render target
-            SpriteBatchToolkit.StartRendering(DynamicReflections.npcPuddleReflectionRender);
-
-            // Draw the scene
-            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
             int npcCount = 0;
             int companionCount = 0;
@@ -513,6 +523,19 @@ namespace DynamicReflections.Framework.Utilities
                     {
                         continue;
                     }
+                }
+
+                if (beforePlayer is false && npc.Tile.Y <= Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && npc.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (Utility.isOnScreen(npc.Position, 64 * 3) is false)
+                {
+                    continue;
                 }
 
                 var offset = isCompanion
@@ -550,11 +573,6 @@ namespace DynamicReflections.Framework.Utilities
                     npcCount++;
                 }
             }
-
-            // Drop the render target
-            SpriteBatchToolkit.StopRendering();
-
-            Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
         internal static void RenderWaterReflectionTerrain(bool beforePlayer = true, bool afterPlayer = true)
@@ -703,6 +721,65 @@ namespace DynamicReflections.Framework.Utilities
             }
         }
 
+        internal static void RenderLayersMapReflections(bool beforePlayer = true, bool afterPlayer = true)
+        {
+            if (Game1.currentLocation is null || Game1.currentLocation.map is null)
+            {
+                return;
+            }
+
+            RenderMapLayerReflections(Game1.currentLocation.backgroundLayers, beforePlayer, afterPlayer);
+            RenderMapLayerReflections(Game1.currentLocation.buildingLayers, beforePlayer, afterPlayer);
+            RenderMapLayerReflections(Game1.currentLocation.frontLayers, beforePlayer, afterPlayer);
+
+            if (afterPlayer)
+            {
+                RenderMapLayerReflections(Game1.currentLocation.alwaysFrontLayers);
+            }
+        }
+
+        internal static void RenderMapLayerReflections(List<KeyValuePair<Layer, int>> layers, bool beforePlayer = true, bool afterPlayer = true)
+        {
+            foreach (var layerPair in layers)
+            {
+                var layer = layerPair.Key;
+                if (layer is null)
+                {
+                    continue;
+                }
+
+                foreach (var reflectableMapObject in DynamicReflections.tileManager.GetReflectableMapObjectsForCurrentLocation())
+                {
+                    if (reflectableMapObject.HasAnyTileWithLayer(layer.Id) is false || reflectableMapObject.IsEnabled() is false)
+                    {
+                        continue;
+                    }
+                    else if (beforePlayer is false && reflectableMapObject.Tile.Y < Game1.player.Tile.Y)
+                    {
+                        continue;
+                    }
+                    else if (afterPlayer is false && reflectableMapObject.Tile.Y > Game1.player.Tile.Y)
+                    {
+                        continue;
+                    }
+                    else if (reflectableMapObject.IsOnScreen() is false)
+                    {
+                        continue;
+                    }
+
+                    var scale = Matrix.CreateScale(1, -1, 1);
+                    var position = Matrix.CreateTranslation(0, Game1.GlobalToLocal(Game1.viewport, reflectableMapObject.Tile * 64).Y * 2f, 0);
+                    Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, rasterizerState: DynamicReflections.rasterizer, transformMatrix: scale * position);
+
+                    DynamicReflections.isFilteringMap = true;
+                    reflectableMapObject.DrawByLayer(Game1.spriteBatch, layer.Id);
+                    DynamicReflections.isFilteringMap = false;
+
+                    Game1.spriteBatch.End();
+                }
+            }
+        }
+
         internal static void DrawPuddleReflection(Texture2D mask)
         {
             DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(mask);
@@ -718,8 +795,6 @@ namespace DynamicReflections.Framework.Utilities
                 // Draw the player
                 Game1.spriteBatch.Draw(DynamicReflections.playerPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
             }
-
-            Game1.spriteBatch.Draw(DynamicReflections.npcPuddleReflectionRender, Vector2.Zero, DynamicReflections.currentPuddleSettings.ReflectionOverlay);
 
             Game1.spriteBatch.End();
         }
@@ -762,17 +837,32 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain before player
             RenderPuddleReflectionTerrain(afterPlayer: false);
 
+            // Draw map tiles before player
+            RenderLayersMapReflections(afterPlayer: false);
+
+            // Draw npcs before player
+            RenderPuddleReflectionNPCs(afterPlayer: false);
+
             // Draw player reflection
             DrawPlayerPuddleReflection();
 
             // Draw terrain after player
             RenderPuddleReflectionTerrain(beforePlayer: false);
 
+            // Draw map tiles after player
+            RenderLayersMapReflections(beforePlayer: false);
+
+            // Draw npcs after player
+            RenderPuddleReflectionNPCs(beforePlayer: false);
+
             // Draw puddle ripples on top, unchanged
             Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
             foreach (var rippleSprite in DynamicReflections.puddleManager.puddleRippleSprites.ToList())
             {
-                rippleSprite.draw(Game1.spriteBatch);
+                if (Utility.isOnScreen(rippleSprite.Position, 3 * 64))
+                {
+                    rippleSprite.draw(Game1.spriteBatch);
+                }
             }
             Game1.spriteBatch.End();
 
@@ -899,7 +989,6 @@ namespace DynamicReflections.Framework.Utilities
             if (DynamicReflections.modConfig.AreNPCReflectionsEnabled is true)
             {
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: isWavy ? DynamicReflections.waterReflectionEffect : null);
-                Game1.spriteBatch.Draw(DynamicReflections.npcWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
                 Game1.spriteBatch.End();
             }
         }

@@ -1,12 +1,15 @@
 ﻿using DynamicReflections.Framework.Managers;
+using DynamicReflections.Framework.Utilities;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
 using StardewValley.Buildings;
+using StardewValley.Characters;
 using StardewValley.Locations;
 using StardewValley.Menus;
+using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -70,7 +73,7 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return true;
             }
 
-            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ref ___m_tilePosition);
+            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, null, ref ___m_tilePosition);
         }
 
         private static bool DrawTilePrefix(IDisplayDevice __instance, SpriteBatch ___m_spriteBatchAlpha, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition, Tile? tile, Location location, float layerDepth)
@@ -80,10 +83,10 @@ namespace DynamicReflections.Framework.Patches.SMAPI
                 return true;
             }
 
-            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ref ___m_tilePosition);
+            return ActualDrawTilePrefix(tile, location, layerDepth, ___m_spriteBatchAlpha, ___m_tileSheetTextures, ref ___m_tilePosition);
         }
 
-        private static bool ActualDrawTilePrefix(Tile? tile, Location location, float layerDepth, SpriteBatch ___m_spriteBatchAlpha, ref Vector2 ___m_tilePosition)
+        private static bool ActualDrawTilePrefix(Tile? tile, Location location, float layerDepth, SpriteBatch ___m_spriteBatchAlpha, Dictionary<TileSheet, Texture2D> ___m_tileSheetTextures, ref Vector2 ___m_tilePosition)
         {
             if (DynamicReflections.currentWaterSettings.AreReflectionsEnabled is false)
             {
