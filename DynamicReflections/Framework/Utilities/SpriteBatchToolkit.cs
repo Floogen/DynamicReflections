@@ -402,11 +402,17 @@ namespace DynamicReflections.Framework.Utilities
             // Draw npcs before player
             RenderWaterReflectionNPCs(afterPlayer: false);
 
+            // Draw farmhands before player
+            DrawFarmhandWaterReflections(afterPlayer: false);
+
             // Draw player reflection (if near water tile)
             if (DynamicReflections.shouldDrawWaterReflection)
             {
-                DrawPlayerWaterReflection();
+                DrawPlayerWaterReflection(Game1.player);
             }
+
+            // Draw farmhands after player
+            DrawFarmhandWaterReflections(beforePlayer: false);
 
             // Draw terrain after player
             RenderWaterReflectionTerrain(beforePlayer: false);
@@ -843,8 +849,14 @@ namespace DynamicReflections.Framework.Utilities
             // Draw npcs before player
             RenderPuddleReflectionNPCs(afterPlayer: false);
 
+            // Draw farmhands before player
+            DrawFarmhandPuddleReflections(afterPlayer: false);
+
             // Draw player reflection
-            DrawPlayerPuddleReflection();
+            DrawPlayerPuddleReflection(Game1.player);
+
+            // Draw farmhands after player
+            DrawFarmhandPuddleReflections(beforePlayer: false);
 
             // Draw terrain after player
             RenderPuddleReflectionTerrain(beforePlayer: false);
@@ -871,11 +883,36 @@ namespace DynamicReflections.Framework.Utilities
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
         }
 
-        internal static void DrawPlayerWaterReflection()
+        internal static void DrawFarmhandWaterReflections(bool beforePlayer = true, bool afterPlayer = true)
+        {
+            foreach (var farmhand in Game1.getOnlineFarmers())
+            {
+                if (farmhand == Game1.player)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && farmhand.Tile.Y <= Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && farmhand.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (Utility.isOnScreen(farmhand.Position, 64 * 3) is false)
+                {
+                    continue;
+                }
+
+                DrawPlayerWaterReflection(farmhand);
+            }
+        }
+
+        internal static void DrawPlayerWaterReflection(Farmer farmer)
         {
             // Cache what we’re going to touch so we can restore it
-            var oldDirection = Game1.player.FacingDirection;
-            var oldSprite = Game1.player.FarmerSprite;
+            var oldDirection = farmer.FacingDirection;
+            var oldSprite = farmer.FarmerSprite;
 
             var currentWaterSettings = DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation);
 
@@ -886,8 +923,8 @@ namespace DynamicReflections.Framework.Utilities
                 var scale = Matrix.CreateScale(1f, -1f, 1f);
 
                 // Pivot at the water reflection line (already computed in world space, convert to screen).
-                float yOffset = Game1.player.IsSitting() ? 16f : 0f;
-                float pivotY = Game1.GlobalToLocal(Game1.viewport, DynamicReflections.waterReflectionPosition.Value).Y;
+                float yOffset = farmer.IsSitting() ? 16f : 0f;
+                float pivotY = Game1.GlobalToLocal(Game1.viewport, farmer.Position + currentWaterSettings.PlayerReflectionOffset * 64).Y;
                 var position = Matrix.CreateTranslation(0f, (pivotY + yOffset) * 2f, 0f);
 
                 Game1.spriteBatch.Begin(
@@ -908,32 +945,56 @@ namespace DynamicReflections.Framework.Utilities
                     SamplerState.PointClamp
                 );
 
-                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
-                Game1.player.FarmerSprite = oldDirection == 0
+                farmer.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
+                farmer.FarmerSprite = oldDirection == 0
                     ? DynamicReflections.mirrorReflectionSprite
                     : oldSprite;
 
-                Game1.player.modData["FashionSense.Animation.FacingDirection"] =
-                    Game1.player.FacingDirection.ToString();
+                farmer.modData["FashionSense.Animation.FacingDirection"] = farmer.FacingDirection.ToString();
             }
 
-            // IMPORTANT: No longer touch Game1.player.Position here.
-            Game1.player.draw(Game1.spriteBatch);
+            // IMPORTANT: No longer touch farmer.Position here.
+            farmer.draw(Game1.spriteBatch);
 
             // Restore what changed
-            Game1.player.FacingDirection = oldDirection;
-            Game1.player.FarmerSprite = oldSprite;
+            farmer.FacingDirection = oldDirection;
+            farmer.FarmerSprite = oldSprite;
 
             Game1.spriteBatch.End();
         }
 
-        internal static void DrawPlayerPuddleReflection()
+        internal static void DrawFarmhandPuddleReflections(bool beforePlayer = true, bool afterPlayer = true)
         {
-            var oldDirection = Game1.player.FacingDirection;
-            var oldSprite = Game1.player.FarmerSprite;
+            foreach (var farmhand in Game1.getOnlineFarmers())
+            {
+                if (farmhand == Game1.player)
+                {
+                    continue;
+                }
+                else if (beforePlayer is false && farmhand.Tile.Y <= Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (afterPlayer is false && farmhand.Tile.Y > Game1.player.Tile.Y)
+                {
+                    continue;
+                }
+                else if (Utility.isOnScreen(farmhand.Position, 64 * 3) is false)
+                {
+                    continue;
+                }
+
+                DrawPlayerPuddleReflection(farmhand);
+            }
+        }
+
+        internal static void DrawPlayerPuddleReflection(Farmer farmer)
+        {
+            var oldDirection = farmer.FacingDirection;
+            var oldSprite = farmer.FarmerSprite;
 
             // Original world position
-            var oldPosition = Game1.player.Position;
+            var oldPosition = farmer.Position;
 
             // Where the reflection was previously drawn (world space)
             var worldOffset = DynamicReflections.currentPuddleSettings.ReflectionOffset * 64f;
@@ -945,7 +1006,7 @@ namespace DynamicReflections.Framework.Utilities
             var delta = targetScreen - playerScreen;
 
             // Same vertical flip & pivot as before (across the player's original local Y)
-            float yOffset = Game1.player.IsSitting() ? 32f : 0f;
+            float yOffset = farmer.IsSitting() ? 32f : 0f;
             var scale = Matrix.CreateScale(1f, -1f, 1f);
             var pivot = Matrix.CreateTranslation(0f, (playerScreen.Y + yOffset) * 2f, 0f);
 
@@ -964,10 +1025,10 @@ namespace DynamicReflections.Framework.Utilities
             );
 
             // Draw the player at their real position; transform handles reflection+offset
-            Game1.player.draw(Game1.spriteBatch);
+            farmer.draw(Game1.spriteBatch);
 
-            Game1.player.FacingDirection = oldDirection;
-            Game1.player.FarmerSprite = oldSprite;
+            farmer.FacingDirection = oldDirection;
+            farmer.FarmerSprite = oldSprite;
 
             Game1.spriteBatch.End();
         }
