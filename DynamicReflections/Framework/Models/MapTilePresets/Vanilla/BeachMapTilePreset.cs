@@ -13,6 +13,7 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
         public override string MapName { get; } = "Beach";
         public override List<ReflectableMapObject> MapObjects { get; } = new List<ReflectableMapObject>()
         {
+            /*
             new ReflectableMapObject("Street_Lamp_1", new List<ReflectableMapTile>()
             {
                 new ReflectableMapTile(layerName: "Buildings", x: 44, y: 34) { Offset = new Vector2(0f, 2.5f) },
@@ -27,7 +28,6 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
                 new ReflectableMapTile(layerName: "Front", x: 90, y: 36) { Offset = new Vector2(0f, 2.5f) },
                 new ReflectableMapTile(layerName: "Front", x: 90, y: 35) { Offset = new Vector2(0f, 2.5f) },
             })
-            /*
             new ReflectableMapObject("Willy_Fish_Shop", new List<ReflectableMapTile>()
             {
                 new ReflectableMapTile(layerName: "Buildings", x: 28, y: 33) { Offset = new Vector2(0f, 0f) },

@@ -106,7 +106,8 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
                 new ReflectableMapTile(layerName: "Buildings", x: 93, y: 13) { Offset = new Vector2(0f, 1.6f) },
                 new ReflectableMapTile(layerName: "Buildings", x: 94, y: 13) { Offset = new Vector2(0f, 1.6f) },
                 new ReflectableMapTile(layerName: "Buildings", x: 95, y: 13) { Offset = new Vector2(0f, 1.6f) },
-                new ReflectableMapTile(layerName: "Buildings", x: 96, y: 13) { Offset = new Vector2(0f, 1.6f) }
+                new ReflectableMapTile(layerName: "Buildings", x: 96, y: 13) { Offset = new Vector2(0f, 1.6f) },
+                new ReflectableMapTile(layerName: "Buildings", x: 97, y: 13) { Offset = new Vector2(0f, 1.6f) }
             }),
         };
     }
