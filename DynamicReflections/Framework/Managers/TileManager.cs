@@ -63,16 +63,6 @@ namespace DynamicReflections.Framework.Managers
 
             if (location is not null)
             {
-                // Load in any presets
-                var firstPresetMatch = _mapTilePresets.FirstOrDefault(p => p.MapName.Equals(location.Name, StringComparison.OrdinalIgnoreCase));
-                if (firstPresetMatch is not null)
-                {
-                    foreach (var reflectableMapObject in firstPresetMatch.MapObjects)
-                    {
-                        AddMapObject(reflectableMapObject);
-                    }
-                }
-
                 // Find any ReflectableMapTile that exist on the current map
                 if (location.Map is not null && location.Map.Layers is not null)
                 {
@@ -80,6 +70,37 @@ namespace DynamicReflections.Framework.Managers
                     GetReflectableMapTilesFromLayers(location.buildingLayers);
                     GetReflectableMapTilesFromLayers(location.frontLayers);
                     GetReflectableMapTilesFromLayers(location.alwaysFrontLayers);
+                }
+
+                // Load in any presets
+                var firstPresetMatch = _mapTilePresets.FirstOrDefault(p => p.MapName.Equals(location.Name, StringComparison.OrdinalIgnoreCase));
+                if (firstPresetMatch is not null)
+                {
+                    if (firstPresetMatch.SkipWithModIds.Count == 0 || firstPresetMatch.SkipWithModIds.Any(id => DynamicReflections.modHelper.ModRegistry.IsLoaded(id)) is false)
+                    {
+                        if (firstPresetMatch.RequiredModIds.Count == 0 || firstPresetMatch.RequiredModIds.Any(id => DynamicReflections.modHelper.ModRegistry.IsLoaded(id)) is true)
+                        {
+                            foreach (var reflectableMapObject in firstPresetMatch.MapObjects)
+                            {
+                                // Skip any preset MapObjects if the tile currently already has a reflective property (via Content Patcher, etc.)
+                                bool shouldUsePreset = true;
+                                foreach (var mapTile in reflectableMapObject.GetTiles())
+                                {
+                                    if (_refectableMapObjects.Any(m => m.HasTileOnAnyLayer((int)mapTile.Tile.X, (int)mapTile.Tile.Y)))
+                                    {
+                                        shouldUsePreset = false;
+                                        DynamicReflections.monitor.Log($"Skipping preset reflectable map object in {firstPresetMatch.MapName} at tile {reflectableMapObject.Tile} due to overlapping TileProperty at {mapTile.Tile}!", StardewModdingAPI.LogLevel.Trace);
+                                        break;
+                                    }
+                                }
+                                
+                                if (shouldUsePreset is true)
+                                {
+                                    AddMapObject(reflectableMapObject);
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

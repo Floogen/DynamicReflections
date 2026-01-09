@@ -750,7 +750,7 @@ namespace DynamicReflections.Framework.Utilities
 
                 foreach (var reflectableMapObject in DynamicReflections.tileManager.GetReflectableMapObjectsForCurrentLocation())
                 {
-                    if (reflectableMapObject.HasTileWithLayer(layer.Id) is false || reflectableMapObject.IsEnabled() is false)
+                    if (reflectableMapObject.HasAnyTileWithLayer(layer.Id) is false || reflectableMapObject.IsEnabled() is false)
                     {
                         continue;
                     }
