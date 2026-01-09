@@ -74,7 +74,7 @@ namespace DynamicReflections.Framework.Managers
 
                 // Load in any presets
                 var firstPresetMatch = _mapTilePresets.FirstOrDefault(p => p.MapName.Equals(location.Name, StringComparison.OrdinalIgnoreCase));
-                if (firstPresetMatch is not null)
+                if (firstPresetMatch is not null && DynamicReflections.modConfig.ShouldUsePresetMapReflections is true)
                 {
                     if (firstPresetMatch.SkipWithModIds.Count == 0 || firstPresetMatch.SkipWithModIds.Any(id => DynamicReflections.modHelper.ModRegistry.IsLoaded(id)) is false)
                     {

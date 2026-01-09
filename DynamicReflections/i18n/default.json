@@ -13,6 +13,7 @@
   "config.general_settings.player_buildings_reflections": "Enable Player Building Reflections",
   "config.general_settings.furniture_reflections": "Enable Furniture Reflections",
   "config.general_settings.map_reflections": "Enable Map Reflections",
+  "config.general_settings.use_preset_map_reflections": "Use Preset Tiles for Map Reflections",
   "config.general_settings.sky_reflections": "Enable Sky Reflections",
   "config.general_settings.link.click_here": "Click Here",
   "config.general_settings.link.return_main": "Return to the Main Page",
