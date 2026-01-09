@@ -91,36 +91,48 @@ namespace DynamicReflections.Framework.Patches.Tools
                 return;
             }
 
-            var playerTilePosition = Game1.player.TilePoint;
-            if (__instance.lastTouchActionLocation.Equals(Vector2.Zero) && Int32.TryParse(__instance.doesTileHaveProperty(playerTilePosition.X, playerTilePosition.Y, "PuddleIndex", "Back"), out int puddleIndex) && puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
+            foreach (var farmer in __instance.farmers)
             {
-                float xOffset = Game1.player.FacingDirection == 3 ? 64f : 0f;
-                float yOffset = Game1.player.FacingDirection == 0 ? 64f : 0f;
-                switch (Game1.player.FacingDirection)
+                if (DynamicReflections.puddleManager.puddleRippleCooldowns.ContainsKey(farmer) is false)
                 {
-                    case 0:
-                    case 2:
-                        xOffset += 20f;
-                        break;
-                    case 1:
-                    case 3:
-                        yOffset += 20f;
-                        break;
+                    DynamicReflections.puddleManager.puddleRippleCooldowns[farmer] = 0;
                 }
 
-                TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(Game1.player.StandingPixel.X - xOffset, Game1.player.StandingPixel.Y - yOffset), flicker: false, flipped: false, 0f, 0f, DynamicReflections.currentPuddleSettings.RippleColor, 1f, 0f, 0f, 0f);
-                splashSprite.acceleration = new Vector2(Game1.player.xVelocity, Game1.player.yVelocity);
-                DynamicReflections.puddleManager.puddleRippleSprites.Add(splashSprite);
-
-                TemporaryAnimatedSprite dropletSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(2 * 64, 18 * 64, 64, 64), Game1.random.Next(75, 125), 5, 1, new Vector2(playerTilePosition.X, playerTilePosition.Y - 0.5f) * 64f, flicker: false, flipped: false, 0f, 0f, new Color(141, 181, 216, 91), 1f, 0f, 0f, 0f);
-                splashSprite.acceleration = new Vector2(Game1.player.xVelocity, Game1.player.yVelocity);
-                __instance.temporarySprites.Add(dropletSprite);
-
-                if (DynamicReflections.currentPuddleSettings.ShouldPlaySplashSound)
+                var playerTilePosition = farmer.TilePoint;
+                if (farmer.isMoving() && DynamicReflections.puddleManager.puddleRippleCooldowns[farmer] <= 0 && Int32.TryParse(__instance.doesTileHaveProperty(playerTilePosition.X, playerTilePosition.Y, "PuddleIndex", "Back"), out int puddleIndex) && puddleIndex != PuddleManager.DEFAULT_PUDDLE_INDEX)
                 {
-                    __instance.playSound(Game1.random.NextDouble() > 0.5 ? "slosh" : "waterSlosh");
+                    float xOffset = farmer.FacingDirection == 3 ? 64f : 0f;
+                    float yOffset = farmer.FacingDirection == 0 ? 64f : 0f;
+                    switch (farmer.FacingDirection)
+                    {
+                        case 0:
+                        case 2:
+                            xOffset += 20f;
+                            break;
+                        case 1:
+                        case 3:
+                            yOffset += 20f;
+                            break;
+                    }
+
+                    TemporaryAnimatedSprite splashSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(0, 0, 64, 64), Game1.random.Next(50, 100), 9, 1, new Vector2(farmer.StandingPixel.X - xOffset, farmer.StandingPixel.Y - yOffset), flicker: false, flipped: false, 0f, 0f, DynamicReflections.currentPuddleSettings.RippleColor, 1f, 0f, 0f, 0f);
+                    splashSprite.acceleration = new Vector2(farmer.xVelocity, farmer.yVelocity);
+                    DynamicReflections.puddleManager.puddleRippleSprites.Add(splashSprite);
+
+                    TemporaryAnimatedSprite dropletSprite = new TemporaryAnimatedSprite("TileSheets\\animations", new Microsoft.Xna.Framework.Rectangle(2 * 64, 18 * 64, 64, 64), Game1.random.Next(75, 125), 5, 1, new Vector2(playerTilePosition.X, playerTilePosition.Y - 0.5f) * 64f, flicker: false, flipped: false, 0f, 0f, new Color(141, 181, 216, 91), 1f, 0f, 0f, 0f);
+                    __instance.temporarySprites.Add(dropletSprite);
+
+                    if (DynamicReflections.currentPuddleSettings.ShouldPlaySplashSound)
+                    {
+                        __instance.playSound(Game1.random.NextDouble() > 0.5 ? "slosh" : "waterSlosh");
+                    }
+
+                    DynamicReflections.puddleManager.puddleRippleCooldowns[farmer] = 250f;
                 }
-                __instance.lastTouchActionLocation = new Vector2(playerTilePosition.X, playerTilePosition.Y);
+                else if (DynamicReflections.puddleManager.puddleRippleCooldowns[farmer] >= 0)
+                {
+                    DynamicReflections.puddleManager.puddleRippleCooldowns[farmer] -= time.ElapsedGameTime.TotalMilliseconds;
+                }
             }
 
             _elapsedMilliseconds += time.ElapsedGameTime.TotalMilliseconds;
