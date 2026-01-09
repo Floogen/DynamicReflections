@@ -408,7 +408,7 @@ namespace DynamicReflections.Framework.Utilities
             // Draw terrain after player
             RenderWaterReflectionTerrain(beforePlayer: false);
 
-            // Draw map tiles before player
+            // Draw map tiles after player
             RenderLayersMapReflections(beforePlayer: false);
 
             // Drop the render target
