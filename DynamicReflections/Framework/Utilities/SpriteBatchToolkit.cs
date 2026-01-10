@@ -252,11 +252,13 @@ namespace DynamicReflections.Framework.Utilities
                 var scale = new Vector2(1f, 1f);
                 var scaleOffset = Vector2.Zero;
 
+                float mirrorRange = (mirror.FurnitureLink != null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) : mirror.Settings.Dimensions.Height);
+                var playerDistanceFromBase = Math.Abs((mirror.WorldPosition.Y - Game1.player.Position.Y) + 64f) / 64f / mirrorRange;
                 Game1.spriteBatch.Draw(
                     rawReflectionRender,
                     new Vector2(-flipOffset, 0f),
                     rawReflectionRender.Bounds,
-                    mirror.Settings.ReflectionOverlay,
+                    Color.Lerp(new Color(25, 25, 25, 25), mirror.Settings.ReflectionOverlay, 1f - playerDistanceFromBase),
                     0f,
                     scaleOffset,
                     scale,
