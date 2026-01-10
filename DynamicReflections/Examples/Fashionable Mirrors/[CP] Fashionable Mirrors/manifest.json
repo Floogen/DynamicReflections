@@ -11,7 +11,7 @@
   "Dependencies": [
     {
       "UniqueID": "PeacefulEnd.FashionSense",
-      "MinimumVersion": "4.9.0"
+      "MinimumVersion": "7.2.0"
     }
   ]
 }
