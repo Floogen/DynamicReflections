@@ -1,20 +1,17 @@
 ﻿{
-  "Name": "[DGA] Fashionable Mirrors",
+  "Name": "[CP] Fashionable Mirrors",
   "Author": "PeacefulEnd",
   "Version": "1.0.0",
   "Description": "Furniture component for Fashionable Mirrors.",
-  "UniqueID": "PeacefulEnd.DGA.FashionableMirrors",
+  "UniqueID": "PeacefulEnd.CP.FashionableMirrors",
   "UpdateKeys": [],
   "ContentPackFor": {
-    "UniqueID": "spacechase0.DynamicGameAssets",
-    "MinimumVersion": "1.4.3"
+        "UniqueID": "Pathoschild.ContentPatcher"
   },
   "Dependencies": [
     {
       "UniqueID": "PeacefulEnd.FashionSense",
       "MinimumVersion": "4.9.0"
     }
-  ],
-  "DGA.FormatVersion": 2,
-  "DGA.ConditionsFormatVersion": "1.23.0"
+  ]
 }

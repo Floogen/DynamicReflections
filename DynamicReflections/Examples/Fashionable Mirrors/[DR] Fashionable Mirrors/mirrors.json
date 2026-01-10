@@ -1,26 +1,6 @@
 ﻿[
   {
-    "FurnitureId": "PeacefulEnd.DGA.FashionableMirrors/Enchanted Mirror",
-    "MaskTexture": "enchanted_mirror_mask.png",
-    "Mirror": {
-      "Dimensions": {
-        "Width": 16,
-        "Height": 32
-      },
-      "ReflectionOverlay": {
-        "R": 255,
-        "G": 255,
-        "B": 255,
-        "A": 155
-      },
-      "ReflectionOffset": {
-        "X": 0,
-        "Y": 4
-      }
-    }
-  },
-  {
-    "FurnitureId": "PeacefulEnd.DGA.FashionableMirrors/Leaning Mirror",
+    "FurnitureId": "PeacefulEnd.CP.FashionableMirrors_LeaningMirror",
     "MaskTexture": "leaning_mirror_mask.png",
     "Mirror": {
       "Dimensions": {
@@ -36,7 +16,7 @@
     }
   },
   {
-    "FurnitureId": "PeacefulEnd.DGA.FashionableMirrors/Double Leaning Mirror",
+    "FurnitureId": "PeacefulEnd.CP.FashionableMirrors_DoubleLeaningMirror",
     "MaskTexture": "double_leaning_mirror_mask.png",
     "Mirror": {
       "Dimensions": {
@@ -52,7 +32,7 @@
     }
   },
   {
-    "FurnitureId": "PeacefulEnd.DGA.FashionableMirrors/Table Mirror",
+    "FurnitureId": "PeacefulEnd.CP.FashionableMirrors_TableMirror",
     "MaskTexture": "table_mirror_mask.png",
     "Mirror": {
       "Dimensions": {
