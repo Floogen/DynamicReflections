@@ -1,0 +1,19 @@
+{
+    "Format": "2.8.0",
+    "Changes": [
+      {
+          "Action": "EditData",
+          "Target": "Data/Furniture",
+          "Entries": {
+              "{{ModId}}_LeaningMirror": "Leaning Mirror/other/2 3/1 1/1/1250/-1/{{i18n: furniture.LeaningMirror.name}}/0/Mods\\PeacefulEnd.FashionableMirrors\\leaning_mirror/0/fashionsense_furniture",
+              "{{ModId}}_DoubleLeaningMirror": "Double Leaning Mirror/other/2 3/2 1/1/1250/-1/{{i18n: furniture.DoubleLeaningMirror.name}}/0/Mods\\PeacefulEnd.FashionableMirrors\\double_leaning_mirror/0/fashionsense_furniture",
+              "{{ModId}}_TableMirror": "Table Mirror/other/2 3/2 1/1/1250/-1/{{i18n: furniture.TableMirror.name}}/0/Mods\\PeacefulEnd.FashionableMirrors\\table_mirror/0/fashionsense_furniture"
+          }
+      },
+      {
+        "Action": "Load",
+        "Target": "Mods/PeacefulEnd.FashionableMirrors/leaning_mirror, Mods/PeacefulEnd.FashionableMirrors/double_leaning_mirror, Mods/PeacefulEnd.FashionableMirrors/table_mirror",
+        "FromFile": "assets/{{TargetWithoutPath}}.png"
+      }
+    ]
+}
