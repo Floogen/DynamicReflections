@@ -50,7 +50,17 @@ namespace DynamicReflections.Framework.Models.Reflections
             _layers.Add(mapTile.LayerName.ToLower());
         }
 
-        public bool HasTileWithLayer(string layerName)
+        public List<ReflectableMapTile> GetTiles()
+        {
+            return _mapTiles;
+        }
+
+        public bool HasTileOnAnyLayer(int x, int y)
+        {
+            return _mapTiles.Any(m => m.Tile.X == x && m.Tile.Y == y);
+        }
+
+        public bool HasAnyTileWithLayer(string layerName)
         {
             return _layers.Contains(layerName.ToLower());
         }

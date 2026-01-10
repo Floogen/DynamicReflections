@@ -21,6 +21,7 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
         public bool ArePlayerBuildingReflectionsEnabled { get; set; } = true;
         public bool AreFurnitureReflectionsEnabled { get; set; } = true;
         public bool AreMapReflectionsEnabled { get; set; } = true;
+        public bool ShouldUsePresetMapReflections { get; set; } = true;
         public bool AreSkyReflectionsEnabled { get; set; } = true;
 
         public WaterSettings WaterReflectionSettings { get; set; } = new WaterSettings();

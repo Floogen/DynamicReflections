@@ -1,0 +1,17 @@
+﻿{
+  "Name": "[CP] Fashionable Mirrors",
+  "Author": "PeacefulEnd",
+  "Version": "1.0.0",
+  "Description": "Furniture component for Fashionable Mirrors.",
+  "UniqueID": "PeacefulEnd.CP.FashionableMirrors",
+  "UpdateKeys": [],
+  "ContentPackFor": {
+        "UniqueID": "Pathoschild.ContentPatcher"
+  },
+  "Dependencies": [
+    {
+      "UniqueID": "PeacefulEnd.FashionSense",
+      "MinimumVersion": "7.2.0"
+    }
+  ]
+}

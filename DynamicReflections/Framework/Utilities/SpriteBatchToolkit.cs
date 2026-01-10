@@ -182,11 +182,20 @@ namespace DynamicReflections.Framework.Utilities
 
             // Draw the raw and flattened player sprites
             int index = 0;
+
+            if (oldDirection == 0 || oldDirection == 2)
+            {
+                Game1.player.FarmerSprite = DynamicReflections.mirrorReflectionSprite;
+            }
+
+            Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
+            Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
+
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
                 var rawReflectionRender = DynamicReflections.inBetweenRenderTarget;
 
-                // Set the render target
+                // Set the render targets
                 SpriteBatchToolkit.StartRendering(rawReflectionRender);
 
                 // Draw the scene
@@ -211,10 +220,6 @@ namespace DynamicReflections.Framework.Utilities
                     transformMatrix: Matrix.CreateTranslation(delta.X, delta.Y, 0f)
                 );
 
-                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
-                Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
-                Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
-
                 Game1.player.draw(Game1.spriteBatch);
 
                 Game1.spriteBatch.End();
@@ -232,8 +237,6 @@ namespace DynamicReflections.Framework.Utilities
 
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
 
-                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
-
                 // Should flip the sprite on the X-axis (if facing front or back)
                 var flipEffect = Game1.player.FacingDirection is (0 or 2)
                     ? SpriteEffects.FlipHorizontally
@@ -249,11 +252,13 @@ namespace DynamicReflections.Framework.Utilities
                 var scale = new Vector2(1f, 1f);
                 var scaleOffset = Vector2.Zero;
 
+                float mirrorRange = (mirror.FurnitureLink != null ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f) : mirror.Settings.Dimensions.Height);
+                var playerDistanceFromBase = Math.Abs((mirror.WorldPosition.Y - Game1.player.Position.Y) + 64f) / 64f / mirrorRange;
                 Game1.spriteBatch.Draw(
                     rawReflectionRender,
                     new Vector2(-flipOffset, 0f),
                     rawReflectionRender.Bounds,
-                    mirror.Settings.ReflectionOverlay,
+                    Color.Lerp(new Color(25, 25, 25, 25), mirror.Settings.ReflectionOverlay, 1f - playerDistanceFromBase),
                     0f,
                     scaleOffset,
                     scale,
@@ -320,9 +325,10 @@ namespace DynamicReflections.Framework.Utilities
             }
 
             // Restore player state
+            Game1.player.FarmerSprite = oldSprite;
             Game1.player.Position = oldPosition;
             Game1.player.FacingDirection = oldDirection;
-            Game1.player.FarmerSprite = oldSprite;
+            Game1.player.modData["FashionSense.Animation.FacingDirection"] = oldDirection.ToString();
 
             // Restore modData for Fashion Sense
             foreach (var dataKey in modDataCache.Keys)
@@ -756,7 +762,7 @@ namespace DynamicReflections.Framework.Utilities
 
                 foreach (var reflectableMapObject in DynamicReflections.tileManager.GetReflectableMapObjectsForCurrentLocation())
                 {
-                    if (reflectableMapObject.HasTileWithLayer(layer.Id) is false || reflectableMapObject.IsEnabled() is false)
+                    if (reflectableMapObject.HasAnyTileWithLayer(layer.Id) is false || reflectableMapObject.IsEnabled() is false)
                     {
                         continue;
                     }
