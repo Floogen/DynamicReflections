@@ -175,14 +175,14 @@ namespace DynamicReflections.Framework.Managers
                     }
                 }
 
-                if (tile.Properties.TryGetValue("DR_Color", out string color) && string.IsNullOrEmpty(color) is false && color.Split(' ').Length >= 3 is true)
+                if (tile.Properties.TryGetValue("DR_Color", out string color) && string.IsNullOrEmpty(color) is false && color.Split(' ').Length >= 4 is true)
                 {
                     var splitColorValues = color.Split(' ');
 
                     bool isValidColor = true;
-                    for (int i = 0; i < 3; i++)
+                    for (int i = 0; i < 4; i++)
                     {
-                        if (float.TryParse(splitColorValues[i], out float _) is false)
+                        if (int.TryParse(splitColorValues[i], out int _) is false)
                         {
                             isValidColor = false;
                             break;
@@ -192,7 +192,7 @@ namespace DynamicReflections.Framework.Managers
                     if ( (isValidColor))
                     {
                         {
-                            reflectableMapTile.ReflectionColor = new Color(float.Parse(splitColorValues[0]), float.Parse(splitColorValues[1]), float.Parse(splitColorValues[2]), float.Parse(splitColorValues[3]));
+                            reflectableMapTile.ReflectionColor = new Color(int.Parse(splitColorValues[0]), int.Parse(splitColorValues[1]), int.Parse(splitColorValues[2]), int.Parse(splitColorValues[3]));
                         }
                     }
                 }
