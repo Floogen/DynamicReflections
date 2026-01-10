@@ -13,6 +13,7 @@ using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Buildings;
 using StardewValley.Extensions;
@@ -39,6 +40,7 @@ namespace DynamicReflections
         // Managers
         internal static ApiManager apiManager;
         internal static AssetManager assetManager;
+        internal static MessageManager messageManager;
         internal static MirrorsManager mirrorsManager;
         internal static PuddleManager puddleManager;
         internal static SkyManager skyManager;
@@ -113,6 +115,7 @@ namespace DynamicReflections
             // Load the managers
             apiManager = new ApiManager(monitor);
             assetManager = new AssetManager(modHelper);
+            messageManager = new MessageManager(monitor, modHelper, ModManifest.UniqueID);
             mirrorsManager = new MirrorsManager();
             puddleManager = new PuddleManager();
             skyManager = new SkyManager();
@@ -152,6 +155,7 @@ namespace DynamicReflections
             helper.Events.World.TerrainFeatureListChanged += OnTerrainFeatureListChanged;
             helper.Events.World.LargeTerrainFeatureListChanged += OnLargeTerrainFeatureChanged;
             helper.Events.World.BuildingListChanged += OnBuildingListChanged;
+            helper.Events.Multiplayer.ModMessageReceived += OnModMessageReceived;
         }
 
         public override object GetApi()
@@ -691,10 +695,11 @@ namespace DynamicReflections
             if (isFreshInstall || isNewerVersion)
             {
                 // Handle new version behavior
-                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.2.0")))
+                if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.3.0")))
                 {
                     // Reset the default WaterReflectionSettings
                     modConfig.WaterReflectionSettings.Reset();
+                    DynamicReflections.modConfig.LocalWaterReflectionSettings["Beach"] = GMCMHelper.GetBeachSettings();
                 }
                 if (isFreshInstall || (isNewerVersion && lastInstalledVersion.IsOlderThan("3.1.1")))
                 {
@@ -749,6 +754,14 @@ namespace DynamicReflections
             if (e.Removed.Count() > 0)
             {
                 ResetLocationTerrainCache(e.Location);
+            }
+        }
+
+        private void OnModMessageReceived(object sender, ModMessageReceivedEventArgs e)
+        {
+            if (e.FromModID == ModManifest.UniqueID)
+            {
+                messageManager.HandleIncomingMessage(e);
             }
         }
 

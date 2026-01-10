@@ -266,9 +266,14 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
             switch (location.NameOrUniqueName)
             {
                 case "Beach":
-                    return new WaterSettings() { OverrideDefaultSettings = true, PlayerReflectionOffset = new Vector2(0f, 1f), NPCReflectionOffset = new Vector2(0f, 0.7f) };
+                    return GetBeachSettings();
             }
             return new WaterSettings();
+        }
+
+        internal static WaterSettings GetBeachSettings()
+        {
+            return new WaterSettings() { OverrideDefaultSettings = true, PlayerReflectionOffset = new Vector2(0f, 0.5f), NPCReflectionOffset = new Vector2(0f, 0.8f) };
         }
     }
 }
