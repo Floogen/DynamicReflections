@@ -69,6 +69,7 @@ namespace DynamicReflections
         internal static bool isDrawingPuddles;
 
         // Mirror reflection variables
+        private static int _cachedMirrorPlayerDirection;
         internal static FarmerSprite mirrorReflectionSprite;
         internal static Dictionary<Point, Mirror> mirrors = new Dictionary<Point, Mirror>();
         internal static List<Point> activeMirrorPositions = new List<Point>();
@@ -556,43 +557,75 @@ namespace DynamicReflections
                     DynamicReflections.shouldDrawMirrorReflection = DynamicReflections.activeMirrorPositions.Count > 0;
                     if (DynamicReflections.shouldDrawMirrorReflection)
                     {
-                        if (DynamicReflections.mirrorReflectionSprite == null)
+                        if (DynamicReflections.mirrorReflectionSprite == null || (_cachedMirrorPlayerDirection != Game1.player.FacingDirection && (Game1.player.FacingDirection == 0 || Game1.player.FacingDirection == 2)))
                         {
-                            DynamicReflections.mirrorReflectionSprite = new FarmerSprite(Game1.player.FarmerSprite.textureName.Value);
+                            _cachedMirrorPlayerDirection = Game1.player.FacingDirection;
+                            //Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(_cachedMirrorPlayerDirection, true);
+                            DynamicReflections.mirrorReflectionSprite = new FarmerSprite(Game1.player.FarmerSprite.textureName.Value)
+                            {
+                                CurrentAnimation = Game1.player.FarmerSprite.CurrentAnimation,
+                                CurrentFrame = Game1.player.FarmerSprite.CurrentFrame
+                            };
+                            //Game1.player.FacingDirection = _cachedMirrorPlayerDirection;
                         }
 
-                        if (Game1.player.FacingDirection == 0 &&
-                            DynamicReflections.mirrorReflectionSprite.PauseForSingleAnimation == false &&
-                            Game1.player.UsingTool == false)
+                        if (_cachedMirrorPlayerDirection == 0 || _cachedMirrorPlayerDirection == 2)
                         {
-                            bool isCarrying = Game1.player.IsCarrying();
+                            bool carrying = Game1.player.IsCarrying();
+                            bool running = Game1.player.running;
+                            bool moveUp = _cachedMirrorPlayerDirection == 2;
+                            bool moveDown = _cachedMirrorPlayerDirection == 0;
 
-                            if (Game1.player.isMoving())
+                            var time = Game1.currentGameTime;
+
+                            if (Game1.player.isMoving() && !DynamicReflections.mirrorReflectionSprite.PauseForSingleAnimation && !Game1.player.UsingTool)
                             {
-                                if (Game1.player.running && !isCarrying)
+                                if (Game1.player.isRidingHorse() && !Game1.player.mount.dismounting.Value)
                                 {
-                                    DynamicReflections.mirrorReflectionSprite.animate(32, Game1.currentGameTime);
+                                    Game1.player.showRiding();
                                 }
-                                else if (Game1.player.running)
+                                else if (moveUp && running && !carrying)
                                 {
-                                    DynamicReflections.mirrorReflectionSprite.animate(128, Game1.currentGameTime);
+                                    DynamicReflections.mirrorReflectionSprite.animate(48, time);
                                 }
-                                else if (isCarrying)
+                                else if (moveDown && running && !carrying)
                                 {
-                                    DynamicReflections.mirrorReflectionSprite.animate(96, Game1.currentGameTime);
+                                    DynamicReflections.mirrorReflectionSprite.animate(32, time);
                                 }
-                                else
+                                else if (moveUp && running)
                                 {
-                                    DynamicReflections.mirrorReflectionSprite.animate(0, Game1.currentGameTime);
+                                    DynamicReflections.mirrorReflectionSprite.animate(144, time);
+                                }
+                                else if (moveDown && running)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(128, time);
+                                }
+                                else if (moveUp && !carrying)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(16, time);
+                                }
+                                else if (moveDown && !carrying)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(0, time);
+                                }
+                                else if (moveUp)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(112, time);
+                                }
+                                else if (moveDown)
+                                {
+                                    DynamicReflections.mirrorReflectionSprite.animate(96, time);
                                 }
                             }
-                            else if (isCarrying)
+                            else if (moveDown)
                             {
-                                DynamicReflections.mirrorReflectionSprite.setCurrentFrame(128);
+                                DynamicReflections.mirrorReflectionSprite.StopAnimation();
+                                DynamicReflections.mirrorReflectionSprite.CurrentFrame = 0;
                             }
-                            else
+                            else if (moveUp)
                             {
-                                DynamicReflections.mirrorReflectionSprite.setCurrentFrame(32);
+                                DynamicReflections.mirrorReflectionSprite.StopAnimation();
+                                DynamicReflections.mirrorReflectionSprite.CurrentFrame = 12;
                             }
                         }
                     }

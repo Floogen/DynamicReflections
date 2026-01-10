@@ -182,11 +182,20 @@ namespace DynamicReflections.Framework.Utilities
 
             // Draw the raw and flattened player sprites
             int index = 0;
+
+            if (oldDirection == 0 || oldDirection == 2)
+            {
+                Game1.player.FarmerSprite = DynamicReflections.mirrorReflectionSprite;
+            }
+
+            Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
+            Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
+
             foreach (var mirrorPosition in DynamicReflections.activeMirrorPositions)
             {
                 var rawReflectionRender = DynamicReflections.inBetweenRenderTarget;
 
-                // Set the render target
+                // Set the render targets
                 SpriteBatchToolkit.StartRendering(rawReflectionRender);
 
                 // Draw the scene
@@ -210,10 +219,6 @@ namespace DynamicReflections.Framework.Utilities
                     effect: null,
                     transformMatrix: Matrix.CreateTranslation(delta.X, delta.Y, 0f)
                 );
-
-                Game1.player.faceDirection(DynamicReflections.GetReflectedDirection(oldDirection, true));
-                Game1.player.FarmerSprite = oldSprite;
-                Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
 
                 Game1.player.draw(Game1.spriteBatch);
 
@@ -318,9 +323,9 @@ namespace DynamicReflections.Framework.Utilities
             }
 
             // Restore player state
-            Game1.player.Position = oldPosition;
-            Game1.player.faceDirection(oldDirection);
             Game1.player.FarmerSprite = oldSprite;
+            Game1.player.Position = oldPosition;
+            Game1.player.FacingDirection = oldDirection;
             Game1.player.modData["FashionSense.Animation.FacingDirection"] = oldDirection.ToString();
 
             // Restore modData for Fashion Sense
