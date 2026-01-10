@@ -1301,7 +1301,7 @@ namespace DynamicReflections
             // Find all mirror furniture
             foreach (var furniture in currentLocation.furniture)
             {
-                if (DynamicReflections.mirrorsManager.GetSettings(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                if (DynamicReflections.mirrorsManager.GetSettings(furniture.ItemId) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                     var settings = new MirrorSettings()
