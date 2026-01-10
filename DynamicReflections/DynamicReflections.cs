@@ -186,7 +186,7 @@ namespace DynamicReflections
             // Attempt to add any DGA mirrors
             foreach (var furniture in e.Added)
             {
-                if (DynamicReflections.mirrorsManager.GetSettings(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                if (DynamicReflections.mirrorsManager.GetSettings(furniture.ItemId) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                     var settings = new MirrorSettings()
@@ -209,7 +209,7 @@ namespace DynamicReflections
             // Attempt to remove any DGA mirrors
             foreach (var furniture in e.Removed)
             {
-                if (DynamicReflections.mirrorsManager.GetSettings(furniture.Name) is MirrorSettings baseSettings && baseSettings is not null)
+                if (DynamicReflections.mirrorsManager.GetSettings(furniture.ItemId) is MirrorSettings baseSettings && baseSettings is not null)
                 {
                     var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
                     foreach (var mirrorPosition in DynamicReflections.mirrors.Keys.ToList())
