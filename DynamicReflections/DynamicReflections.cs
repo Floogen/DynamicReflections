@@ -212,12 +212,11 @@ namespace DynamicReflections
             {
                 if (DynamicReflections.mirrorsManager.GetSettings(furniture.ItemId) is MirrorSettings baseSettings && baseSettings is not null)
                 {
-                    var point = new Point((int)furniture.TileLocation.X, (int)furniture.TileLocation.Y);
-                    foreach (var mirrorPosition in DynamicReflections.mirrors.Keys.ToList())
+                    foreach (var mirrorData in DynamicReflections.mirrors)
                     {
-                        if (DynamicReflections.mirrors[mirrorPosition].FurnitureLink is not null && mirrorPosition.X == point.X && mirrorPosition.Y == point.Y)
+                        if (mirrorData.Value.FurnitureLink == furniture)
                         {
-                            DynamicReflections.mirrors.Remove(mirrorPosition);
+                            DynamicReflections.mirrors.Remove(mirrorData.Key);
                         }
                     }
                 }
