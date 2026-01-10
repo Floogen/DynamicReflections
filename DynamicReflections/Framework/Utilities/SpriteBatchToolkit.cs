@@ -211,8 +211,8 @@ namespace DynamicReflections.Framework.Utilities
                     transformMatrix: Matrix.CreateTranslation(delta.X, delta.Y, 0f)
                 );
 
-                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
-                Game1.player.FarmerSprite = oldDirection == 0 ? DynamicReflections.mirrorReflectionSprite : oldSprite;
+                Game1.player.faceDirection(DynamicReflections.GetReflectedDirection(oldDirection, true));
+                Game1.player.FarmerSprite = oldSprite;
                 Game1.player.modData["FashionSense.Animation.FacingDirection"] = Game1.player.FacingDirection.ToString();
 
                 Game1.player.draw(Game1.spriteBatch);
@@ -231,8 +231,6 @@ namespace DynamicReflections.Framework.Utilities
                 Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
                 Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp);
-
-                Game1.player.FacingDirection = DynamicReflections.GetReflectedDirection(oldDirection, true);
 
                 // Should flip the sprite on the X-axis (if facing front or back)
                 var flipEffect = Game1.player.FacingDirection is (0 or 2)
@@ -321,8 +319,9 @@ namespace DynamicReflections.Framework.Utilities
 
             // Restore player state
             Game1.player.Position = oldPosition;
-            Game1.player.FacingDirection = oldDirection;
+            Game1.player.faceDirection(oldDirection);
             Game1.player.FarmerSprite = oldSprite;
+            Game1.player.modData["FashionSense.Animation.FacingDirection"] = oldDirection.ToString();
 
             // Restore modData for Fashion Sense
             foreach (var dataKey in modDataCache.Keys)
