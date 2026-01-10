@@ -183,7 +183,7 @@ namespace DynamicReflections
                 return;
             }
 
-            // Attempt to add any DGA mirrors
+            // Attempt to add any DR mirrors
             foreach (var furniture in e.Added)
             {
                 if (DynamicReflections.mirrorsManager.GetSettings(furniture.ItemId) is MirrorSettings baseSettings && baseSettings is not null)
@@ -206,7 +206,7 @@ namespace DynamicReflections
                 }
             }
 
-            // Attempt to remove any DGA mirrors
+            // Attempt to remove any DR mirrors
             foreach (var furniture in e.Removed)
             {
                 if (DynamicReflections.mirrorsManager.GetSettings(furniture.ItemId) is MirrorSettings baseSettings && baseSettings is not null)
@@ -525,16 +525,14 @@ namespace DynamicReflections
                                     ? (int)Math.Ceiling(mirror.Settings.Dimensions.Width / 16f)
                                     : mirror.Settings.Dimensions.Width);
 
-                            if (mirror.TilePosition.X - 1 <= playerTilePosition.X &&
-                                playerTilePosition.X <= mirrorWidth)
+                            if (mirror.TilePosition.X - 1 <= playerTilePosition.X && playerTilePosition.X <= mirrorWidth)
                             {
                                 var mirrorRange = mirror.TilePosition.Y +
                                     (mirror.FurnitureLink != null
                                         ? (int)Math.Ceiling(mirror.Settings.Dimensions.Height / 16f)
                                         : mirror.Settings.Dimensions.Height);
 
-                                if (mirror.TilePosition.Y < playerTilePosition.Y &&
-                                    playerTilePosition.Y <= mirrorRange)
+                                if (mirror.TilePosition.Y < playerTilePosition.Y && playerTilePosition.Y <= mirrorRange)
                                 {
                                     if (IsTileWithinActiveMirror(mirrorRange))
                                     {
@@ -544,10 +542,8 @@ namespace DynamicReflections
                                     mirror.IsEnabled = true;
                                     mirror.ActiveIndex = DynamicReflections.activeMirrorPositions.Count;
 
-                                    var playerDistanceFromBase = mirror.WorldPosition.Y - playerWorldPosition.Y;
-                                    var adjustedPosition = new Vector2(
-                                        playerWorldPosition.X,
-                                        mirror.WorldPosition.Y + playerDistanceFromBase + 64f);
+                                    var playerDistanceFromBase = (mirror.WorldPosition.Y) - playerWorldPosition.Y;
+                                    var adjustedPosition = new Vector2(playerWorldPosition.X, mirror.WorldPosition.Y + playerDistanceFromBase + 64f);
 
                                     mirror.PlayerReflectionPosition = adjustedPosition;
 
