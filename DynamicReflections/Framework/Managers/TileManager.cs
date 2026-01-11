@@ -137,6 +137,7 @@ namespace DynamicReflections.Framework.Managers
                 if (reflectableMapObject is null)
                 {
                     reflectableMapObject = new ReflectableMapObject(reflectableMapTile.ObjectId);
+                    reflectableMapObjects.Add(reflectableMapObject);
                 }
 
                 reflectableMapObject.AddTile(reflectableMapTile);
