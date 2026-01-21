@@ -12,6 +12,7 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
     {
         public override string MapName { get; } = "Forest";
         public override List<string> SkipWithModIds { get; } = new List<string>() { "FlashShifter.StardewValleyExpandedCP" };
+
         public override List<ReflectableMapObject> MapObjects { get; } = new List<ReflectableMapObject>()
         {
             new ReflectableMapObject("Forest_North_Wood_Plank_Short", new List<ReflectableMapTile>()

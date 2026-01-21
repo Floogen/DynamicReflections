@@ -11,6 +11,8 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
     internal class TownMapTilePreset : MapTilePresetTemplate
     {
         public override string MapName { get; } = "Town";
+        public override List<string> SkipWithModIds { get; } = new List<string>() { "FlashShifter.StardewValleyExpandedCP" };
+
         public override List<ReflectableMapObject> MapObjects { get; } = new List<ReflectableMapObject>()
         {
             new ReflectableMapObject("Town_SouthRiver_Tree_1", new List<ReflectableMapTile>()

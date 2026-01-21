@@ -11,6 +11,8 @@ namespace DynamicReflections.Framework.Models.MapTilePresets.Vanilla
     internal class BeachNightMarketMapTilePreset : MapTilePresetTemplate
     {
         public override string MapName { get; } = "BeachNightMarket";
+        public override List<string> SkipWithModIds { get; } = new List<string>() { "FlashShifter.StardewValleyExpandedCP" };
+
         public override List<ReflectableMapObject> MapObjects { get; } = new List<ReflectableMapObject>()
         {
             new ReflectableMapObject("Street_Lamp_1", new List<ReflectableMapTile>()
