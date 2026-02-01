@@ -40,13 +40,21 @@ namespace DynamicReflections.Framework.Managers
         {
             _mapTilePresets = new List<MapTilePresetTemplate>()
             {
+                // Vanilla map presets
                 new TownMapTilePreset(),
                 new BeachMapTilePreset(),
                 new BeachNightMarketMapTilePreset(),
                 new MountainMapTilePreset(),
                 new ForestMapTilePreset(),
                 new IslandNorthMapTilePreset(),
-                new IslandWestMapTilePreset()
+                new IslandWestMapTilePreset(),
+
+                // SVE map presets
+                new SVE_BeachMapTilePreset(),
+                new SVE_BeachNightMarketMapTilePreset(),
+                new SVE_ForestMapTilePreset(),
+                new SVE_MountainMapTilePreset(),
+                new SVE_TownMapTilePreset()
             };
         }
 
