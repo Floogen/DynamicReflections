@@ -64,6 +64,10 @@ namespace DynamicReflections
         internal static bool isDrawingWaterReflection;
         internal static bool isFilteringWater;
         internal static bool shouldSkipWaterOverlay;
+        internal static bool shouldDeferWaterReflectionPresentation;
+        internal static bool shouldDeferSkyReflectionPresentation;
+        internal static bool isRenderingTopmostBackgroundWaterMask;
+        internal static readonly HashSet<Point> originalWaterMaskTiles = new HashSet<Point>();
 
         // Puddle reflection variables
         internal static bool shouldDrawPuddlesReflection;
@@ -101,6 +105,7 @@ namespace DynamicReflections
         internal static RenderTarget2D mirrorsLayerRenderTarget;
         internal static RenderTarget2D mirrorsFurnitureRenderTarget;
         internal static RenderTarget2D puddlesRenderTarget;
+        internal static RenderTarget2D backgroundWaterMaskRenderTarget;
         internal static RasterizerState rasterizer;
 
         public override void Entry(IModHelper helper)
@@ -1373,6 +1378,7 @@ namespace DynamicReflections
             RegenerateRenderer(ref playerWaterReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref playerPuddleReflectionRender, shouldUseScreenDimensions);
             RegenerateRenderer(ref puddlesRenderTarget, shouldUseScreenDimensions);
+            RegenerateRenderer(ref backgroundWaterMaskRenderTarget, shouldUseScreenDimensions);
 
             RegenerateRenderer(ref mirrorsLayerRenderTarget, shouldUseScreenDimensions);
             RegenerateRenderer(ref mirrorsFurnitureRenderTarget, shouldUseScreenDimensions);
