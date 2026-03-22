@@ -32,6 +32,7 @@ namespace DynamicReflections.Framework.Patches.Tools
         {
             harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), prefix: new HarmonyMethod(GetType(), nameof(DrawWaterPrefix)));
             harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), prefix: new HarmonyMethod(GetType(), nameof(VisibleFishDrawPrefix)));
+            harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.isWaterTile), new[] { typeof(int), typeof(int) }), prefix: new HarmonyMethod(GetType(), nameof(IsWaterTilePrefix)));
             harmony.CreateReversePatcher(AccessTools.Method(_type, nameof(GameLocation.drawWater), new[] { typeof(SpriteBatch) }), new HarmonyMethod(GetType(), nameof(DrawWaterReversePatch))).Patch();
 
             harmony.Patch(AccessTools.Method(_type, nameof(GameLocation.UpdateWhenCurrentLocation), new[] { typeof(GameTime) }), postfix: new HarmonyMethod(GetType(), nameof(UpdateWhenCurrentLocationPostfix)));
@@ -61,6 +62,17 @@ namespace DynamicReflections.Framework.Patches.Tools
             }
 
             return true;
+        }
+
+        private static bool IsWaterTilePrefix(GameLocation __instance, int xTile, int yTile, ref bool __result)
+        {
+            if (DynamicReflections.isRenderingTopmostBackgroundWaterMask is false || !ReferenceEquals(__instance, Game1.currentLocation))
+            {
+                return true;
+            }
+
+            __result = LayerToolkit.IsTopmostVisibleBackgroundWater(__instance, xTile, yTile);
+            return false;
         }
 
         internal static void DrawWaterReversePatch(GameLocation __instance, SpriteBatch b)
