@@ -71,8 +71,7 @@ namespace DynamicReflections.Framework.Patches.Tools
                 return true;
             }
 
-            __result = DynamicReflections.originalWaterMaskTiles.Contains(new Point(xTile, yTile))
-                && LayerToolkit.IsTopmostVisibleBackgroundWater(__instance, xTile, yTile);
+            __result = LayerToolkit.IsTopmostVisibleBackgroundWater(__instance, xTile, yTile);
             return false;
         }
 
