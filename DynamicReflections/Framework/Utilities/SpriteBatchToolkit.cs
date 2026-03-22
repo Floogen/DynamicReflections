@@ -390,39 +390,15 @@ namespace DynamicReflections.Framework.Utilities
             SpriteBatchToolkit.StartRendering(DynamicReflections.backgroundWaterMaskRenderTarget);
             Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
 
-            var location = Game1.currentLocation;
-            var map = location?.Map;
-            if (location is null || map is null || map.Layers is null || map.Layers.Count == 0)
+            GameLocation location = Game1.currentLocation;
+            if (location is null || location.Map is null || LayerToolkit.HasAnyTopmostVisibleBackgroundWater(location) is false)
             {
                 SpriteBatchToolkit.StopRendering();
                 return;
             }
 
-            int maxWidth = map.Layers.Max(layer => layer.LayerWidth);
-            int maxHeight = map.Layers.Max(layer => layer.LayerHeight);
-            int startX = Math.Max(0, (Game1.viewport.X / Game1.tileSize) - 1);
-            int startY = Math.Max(0, (Game1.viewport.Y / Game1.tileSize) - 1);
-            int endX = Math.Min(maxWidth - 1, ((Game1.viewport.X + Game1.viewport.Width) / Game1.tileSize) + 1);
-            int endY = Math.Min(maxHeight - 1, ((Game1.viewport.Y + Game1.viewport.Height) / Game1.tileSize) + 1);
-
-            DynamicReflections.originalWaterMaskTiles.Clear();
-            for (int tileX = startX; tileX <= endX; tileX++)
-            {
-                for (int tileY = startY; tileY <= endY; tileY++)
-                {
-                    if (location.isWaterTile(tileX, tileY))
-                    {
-                        DynamicReflections.originalWaterMaskTiles.Add(new Point(tileX, tileY));
-                    }
-                }
-            }
-
-            if (DynamicReflections.originalWaterMaskTiles.Count == 0)
-            {
-                SpriteBatchToolkit.StopRendering();
-                return;
-            }
-
+            // For multi-Back* maps, build the water-shaped mask from the final visible water surface only.
+            // This preserves the original mod's placement rules while avoiding repeated viewport scans each frame.
             Color cachedWaterColor = location.waterColor.Value;
             DynamicReflections.isRenderingTopmostBackgroundWaterMask = true;
             location.waterColor.Value = Color.White;
@@ -433,7 +409,6 @@ namespace DynamicReflections.Framework.Utilities
 
             location.waterColor.Value = cachedWaterColor;
             DynamicReflections.isRenderingTopmostBackgroundWaterMask = false;
-            DynamicReflections.originalWaterMaskTiles.Clear();
 
             SpriteBatchToolkit.StopRendering();
         }
