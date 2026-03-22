@@ -67,7 +67,6 @@ namespace DynamicReflections
         internal static bool shouldDeferWaterReflectionPresentation;
         internal static bool shouldDeferSkyReflectionPresentation;
         internal static bool isRenderingTopmostBackgroundWaterMask;
-        internal static readonly HashSet<Point> originalWaterMaskTiles = new HashSet<Point>();
 
         // Puddle reflection variables
         internal static bool shouldDrawPuddlesReflection;
@@ -171,6 +170,7 @@ namespace DynamicReflections
         private void OnWindowResized(object sender, StardewModdingAPI.Events.WindowResizedEventArgs e)
         {
             LoadRenderers();
+            LayerToolkit.InvalidateCaches();
         }
 
         private void OnButtonPressed(object sender, StardewModdingAPI.Events.ButtonPressedEventArgs e)
@@ -245,6 +245,8 @@ namespace DynamicReflections
 
         private void OnWarped(object sender, StardewModdingAPI.Events.WarpedEventArgs e)
         {
+            LayerToolkit.InvalidateCaches();
+
             SetSkyReflectionSettings();
             SetPuddleReflectionSettings();
             SetWaterReflectionSettings();
