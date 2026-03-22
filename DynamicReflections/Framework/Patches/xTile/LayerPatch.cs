@@ -153,6 +153,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     return true;
                 }
 
+                // Keep the original single-Back behavior intact.
+                // Only multi-Back* maps defer the final water/sky presentation until the top of the background stack.
                 if (hasMultipleBackgroundLayers is true)
                 {
                     DynamicReflections.shouldDeferSkyReflectionPresentation = DynamicReflections.shouldDrawNightSky;
@@ -251,6 +253,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 }
             }
 
+            // Present the already-rendered water/sky reflections after the highest background layer.
+            // The explicit water mask keeps the original placement behavior on maps that use Back* layer stacks.
             if (hasMultipleBackgroundLayers is true && __instance.Equals(highestBackgroundLayer) is true && (DynamicReflections.shouldDeferWaterReflectionPresentation is true || DynamicReflections.shouldDeferSkyReflectionPresentation is true))
             {
                 SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
