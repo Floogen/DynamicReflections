@@ -1,4 +1,4 @@
-﻿using DynamicReflections.Framework.Interfaces;
+using DynamicReflections.Framework.Interfaces;
 using DynamicReflections.Framework.Models.Settings;
 using Microsoft.Xna.Framework;
 using StardewValley;
@@ -178,8 +178,10 @@ namespace DynamicReflections.Framework.External.GenericModConfigMenu
 
             configApi.AddPage(ModManifest, "performance_settings", () => Helper.Translation.Get("config.performance_settings.title"));
 
-            // PerformanceSettings: caching
+            // PerformanceSettings: caching & engine optimizations
             configApi.AddSectionTitle(ModManifest, () => Helper.Translation.Get("config.performance_settings.title"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableFastSettingsCache, value => DynamicReflections.modConfig.PerformanceSettings.EnableFastSettingsCache = value, () => Helper.Translation.Get("config.performance_settings.enable_fast_settings_cache"), () => Helper.Translation.Get("config.performance_settings.enable_fast_settings_cache.description"));
+            configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableRenderTargetCulling, value => DynamicReflections.modConfig.PerformanceSettings.EnableRenderTargetCulling = value, () => Helper.Translation.Get("config.performance_settings.enable_render_target_culling"), () => Helper.Translation.Get("config.performance_settings.enable_render_target_culling.description"));
             configApi.AddBoolOption(ModManifest, () => DynamicReflections.modConfig.PerformanceSettings.EnableSafeCaching, value => DynamicReflections.modConfig.PerformanceSettings.EnableSafeCaching = value, () => Helper.Translation.Get("config.performance_settings.enable_safe_caching"));
 
             // PerformanceSettings: NPC reflections

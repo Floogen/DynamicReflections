@@ -250,7 +250,8 @@ namespace DynamicReflections
 
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
-                bool canRainHere = e.NewLocation.GetLocationContext().WeatherConditions.Any(w => w.Weather == "Rain" || w.Weather == "Storm");
+                // Modded weather support: check IsRainingHere as well as weather conditions (e.g. GreenRain, AcidRain, etc.)
+                bool canRainHere = Game1.IsRainingHere(e.NewLocation) || e.NewLocation.GetLocationContext().WeatherConditions.Any(w => w.Weather == "Rain" || w.Weather == "Storm" || w.Weather.Contains("Rain", StringComparison.OrdinalIgnoreCase));
                 if (canRainHere is true)
                 {
                     int puddlesPercentage = 0;
@@ -284,7 +285,8 @@ namespace DynamicReflections
             var skySettings = modConfig.GetCurrentSkySettings(Game1.currentLocation);
             GMCMHelper.IsLocationOverridingSkyDefault = skySettings.OverrideDefaultSettings && skySettings != DynamicReflections.modConfig.SkyReflectionSettings;
 
-            if (Game1.activeClickableMenu is null)
+            // Only refresh GMCM location listing periodically (every 30 ticks = 0.5s) instead of every frame
+            if (Game1.activeClickableMenu is null && e.IsMultipleOf(30))
             {
                 GMCMHelper.RefreshLocationListing();
             }
@@ -292,7 +294,13 @@ namespace DynamicReflections
             // Handle the sky reflections
             var targetDarkTime = Game1.getTrulyDarkTime(Game1.currentLocation) + 100;
             DynamicReflections.shouldDrawNightSky = false;
-            if (modConfig.AreSkyReflectionsEnabled is not false && currentSkySettings is not null && currentSkySettings.AreReflectionsEnabled && Game1.currentLocation.IsOutdoors && Game1.IsRainingHere(Game1.currentLocation) is false && Game1.timeOfDay >= targetDarkTime)
+            bool isNightSkyWeather = true;
+            if (modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            {
+                isNightSkyWeather = !Game1.isSnowing && !Game1.isDebrisWeather;
+            }
+
+            if (isNightSkyWeather && modConfig.AreSkyReflectionsEnabled is not false && currentSkySettings is not null && currentSkySettings.AreReflectionsEnabled && Game1.currentLocation.IsOutdoors && Game1.IsRainingHere(Game1.currentLocation) is false && Game1.timeOfDay >= targetDarkTime)
             {
                 DynamicReflections.shouldDrawNightSky = true;
                 if (Game1.timeOfDay < targetDarkTime + 100) // Less then 10 PM
@@ -326,7 +334,15 @@ namespace DynamicReflections
 
             // Handle the puddle reflection
             DynamicReflections.shouldDrawPuddlesReflection = false;
-            if (modConfig.ArePuddleReflectionsEnabled is not false && currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
+
+            // Only activate puddle reflections if the weather/location allows puddles
+            bool canHavePuddles = true;
+            if (modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            {
+                canHavePuddles = Game1.currentLocation.IsOutdoors && (Game1.isRaining || Game1.IsRainingHere(Game1.currentLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"));
+            }
+
+            if (canHavePuddles && modConfig.ArePuddleReflectionsEnabled is not false && currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
             {
                 DynamicReflections.shouldDrawPuddlesReflection = true;
             }

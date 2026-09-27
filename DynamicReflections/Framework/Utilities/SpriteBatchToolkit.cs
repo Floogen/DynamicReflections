@@ -9,6 +9,8 @@ using StardewValley.TerrainFeatures;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
 using xTile.Dimensions;
@@ -31,8 +33,129 @@ namespace DynamicReflections.Framework.Utilities
         private static Effect _cachedSpriteEffect;
         private static Matrix? _cachedMatrix;
 
+        // Pre-compiled open delegates to read SpriteBatch private state without SMAPI reflection overhead
+        private static readonly Func<SpriteBatch, SpriteSortMode> _getSortMode;
+        private static readonly Func<SpriteBatch, BlendState> _getBlendState;
+        private static readonly Func<SpriteBatch, SamplerState> _getSamplerState;
+        private static readonly Func<SpriteBatch, DepthStencilState> _getDepthStencilState;
+        private static readonly Func<SpriteBatch, RasterizerState> _getRasterizerState;
+        private static readonly Func<SpriteBatch, Effect> _getEffect;
+        private static readonly Func<SpriteBatch, Matrix?> _getMatrix;
+        private static readonly bool _hasCompiledDelegates;
+
+        static SpriteBatchToolkit()
+        {
+            // Build dynamic getters on startup so we can snapshot SpriteBatch state each frame
+            // without paying reflection string lookup or value-type boxing costs.
+            try
+            {
+                Type sbType = typeof(SpriteBatch);
+                Type seType = sbType.Assembly.GetType("Microsoft.Xna.Framework.Graphics.SpriteEffect");
+
+                FieldInfo fSort = sbType.GetField("_sortMode", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fBlend = sbType.GetField("_blendState", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fSampler = sbType.GetField("_samplerState", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fDepth = sbType.GetField("_depthStencilState", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fRaster = sbType.GetField("_rasterizerState", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fEffect = sbType.GetField("_effect", BindingFlags.Instance | BindingFlags.NonPublic);
+                FieldInfo fSpriteEffect = sbType.GetField("_spriteEffect", BindingFlags.Instance | BindingFlags.NonPublic);
+                PropertyInfo propMatrix = seType?.GetProperty("TransformMatrix", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
+
+                if (fSort != null && fBlend != null && fSampler != null && fDepth != null && fRaster != null && fEffect != null && fSpriteEffect != null && propMatrix != null)
+                {
+                    _getSortMode = CreateGetter<SpriteSortMode>(fSort);
+                    _getBlendState = CreateGetter<BlendState>(fBlend);
+                    _getSamplerState = CreateGetter<SamplerState>(fSampler);
+                    _getDepthStencilState = CreateGetter<DepthStencilState>(fDepth);
+                    _getRasterizerState = CreateGetter<RasterizerState>(fRaster);
+                    _getEffect = CreateGetter<Effect>(fEffect);
+                    _getMatrix = CreateMatrixGetter(fSpriteEffect, propMatrix);
+                    _hasCompiledDelegates = true;
+                }
+            }
+            catch (Exception ex)
+            {
+                _hasCompiledDelegates = false;
+                DynamicReflections.monitor?.Log($"Failed to initialize compiled delegates for SpriteBatch: {ex.Message}", LogLevel.Warn);
+            }
+        }
+
+        private static Func<SpriteBatch, T> CreateGetter<T>(FieldInfo field)
+        {
+            // Emits: ldarg.0, ldfld <field>, ret
+            var dm = new DynamicMethod($"DR_Get_{field.Name}", typeof(T), new[] { typeof(SpriteBatch) }, typeof(SpriteBatchToolkit), true);
+            var il = dm.GetILGenerator();
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, field);
+            il.Emit(OpCodes.Ret);
+            return (Func<SpriteBatch, T>)dm.CreateDelegate(typeof(Func<SpriteBatch, T>));
+        }
+
+        private static Func<SpriteBatch, Matrix?> CreateMatrixGetter(FieldInfo fSpriteEffect, PropertyInfo propTransformMatrix)
+        {
+            // Null-safe getter: reads _spriteEffect.TransformMatrix, or null if _spriteEffect is null
+            var dm = new DynamicMethod("DR_Get_TransformMatrix", typeof(Matrix?), new[] { typeof(SpriteBatch) }, typeof(SpriteBatchToolkit), true);
+            var il = dm.GetILGenerator();
+            var nullLabel = il.DefineLabel();
+            var retLabel = il.DefineLabel();
+            var loc = il.DeclareLocal(typeof(Matrix?));
+
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, fSpriteEffect);
+            il.Emit(OpCodes.Dup);
+            il.Emit(OpCodes.Brfalse_S, nullLabel);
+
+            il.Emit(OpCodes.Callvirt, propTransformMatrix.GetGetMethod(true)!);
+            il.Emit(OpCodes.Stloc, loc);
+            il.Emit(OpCodes.Br_S, retLabel);
+
+            il.MarkLabel(nullLabel);
+            il.Emit(OpCodes.Pop);
+            il.Emit(OpCodes.Ldloca_S, loc);
+            il.Emit(OpCodes.Initobj, typeof(Matrix?));
+
+            il.MarkLabel(retLabel);
+            il.Emit(OpCodes.Ldloc, loc);
+            il.Emit(OpCodes.Ret);
+
+            return (Func<SpriteBatch, Matrix?>)dm.CreateDelegate(typeof(Func<SpriteBatch, Matrix?>));
+        }
+
         public static void CacheSpriteBatchSettings(SpriteBatch spriteBatch, bool endSpriteBatch = false)
         {
+            if (spriteBatch is null)
+            {
+                return;
+            }
+
+            // Fast path: read internal state directly via compiled delegates when enabled
+            bool useCompiled = _hasCompiledDelegates && (DynamicReflections.modConfig?.PerformanceSettings?.EnableFastSettingsCache != false);
+            if (useCompiled)
+            {
+                try
+                {
+                    _cachedSpriteSortMode = _getSortMode(spriteBatch);
+                    _cachedBlendState = _getBlendState(spriteBatch);
+                    _cachedSamplerState = _getSamplerState(spriteBatch);
+                    _cachedDepthStencilState = _getDepthStencilState(spriteBatch);
+                    _cachedRasterizerState = _getRasterizerState(spriteBatch);
+                    _cachedSpriteEffect = _getEffect(spriteBatch);
+                    _cachedMatrix = _getMatrix(spriteBatch);
+
+                    _hasCache = true;
+                    if (endSpriteBatch is true)
+                    {
+                        spriteBatch.End();
+                    }
+                    return;
+                }
+                catch
+                {
+                    // Fall back safely to SMAPI reflection below if anything fails
+                }
+            }
+
+            // Fallback path: standard SMAPI reflection
             var reflection = DynamicReflections.modHelper.Reflection;
 
             _cachedSpriteSortMode = reflection.GetField<SpriteSortMode>(spriteBatch, "_sortMode").GetValue();
@@ -103,6 +226,20 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderMirrorsLayer()
         {
+            // Skip the render target pass if no mirrors are active or the map has no Mirrors layer
+            if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            {
+                if (DynamicReflections.activeMirrorPositions == null || DynamicReflections.activeMirrorPositions.Count == 0)
+                {
+                    return;
+                }
+
+                if (Game1.currentLocation?.Map?.GetLayer("Mirrors") is null)
+                {
+                    return;
+                }
+            }
+
             // Set the render target
             SpriteBatchToolkit.StartRendering(DynamicReflections.mirrorsLayerRenderTarget);
 
@@ -341,6 +478,15 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderWaterReflectionNightSky()
         {
+            // Night sky reflection is only visible outdoors after 6 PM in clear weather
+            if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            {
+                if (Game1.timeOfDay < 1800 || Game1.isRaining || Game1.IsRainingHere(Game1.currentLocation) || Game1.isSnowing || Game1.isDebrisWeather || Game1.currentLocation?.IsOutdoors == false)
+                {
+                    return;
+                }
+            }
+
             // Set the render target
             SpriteBatchToolkit.StartRendering(DynamicReflections.nightSkyRenderTarget);
 
@@ -813,6 +959,15 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderPuddles()
         {
+            // Skip puddle rendering if indoors or if it hasn't rained today/yesterday
+            if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            {
+                if (Game1.currentLocation == null || !Game1.currentLocation.IsOutdoors || (!Game1.isRaining && !Game1.IsRainingHere(Game1.currentLocation) && (Game1.player?.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) != true || Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] != "True")))
+                {
+                    return;
+                }
+            }
+
             // Set the render target
             SpriteBatchToolkit.StartRendering(DynamicReflections.puddlesRenderTarget);
 

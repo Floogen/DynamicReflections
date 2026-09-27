@@ -1,4 +1,4 @@
-﻿{
+{
   // Config
   "config.general.tooltip.not_implemented": "This feature is currently not implemented.",
 
@@ -96,6 +96,10 @@
 
   "config.performance_settings.title": "Performance Settings",
   "config.performance_settings.link": "Performance & Throttling",
+  "config.performance_settings.enable_fast_settings_cache": "Fast Compiled Delegates",
+  "config.performance_settings.enable_fast_settings_cache.description": "Replaces reflection property lookups with pre-compiled open IL delegates.",
+  "config.performance_settings.enable_render_target_culling": "Cull Inactive Render Targets",
+  "config.performance_settings.enable_render_target_culling.description": "Skips rendering puddle, mirror, and night sky textures when inactive, indoors, or dry.",
   "config.performance_settings.enable_safe_caching": "Enable Safe Caching",
   "config.performance_settings.enable_npc_throttling": "Enable NPC Throttling",
   "config.performance_settings.npc_update_interval_ticks": "NPC Update Interval (ticks)",
