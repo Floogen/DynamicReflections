@@ -36,16 +36,62 @@ namespace DynamicReflections.Framework.Managers
                 return;
             }
 
-            if (_locationToSkyTiles is null)
+            if (_locationToSkyTiles is null || _locationToSkyPoints is null)
             {
                 Reset();
             }
-            else if (force is false && _locationToSkyTiles.ContainsKey(location) is true && _locationToSkyTiles[location] is not null)
+            else if (force is false && IsGeneratedStateCurrent(location) is true)
             {
                 return;
             }
 
             GeneratePerTile(location);
+        }
+
+        private bool IsGeneratedStateCurrent(GameLocation location)
+        {
+            if (_locationToSkyTiles.ContainsKey(location) is false || _locationToSkyTiles[location] is null)
+            {
+                return false;
+            }
+
+            if (_locationToSkyPoints.ContainsKey(location) is false || _locationToSkyPoints[location] is null)
+            {
+                return false;
+            }
+
+            if (location.Map.GetLayer("Back") is not Layer backLayer)
+            {
+                return false;
+            }
+
+            var skyTiles = _locationToSkyTiles[location];
+            if (skyTiles.GetLength(0) != backLayer.LayerWidth || skyTiles.GetLength(1) != backLayer.LayerHeight)
+            {
+                return false;
+            }
+
+            var skyPoints = _locationToSkyPoints[location];
+            if (skyPoints.Count == 0)
+            {
+                return true;
+            }
+
+            foreach (var point in skyPoints)
+            {
+                if (point.X < 0 || point.Y < 0 || point.X >= backLayer.LayerWidth || point.Y >= backLayer.LayerHeight)
+                {
+                    continue;
+                }
+
+                var tile = backLayer.Tiles[point.X, point.Y];
+                if (tile is not null && tile.Properties.ContainsKey("SkyIndex") is true)
+                {
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void GeneratePerTile(GameLocation location)
