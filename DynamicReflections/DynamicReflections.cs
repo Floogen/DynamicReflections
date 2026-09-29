@@ -76,6 +76,7 @@ namespace DynamicReflections
         internal static Dictionary<Point, Mirror> mirrors = new Dictionary<Point, Mirror>();
         internal static List<Point> activeMirrorPositions = new List<Point>();
         internal static bool shouldDrawMirrorReflection;
+        internal static bool currentLocationHasMirrorsLayer;
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
 
@@ -1312,11 +1313,13 @@ namespace DynamicReflections
 
         private void DetectMirrorsForActiveLocation()
         {
+            DynamicReflections.currentLocationHasMirrorsLayer = false;
             if (Context.IsWorldReady is false || Game1.currentLocation is null)
             {
                 return;
             }
             var currentLocation = Game1.currentLocation;
+            DynamicReflections.currentLocationHasMirrorsLayer = currentLocation.Map?.GetLayer("Mirrors") is not null;
 
             // Clear the old base points out
             DynamicReflections.mirrors.Clear();

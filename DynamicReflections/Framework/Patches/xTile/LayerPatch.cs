@@ -186,12 +186,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
             {
                 Game1.currentLocation.waterColor.Value = _waterColor;
 
-                // Skip drawing the full-screen mirror texture if there are no mirrors or no Mirrors layer
-                bool shouldDrawMirrorsLayer = true;
-                if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
-                {
-                    shouldDrawMirrorsLayer = (DynamicReflections.activeMirrorPositions != null && DynamicReflections.activeMirrorPositions.Count > 0) || (Game1.currentLocation?.Map?.GetLayer("Mirrors") is not null);
-                }
+                // Skip drawing the full-screen mirror texture if the map has no Mirrors layer (must match the gate in SpriteBatchToolkit.RenderMirrorsLayer)
+                bool shouldDrawMirrorsLayer = DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling == false || DynamicReflections.currentLocationHasMirrorsLayer;
 
                 // Draw the cached Mirrors layer
                 if (shouldDrawMirrorsLayer)

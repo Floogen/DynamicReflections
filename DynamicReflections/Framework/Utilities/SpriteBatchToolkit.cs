@@ -226,18 +226,10 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderMirrorsLayer()
         {
-            // Skip the render target pass if no mirrors are active or the map has no Mirrors layer
-            if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            // Skip the render target pass if the map has no Mirrors layer (mirror tiles are only drawn via this target, so it must refresh every frame otherwise)
+            if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false && DynamicReflections.currentLocationHasMirrorsLayer is false)
             {
-                if (DynamicReflections.activeMirrorPositions == null || DynamicReflections.activeMirrorPositions.Count == 0)
-                {
-                    return;
-                }
-
-                if (Game1.currentLocation?.Map?.GetLayer("Mirrors") is null)
-                {
-                    return;
-                }
+                return;
             }
 
             // Set the render target
