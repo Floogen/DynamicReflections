@@ -11,7 +11,7 @@ namespace DynamicReflections.Framework.Models.Settings
 
         /// <summary>
         /// If true, skips generating render target textures when they aren't visible
-        /// (e.g. night sky during the day, puddles in dry weather, mirrors when none are placed).
+        /// (e.g. puddles in dry weather, the mirrors layer on maps without a Mirrors layer).
         /// </summary>
         public bool EnableRenderTargetCulling { get; set; } = true;
 

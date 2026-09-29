@@ -295,13 +295,7 @@ namespace DynamicReflections
             // Handle the sky reflections
             var targetDarkTime = Game1.getTrulyDarkTime(Game1.currentLocation) + 100;
             DynamicReflections.shouldDrawNightSky = false;
-            bool isNightSkyWeather = true;
-            if (modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
-            {
-                isNightSkyWeather = !Game1.isSnowing && !Game1.isDebrisWeather;
-            }
-
-            if (isNightSkyWeather && modConfig.AreSkyReflectionsEnabled is not false && currentSkySettings is not null && currentSkySettings.AreReflectionsEnabled && Game1.currentLocation.IsOutdoors && Game1.IsRainingHere(Game1.currentLocation) is false && Game1.timeOfDay >= targetDarkTime)
+            if (modConfig.AreSkyReflectionsEnabled is not false && currentSkySettings is not null && currentSkySettings.AreReflectionsEnabled && Game1.currentLocation.IsOutdoors && Game1.IsRainingHere(Game1.currentLocation) is false && Game1.timeOfDay >= targetDarkTime)
             {
                 DynamicReflections.shouldDrawNightSky = true;
                 if (Game1.timeOfDay < targetDarkTime + 100) // Less then 10 PM
