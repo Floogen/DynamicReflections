@@ -76,6 +76,7 @@ namespace DynamicReflections
         internal static Dictionary<Point, Mirror> mirrors = new Dictionary<Point, Mirror>();
         internal static List<Point> activeMirrorPositions = new List<Point>();
         internal static bool shouldDrawMirrorReflection;
+        internal static bool currentLocationHasMirrorsLayer;
         internal static bool isDrawingMirrorReflection;
         internal static bool isFilteringMirror;
 
@@ -250,7 +251,8 @@ namespace DynamicReflections
 
             if (e.NewLocation is not null && e.NewLocation.IsOutdoors is true)
             {
-                bool canRainHere = e.NewLocation.GetLocationContext().WeatherConditions.Any(w => w.Weather == "Rain" || w.Weather == "Storm");
+                // Modded weather support: check IsRainingHere as well as weather conditions (e.g. GreenRain, AcidRain, etc.)
+                bool canRainHere = Game1.IsRainingHere(e.NewLocation) || e.NewLocation.GetLocationContext().WeatherConditions.Any(w => w.Weather == "Rain" || w.Weather == "Storm" || w.Weather.Contains("Rain", StringComparison.OrdinalIgnoreCase));
                 if (canRainHere is true)
                 {
                     int puddlesPercentage = 0;
@@ -284,7 +286,8 @@ namespace DynamicReflections
             var skySettings = modConfig.GetCurrentSkySettings(Game1.currentLocation);
             GMCMHelper.IsLocationOverridingSkyDefault = skySettings.OverrideDefaultSettings && skySettings != DynamicReflections.modConfig.SkyReflectionSettings;
 
-            if (Game1.activeClickableMenu is null)
+            // Only refresh GMCM location listing periodically (every 30 ticks = 0.5s) instead of every frame
+            if (Game1.activeClickableMenu is null && e.IsMultipleOf(30))
             {
                 GMCMHelper.RefreshLocationListing();
             }
@@ -326,7 +329,15 @@ namespace DynamicReflections
 
             // Handle the puddle reflection
             DynamicReflections.shouldDrawPuddlesReflection = false;
-            if (modConfig.ArePuddleReflectionsEnabled is not false && currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
+
+            // Only activate puddle reflections if the weather/location allows puddles
+            bool canHavePuddles = true;
+            if (modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+            {
+                canHavePuddles = Game1.currentLocation.IsOutdoors && (Game1.isRaining || Game1.IsRainingHere(Game1.currentLocation) || (Game1.player.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"));
+            }
+
+            if (canHavePuddles && modConfig.ArePuddleReflectionsEnabled is not false && currentPuddleSettings is not null && currentPuddleSettings.AreReflectionsEnabled)
             {
                 DynamicReflections.shouldDrawPuddlesReflection = true;
             }
@@ -1296,11 +1307,13 @@ namespace DynamicReflections
 
         private void DetectMirrorsForActiveLocation()
         {
+            DynamicReflections.currentLocationHasMirrorsLayer = false;
             if (Context.IsWorldReady is false || Game1.currentLocation is null)
             {
                 return;
             }
             var currentLocation = Game1.currentLocation;
+            DynamicReflections.currentLocationHasMirrorsLayer = currentLocation.Map?.GetLayer("Mirrors") is not null;
 
             // Clear the old base points out
             DynamicReflections.mirrors.Clear();

@@ -5,6 +5,17 @@ namespace DynamicReflections.Framework.Models.Settings
     public class PerformanceSettings
     {
         /// <summary>
+        /// If true, uses pre-compiled IL delegates instead of SMAPI reflection to snapshot SpriteBatch state.
+        /// </summary>
+        public bool EnableFastSettingsCache { get; set; } = true;
+
+        /// <summary>
+        /// If true, skips generating render target textures when they aren't visible
+        /// (e.g. puddles in dry weather, the mirrors layer on maps without a Mirrors layer).
+        /// </summary>
+        public bool EnableRenderTargetCulling { get; set; } = true;
+
+        /// <summary>
         /// If true, some internal calculations (like water / puddle / mirror checks) can be cached
         /// to reduce CPU usage.
         /// </summary>

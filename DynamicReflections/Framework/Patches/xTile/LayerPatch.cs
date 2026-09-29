@@ -1,4 +1,4 @@
-﻿using DynamicReflections.Framework.Utilities;
+using DynamicReflections.Framework.Utilities;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -95,7 +95,8 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 }
 
                 // Handle preliminary water reflection logic
-                if (DynamicReflections.modConfig.AreWaterReflectionsEnabled)
+                // Only render player water reflection if reflections are enabled for this specific body of water
+                if (DynamicReflections.modConfig.AreWaterReflectionsEnabled && (DynamicReflections.currentWaterSettings is null || DynamicReflections.currentWaterSettings.AreReflectionsEnabled))
                 {
                     DynamicReflections.isFilteringWater = true;
                     SpriteBatchToolkit.RenderWaterReflectionPlayerSprite();
@@ -113,7 +114,14 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 }
 
                 // Handle preliminary puddles reflection and draw logic
-                if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is true)
+                // Check if puddles can form before rendering textures or redrawing the Back layer
+                bool canHavePuddles = true;
+                if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
+                {
+                    canHavePuddles = Game1.currentLocation != null && Game1.currentLocation.IsOutdoors && (Game1.isRaining || Game1.IsRainingHere(Game1.currentLocation) || (Game1.player?.modData.ContainsKey(ModDataKeys.DID_RAIN_YESTERDAY) == true && Game1.player.modData[ModDataKeys.DID_RAIN_YESTERDAY] == "True"));
+                }
+
+                if (DynamicReflections.currentPuddleSettings.ShouldGeneratePuddles is true && canHavePuddles)
                 {
                     DynamicReflections.isFilteringPuddles = true;
                     SpriteBatchToolkit.RenderPuddles();
@@ -178,8 +186,14 @@ namespace DynamicReflections.Framework.Patches.Tiles
             {
                 Game1.currentLocation.waterColor.Value = _waterColor;
 
+                // Skip drawing the full-screen mirror texture if the map has no Mirrors layer (must match the gate in SpriteBatchToolkit.RenderMirrorsLayer)
+                bool shouldDrawMirrorsLayer = DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling == false || DynamicReflections.currentLocationHasMirrorsLayer;
+
                 // Draw the cached Mirrors layer
-                Game1.spriteBatch.Draw(DynamicReflections.mirrorsLayerRenderTarget, Vector2.Zero, Color.White);
+                if (shouldDrawMirrorsLayer)
+                {
+                    Game1.spriteBatch.Draw(DynamicReflections.mirrorsLayerRenderTarget, Vector2.Zero, Color.White);
+                }
 
                 // Skip drawing the player's reflection if not needed
                 if (DynamicReflections.shouldDrawMirrorReflection is true)
