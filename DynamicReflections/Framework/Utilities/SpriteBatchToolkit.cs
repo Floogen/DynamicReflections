@@ -478,15 +478,6 @@ namespace DynamicReflections.Framework.Utilities
 
         internal static void RenderWaterReflectionNightSky()
         {
-            // Night sky reflection is only visible outdoors after 6 PM in clear weather
-            if (DynamicReflections.modConfig?.PerformanceSettings?.EnableRenderTargetCulling != false)
-            {
-                if (Game1.timeOfDay < 1800 || Game1.isRaining || Game1.IsRainingHere(Game1.currentLocation) || Game1.isSnowing || Game1.isDebrisWeather || Game1.currentLocation?.IsOutdoors == false)
-                {
-                    return;
-                }
-            }
-
             // Set the render target
             SpriteBatchToolkit.StartRendering(DynamicReflections.nightSkyRenderTarget);
 
