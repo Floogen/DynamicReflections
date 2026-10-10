@@ -4,18 +4,11 @@ using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
 using StardewValley;
-using StardewValley.Buildings;
-using StardewValley.Locations;
-using StardewValley.Menus;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Emit;
+using System.Reflection;
 using xTile.Dimensions;
 using xTile.Display;
 using xTile.Layers;
-using xTile.Tiles;
-using Object = StardewValley.Object;
 
 namespace DynamicReflections.Framework.Patches.Tiles
 {
@@ -31,41 +24,57 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
         internal void Apply(Harmony harmony)
         {
-            harmony.Patch(AccessTools.Method(_object, "DrawNormal", new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(int), typeof(float) }), prefix: new HarmonyMethod(GetType(), nameof(DrawNormalPrefix)));
-            harmony.Patch(AccessTools.Method(_object, "DrawNormal", new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(int), typeof(float) }), postfix: new HarmonyMethod(GetType(), nameof(DrawNormalPostfix)));
-
-            harmony.CreateReversePatcher(AccessTools.Method(_object, "DrawNormal", new[] { typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(xTile.Dimensions.Location), typeof(int), typeof(float) }), new HarmonyMethod(GetType(), nameof(DrawNormalReversePatch))).Patch();
-
-            // Perform PyTK related patches
-            if (DynamicReflections.modHelper.ModRegistry.IsLoaded("Platonymous.Toolkit"))
+            MethodInfo drawNormal = AccessTools.Method(_object, "DrawNormal", new[]
             {
-                try
+                typeof(IDisplayDevice),
+                typeof(xTile.Dimensions.Rectangle),
+                typeof(xTile.Dimensions.Location),
+                typeof(int),
+                typeof(float)
+            });
+
+            harmony.Patch(drawNormal, prefix: new HarmonyMethod(GetType(), nameof(DrawNormalPrefix)));
+            harmony.Patch(drawNormal, postfix: new HarmonyMethod(GetType(), nameof(DrawNormalPostfix)));
+            harmony.CreateReversePatcher(drawNormal, new HarmonyMethod(GetType(), nameof(DrawNormalReversePatch))).Patch();
+
+            PatchPyTkLayerDraw(harmony, "Platonymous.Toolkit", "PyTK.Extensions.PyMaps, PyTK", "PyTK");
+            PatchPyTkLayerDraw(harmony, "Platonymous.TMXLoader", "TMXLoader.PyMaps, TMXLoader", "TMXLoader");
+        }
+
+        private void PatchPyTkLayerDraw(Harmony harmony, string modId, string typeName, string displayName)
+        {
+            if (!DynamicReflections.modHelper.ModRegistry.IsLoaded(modId))
+            {
+                return;
+            }
+
+            try
+            {
+                Type pyTkType = Type.GetType(typeName);
+                if (pyTkType is null)
                 {
-                    if (Type.GetType("PyTK.Extensions.PyMaps, PyTK") is Type PyTK && PyTK != null)
-                    {
-                        harmony.Patch(AccessTools.Method(PyTK, "drawLayer", new[] { typeof(Layer), typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(int), typeof(Location), typeof(bool) }), prefix: new HarmonyMethod(GetType(), nameof(PyTKDrawLayerPrefix)));
-                    }
+                    return;
                 }
-                catch (Exception ex)
+
+                MethodInfo drawLayer = AccessTools.Method(pyTkType, "drawLayer", new[]
                 {
-                    _monitor.Log($"Failed to patch PyTK in {this.GetType().Name}: DR may not properly display reflections!", LogLevel.Warn);
-                    _monitor.Log($"Patch for PyTK failed in {this.GetType().Name}: {ex}", LogLevel.Trace);
+                    typeof(Layer),
+                    typeof(IDisplayDevice),
+                    typeof(xTile.Dimensions.Rectangle),
+                    typeof(int),
+                    typeof(Location),
+                    typeof(bool)
+                });
+
+                if (drawLayer is not null)
+                {
+                    harmony.Patch(drawLayer, prefix: new HarmonyMethod(GetType(), nameof(PyTKDrawLayerPrefix)));
                 }
             }
-            if (DynamicReflections.modHelper.ModRegistry.IsLoaded("Platonymous.TMXLoader"))
+            catch (Exception ex)
             {
-                try
-                {
-                    if (Type.GetType("TMXLoader.PyMaps, TMXLoader") is Type PyTK && PyTK != null)
-                    {
-                        harmony.Patch(AccessTools.Method(PyTK, "drawLayer", new[] { typeof(Layer), typeof(IDisplayDevice), typeof(xTile.Dimensions.Rectangle), typeof(int), typeof(Location), typeof(bool) }), prefix: new HarmonyMethod(GetType(), nameof(PyTKDrawLayerPrefix)));
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _monitor.Log($"Failed to patch TMXLoader in {this.GetType().Name}: DR may not properly display reflections!", LogLevel.Warn);
-                    _monitor.Log($"Patch for TMXLoader failed in {this.GetType().Name}: {ex}", LogLevel.Trace);
-                }
+                _monitor.Log($"Failed to patch {displayName} in {GetType().Name}: DR may not properly display reflections!", LogLevel.Warn);
+                _monitor.Log($"Patch for {displayName} failed in {GetType().Name}: {ex}", LogLevel.Trace);
             }
         }
 
@@ -80,8 +89,13 @@ namespace DynamicReflections.Framework.Patches.Tiles
             DynamicReflections.isDrawingWaterReflection = false;
             DynamicReflections.isDrawingMirrorReflection = false;
 
-            if (__instance.Equals(LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation)) is true)
+            var lowestBackgroundLayer = LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation);
+            bool hasMultipleBackgroundLayers = LayerToolkit.HasMultipleBackgroundLayers(Game1.currentLocation);
+
+            if (__instance.Equals(lowestBackgroundLayer) is true)
             {
+                DynamicReflections.shouldDeferWaterReflectionPresentation = false;
+                DynamicReflections.shouldDeferSkyReflectionPresentation = false;
                 SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
 
                 // Pre-render the Mirrors layer (this should always be done, regardless of DynamicReflections.shouldDrawMirrorReflection)
@@ -134,8 +148,19 @@ namespace DynamicReflections.Framework.Patches.Tiles
 
                 // Resume previous SpriteBatch
                 SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
-                if (DynamicReflections.isFilteringWater is false && DynamicReflections.isFilteringSky is false)
+                if (DynamicReflections.isFilteringWater is false && DynamicReflections.shouldDrawNightSky is false)
                 {
+                    return true;
+                }
+
+                // Keep the original single-Back behavior intact.
+                // Only multi-Back* maps defer the final water/sky presentation until the top of the background stack.
+                if (hasMultipleBackgroundLayers is true)
+                {
+                    DynamicReflections.shouldDeferSkyReflectionPresentation = DynamicReflections.shouldDrawNightSky;
+                    DynamicReflections.shouldDeferWaterReflectionPresentation = DynamicReflections.isFilteringWater;
+                    DynamicReflections.isFilteringSky = false;
+                    DynamicReflections.isFilteringWater = false;
                     return true;
                 }
 
@@ -204,7 +229,11 @@ namespace DynamicReflections.Framework.Patches.Tiles
                 return;
             }
 
-            if (__instance.Equals(LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation)) is true)
+            var lowestBackgroundLayer = LayerToolkit.GetLowestBackgroundLayer(Game1.currentLocation);
+            var highestBackgroundLayer = LayerToolkit.GetHighestBackgroundLayer(Game1.currentLocation);
+            bool hasMultipleBackgroundLayers = LayerToolkit.HasMultipleBackgroundLayers(Game1.currentLocation);
+
+            if (__instance.Equals(lowestBackgroundLayer) is true)
             {
                 if (DynamicReflections.isDrawingPuddles is true)
                 {
@@ -222,6 +251,37 @@ namespace DynamicReflections.Framework.Patches.Tiles
                     DynamicReflections.isFilteringPuddles = false;
 
                 }
+            }
+
+            // Present the already-rendered water/sky reflections after the highest background layer.
+            // The explicit water mask keeps the original placement behavior on maps that use Back* layer stacks.
+            if (hasMultipleBackgroundLayers is true && __instance.Equals(highestBackgroundLayer) is true && (DynamicReflections.shouldDeferWaterReflectionPresentation is true || DynamicReflections.shouldDeferSkyReflectionPresentation is true))
+            {
+                SpriteBatchToolkit.CacheSpriteBatchSettings(Game1.spriteBatch, endSpriteBatch: true);
+
+                SpriteBatchToolkit.RenderTopmostBackgroundWaterMask();
+
+                if (DynamicReflections.shouldDeferSkyReflectionPresentation is true)
+                {
+                    SpriteBatchToolkit.DrawMaskedNightSky();
+
+                    if (DynamicReflections.shouldDeferWaterReflectionPresentation is true)
+                    {
+                        DynamicReflections.shouldDeferWaterReflectionPresentation = false;
+                        DynamicReflections.isDrawingWaterReflection = true;
+                    }
+
+                    DynamicReflections.shouldDeferSkyReflectionPresentation = false;
+                }
+                else if (DynamicReflections.shouldDeferWaterReflectionPresentation is true)
+                {
+                    SpriteBatchToolkit.DrawMaskedRenderedCharacters(isWavy: DynamicReflections.currentWaterSettings.IsReflectionWavy);
+
+                    DynamicReflections.shouldDeferWaterReflectionPresentation = false;
+                    DynamicReflections.isDrawingWaterReflection = true;
+                }
+
+                SpriteBatchToolkit.ResumeCachedSpriteBatch(Game1.spriteBatch);
             }
         }
 

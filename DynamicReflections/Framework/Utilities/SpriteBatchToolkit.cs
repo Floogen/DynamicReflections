@@ -1,5 +1,6 @@
 using DynamicReflections.Framework.Models.Reflections;
 using DynamicReflections.Framework.Patches.Tiles;
+using DynamicReflections.Framework.Patches.Tools;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using StardewModdingAPI;
@@ -382,6 +383,72 @@ namespace DynamicReflections.Framework.Utilities
             SpriteBatchToolkit.StopRendering();
 
             Game1.graphics.GraphicsDevice.Clear(Game1.bgColor);
+        }
+
+        internal static void RenderTopmostBackgroundWaterMask()
+        {
+            SpriteBatchToolkit.StartRendering(DynamicReflections.backgroundWaterMaskRenderTarget);
+            Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+            GameLocation location = Game1.currentLocation;
+            if (location is null || location.Map is null || LayerToolkit.HasAnyTopmostVisibleBackgroundWater(location) is false)
+            {
+                SpriteBatchToolkit.StopRendering();
+                return;
+            }
+
+            // For multi-Back* maps, build the water-shaped mask from the final visible water surface only.
+            // This preserves the original mod's placement rules while avoiding repeated viewport scans each frame.
+            Color cachedWaterColor = location.waterColor.Value;
+            DynamicReflections.isRenderingTopmostBackgroundWaterMask = true;
+            location.waterColor.Value = Color.White;
+
+            Game1.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp);
+            GameLocationPatch.DrawWaterReversePatch(location, Game1.spriteBatch);
+            Game1.spriteBatch.End();
+
+            location.waterColor.Value = cachedWaterColor;
+            DynamicReflections.isRenderingTopmostBackgroundWaterMask = false;
+
+            SpriteBatchToolkit.StopRendering();
+        }
+
+        internal static void DrawMaskedNightSky()
+        {
+            DrawMaskedTexture(DynamicReflections.nightSkyRenderTarget);
+        }
+
+        internal static void DrawMaskedRenderedCharacters(bool isWavy = false)
+        {
+            Texture2D source = DynamicReflections.playerWaterReflectionRender;
+            if (isWavy)
+            {
+                SpriteBatchToolkit.StartRendering(DynamicReflections.inBetweenRenderTarget);
+                Game1.graphics.GraphicsDevice.Clear(Color.Transparent);
+
+                DynamicReflections.waterReflectionEffect.Parameters["ColorOverlay"].SetValue(DynamicReflections.modConfig.WaterReflectionSettings.ReflectionOverlay.ToVector4());
+                Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.AlphaBlend, SamplerState.PointClamp, effect: DynamicReflections.waterReflectionEffect);
+                Game1.spriteBatch.Draw(DynamicReflections.playerWaterReflectionRender, Vector2.Zero, DynamicReflections.modConfig.GetCurrentWaterSettings(Game1.currentLocation).ReflectionOverlay);
+                Game1.spriteBatch.End();
+
+                SpriteBatchToolkit.StopRendering();
+                source = DynamicReflections.inBetweenRenderTarget;
+            }
+
+            DrawMaskedTexture(source);
+        }
+
+        private static void DrawMaskedTexture(Texture2D source)
+        {
+            if (source is null || DynamicReflections.backgroundWaterMaskRenderTarget is null || DynamicReflections.mirrorReflectionEffect is null)
+            {
+                return;
+            }
+
+            DynamicReflections.mirrorReflectionEffect.Parameters["Mask"].SetValue(DynamicReflections.backgroundWaterMaskRenderTarget);
+            Game1.spriteBatch.Begin(SpriteSortMode.FrontToBack, BlendState.NonPremultiplied, SamplerState.PointClamp, effect: DynamicReflections.mirrorReflectionEffect);
+            Game1.spriteBatch.Draw(source, Vector2.Zero, Color.White);
+            Game1.spriteBatch.End();
         }
 
         internal static void DrawNightSky()
